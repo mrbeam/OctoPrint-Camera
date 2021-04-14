@@ -33,9 +33,7 @@ plugin_url = "https://github.com/mrbeam/OctoPrint-Camera"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = [
-    "numpy",
-]  # todo , "picamera"
+plugin_requires = ["numpy", "picamera"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
