@@ -1,5 +1,17 @@
 # Camera Plugin
 
+##TODO Josef:
+- binding to disable plugin (Mrbeam plugin) to test for watterot (_disabled init.py file) maybe in config.yaml
+- add new classes to plugin - ui to take over ui, iobeam/iobeamhandler for button press
+- make lock when save image to save for write read error
+- save only processed images to sd card (.octoprint/uploads/cam/.....)
+- for watterorr to calibrate, laser markings already done, just calibration steps
+
+- restapi to get image
+- call to get images as soon as new image avaiable
+- Camera thread to take pictures, save and serve
+
+
 ## Objective
 
 - Reduce buggy behaviour (camera not sending images, not starting etc...)
@@ -13,7 +25,7 @@
 
 ## Side benefits of the design choice
 
-- Separation of concern 
+- Separation of concern
   - Un-burden the MrBeamPlugin
   - With a new design, we can make the camera plugin flexible for multiple simultaneous uses.
 - As an optional plugin, the camera plugin doesn't need to be installed in local environments.
@@ -41,7 +53,7 @@ The separate plugin provides:
 
 Requirements:
 
-- Can run without the MrBeamPlugin running 
+- Can run without the MrBeamPlugin running
   > MrBeamPlugin blacklisted during the watterott assembly
 
 Shortcomings:
@@ -105,12 +117,12 @@ Whether the camera can run now
 
 ### OctoPrint Events
 
-We don't want to spam the Event manager of OctoPrint, 
+We don't want to spam the Event manager of OctoPrint,
 therefore there won't be a message for every single picture taken.
 
 `EVENT_IMAGE_READY` - A processed image is available
 
-__payload__ : 
+__payload__ :
 
 ```
 {
@@ -141,7 +153,7 @@ Blocks until the camera is idle or finished taking a picture.
 
 `process(image, *args, **kwargs)`
 
-Process an image with the parameters given. 
+Process an image with the parameters given.
 Each parameter should have a default value.
 After calibration, the relevant paramters should be written to a config file. (Like `.octoprint/cam/pic_settings.yaml`)
 
