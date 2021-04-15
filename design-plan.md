@@ -92,10 +92,12 @@ Most of the communication with the camera plugin could be done with a RESTish (!
 Each request can yield an error message `{error: <error message>, errcode: <error code>}`
 
 `[GET] /image`
+`{type: "available"/"next"}`
 
 Returns the latest available image to diplay on the interface
 
 `[GET] /image_raw`
+`{type: "available"/"next"}`
 
 Returns the latest unprocessed image from the camera
 
