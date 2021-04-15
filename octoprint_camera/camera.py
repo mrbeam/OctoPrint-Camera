@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
+from __future__ import absolute_import, print_function, unicode_literals, division
 
 from datetime import datetime
 import logging
 
-from octoprint_mrbeam.camera.definitions import (
-    TMP_RAW_FNAME_RE,
-    STATE_SUCCESS,
-    CAMERA_HEIGHT,
-    DIST_KEY,
-    ERR_NEED_CALIB,
-    LEGACY_STILL_RES,)
+from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
 # camera is a function that creates a new Camera object
 # or returns the currently used camera object
 from octoprint_mrbeam.camera.mrbcamera import mrbCamera

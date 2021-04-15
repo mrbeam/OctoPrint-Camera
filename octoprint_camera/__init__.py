@@ -11,9 +11,11 @@ from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_
 
 from .__version import __version__
 from .camera import CameraThread
-from .util import logme, logExceptions
+from .util import logme, logExceptions, image
 
 from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
+from octoprint_mrbeam.camera.undistort import _getCamParams
+
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
 
 class CameraPlugin(
@@ -61,6 +63,23 @@ class CameraPlugin(
                 # saveCorrectionDebugImages=False,
                 # markerRecognitionMinPixel=MIN_MARKER_PIX,
                 # remember_markers_across_sessions=True,
+            ),
+            # The list of options that usually get saved to pic_settings.yaml
+            # TODO : Get values from _getCamParams
+            corners=dict(
+                factory=dict(
+                    arrows_px={},
+                    pink_circles_px={},
+                ),
+                user=dict(
+                    arrows_px={},
+                    pink_circles_px={},
+                ),
+                history=dict(
+                    # The last recorded position of the pink_circles.
+                    # Should only be saved on shutdown & camera stop
+                    pink_circles_px={},
+                ),
             ),
         )
 
@@ -128,6 +147,67 @@ class CameraPlugin(
 
         r = add_non_caching_response_headers(r)
         return r
+
+
+    ##~~ Camera Plugin
+
+    PIC_PLAIN = "plain" # The equivalent of "raw" pictures
+    PIC_CORNER = "corner" # Corrected for the position of the work area corners
+    PIC_LENS = "lens" # Corrected for the lens distortion
+    PIC_BOTH = "both" # Corrected corners + lens
+    PIC_TYPES = (PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH)
+    LAST = "last"
+    NEXT = "next"
+    WHICH = (LAST, NEXT)
+
+    @logExceptions
+    def get_picture(pic_type="plain", which="last"):
+        """Returns a jpg picture which can be corrected for
+        - lens distortion,
+        - Real world coordinates
+        Also returns a set of workspace coordinates and whether the pink circles were all found
+        """
+        err_txt = "Unrecognised Picture {} : {}, should be one of {}"
+        if pic_type not in self.PIC_TYPES:
+            raise ValueException(err_txt.format("Type", pic_type, PIC_TYPES))
+        if which not in self.WHICH:
+            raise ValueException(err_txt.format("desired", which, WHICH))
+        do_corners = pic_type in (PIC_CORNER, PIC_BOTH)
+        do_lens = pic_type in (PIC_LENS, PIC_BOTH)
+
+        if which == LAST:
+            img_jpg = self.camera_thread.get_latest_img()
+        elif which == NEXT:
+            img_jpg = self.camera_thread.get_next_img()
+        else:
+            return Exception("We shouldn't be here, huhoo..")
+
+        if not (do_corners or do_lens):
+            return img, {}
+        # Work is done on a numpy version of the image
+        img = image.imdecode(img_jpg)
+        settings = {}
+        if do_corners:
+            positions_pink_circles = corners.find_pink_circles(img, **settings)
+            settings_corners = self._settings.get(['corners'])
+            positions_pink_circles = dict_merge(
+                settings_corners['factory'],
+                settings_corners['history'],
+                positions_pink_circles
+            )
+            positions_workspace_corners = corners.get_workspace_corners(positions_pink_circles, **settings)
+        else:
+            positions_workspace_corners = None
+        if do_lens:
+            img = lens.undistort(img, **settings)
+            if do_corners:
+                positions_workspace_corners = lens.undist_points(positions_workspace_corners, **settings)
+        if do_corners:
+            img = corners.fit_img_to_corners(img, positions_workspace_corners)
+        # Write the modified image to a jpg binary
+        buff = io.BytesIO()
+        image.imwrite(buff, img)
+        return buff, positions_workspace_corners
 
     # NOTE : Can be re-enabled for the factory mode.
     #        For now, it is always in factory mode
