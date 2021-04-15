@@ -33,7 +33,7 @@ class CameraThread(object):
         if self._thread:
             self._thread.start()
         else:
-            self._tread = self._camera_run()
+            self._thread = self._camera_run()
 
     @get_thread(daemon=True)
     def _camera_run(self):

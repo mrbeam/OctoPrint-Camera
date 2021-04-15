@@ -18,6 +18,7 @@ IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
 
 class CameraPlugin(
     octoprint.plugin.StartupPlugin,
+    octoprint.plugin.ShutdownPlugin,
     octoprint.plugin.TemplatePlugin,
     octoprint.plugin.SettingsPlugin,
     octoprint.plugin.AssetPlugin,
@@ -33,7 +34,9 @@ class CameraPlugin(
         self.camera_thread.start()
 
     def on_shutdown(self):
-        self.camera_thread.stop()
+        if self.camera_thread:
+            self.camera_thread.stop()
+        self._logger.debug("Camera thread joined")
 
     def get_settings_defaults(self):
         # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
