@@ -1,14 +1,19 @@
 # coding=utf-8
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 import platform
+import socket
+
 import octoprint.plugin
 from octoprint.server.util.flask import add_non_caching_response_headers
 from octoprint.settings import settings
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 
 
-from octoprint_camera.__version import __version__
+from .__version import __version__
+from .util import logme, logExceptions
 
+from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
+IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
 
 class CameraPlugin(
     octoprint.plugin.StartupPlugin,
@@ -18,40 +23,41 @@ class CameraPlugin(
     octoprint.plugin.BlueprintPlugin,
 ):
     def __init__(self):
-        self._plugin_version = __version__
+        self.camera_thread = None
+
 
     def on_after_startup(self):
         # TODO Stage 1 - Start the camera.
-        self._logger.debug("Hello World From Camera Plugin! (more: %s)")
+        self.camera_thread = CameraThread(debug=self._settings.get(['debug']))
 
     def get_settings_defaults(self):
         # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
-        image_default_width = 2048
-        image_default_height = 1536
+        base_folder = settings().getBaseFolder("base")
 
         return dict(
-            cam=dict(
-                cam_img_width=image_default_width,
-                cam_img_height=image_default_height,
-                frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
-                previewOpacity=1,
-                localFilePath="cam/beam-cam.jpg",
-                localUndistImage="cam/undistorted.jpg",
-                keepOriginals=False,
-                # TODO: we nee a better and unified solution for our custom paths. Some day...
-                correctionSettingsFile="{}/cam/pic_settings.yaml".format(
-                    settings().getBaseFolder("base")
+            cam_img_width=IMG_WIDTH,
+            cam_img_height=IMG_HEIGHT,
+            debug=True,
+            frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
+            previewOpacity=1,
+            localFilePath="cam/beam-cam.jpg",
+            localUndistImage="cam/undistorted.jpg",
+            keepOriginals=False,
+            # TODO: we nee a better and unified solution for our custom paths. Some day...
+            corrections=dict(
+                settingsFile="{}/cam/pic_settings.yaml".format(
+                    base_folder
                 ),
-                correctionTmpFile="{}/cam/last_markers.json".format(
-                    settings().getBaseFolder("base")
+                tmpFile="{}/cam/last_markers.json".format(
+                    base_folder
                 ),
                 # lensCalibration={
                 #     k: os.path.join(cam_folder, camera.LENS_CALIBRATION[k])
                 #     for k in ["legacy", "user", "factory"]
                 # },
-                saveCorrectionDebugImages=False,
+                # saveCorrectionDebugImages=False,
                 # markerRecognitionMinPixel=MIN_MARKER_PIX,
-                remember_markers_across_sessions=True,
+                # remember_markers_across_sessions=True,
             ),
         )
 
@@ -61,7 +67,6 @@ class CameraPlugin(
 
     def get_assets(self):
         # TODO Stage 1 - Camera Calibration UI
-        self._logger.debug("Camer Plugin get assets")
         return dict(
             js=[
                 # "js/settings/camera_settings.js",#user settings
@@ -82,6 +87,8 @@ class CameraPlugin(
             less=[],
         )
 
+    # NOTE : Can be re-enabled for the factory mode.
+    #        For now, it is always in factory mode
     # @property
     # def calibration_tool_mode(self):
     #     """Get the calibration tool mode"""
@@ -102,21 +109,8 @@ class CameraPlugin(
         from flask import make_response, render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
 
-        self._logger.info(
-            UI_API_KEY + "Hello World! (more: %s)" % settings().get(["url"])
-        )
-
-        # display_version_string = "{} on {}".format(
-        #     self._plugin_version, self.getHostname()
-        # )
-
-        # if self._branch:
-        #     display_version_string = "{} ({} branch) on {}".format(
-        #         self._plugin_version, self._branch, self.getHostname()
-        #     )
         render_kwargs = dict(
             debug=debug,
-            # firstRun=self.isFirstRun(),
             version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
             uiApiKey=UI_API_KEY,
             templates=dict(tab=[]),
@@ -124,19 +118,8 @@ class CameraPlugin(
             locales=dict(),
             supportedExtensions=[],
             # beamOS version
-            beamosVersionNumber=self._plugin_version,
-            # beamosVersionBranch=self._branch,
-            # beamosVersionDisplayVersion=display_version_string,
-            # beamosVersionImage=self._octopi_info,
-            # environment
-            # env=self.get_env(),
-            # env_local=self.get_env(self.ENV_LOCAL),
-            # env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
-            # env_analytics=self.get_env(self.ENV_ANALYTICS),
-            # env_support_mode=self.support_mode,
-            #
-            # product_name=self.get_product_name(),
-            # hostname=self.getHostname(),
+            beamosVersionNumber=__version__,
+            hostname=socket.gethostname(),
             # serial=self._serial_num,
             # beta_label=self.get_beta_label(),
             e="null",
