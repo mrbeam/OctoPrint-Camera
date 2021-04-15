@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import base64
 import os
 import time
 from random import randint
@@ -176,24 +177,36 @@ class CameraPlugin(
         file = os.path.join(
             os.path.dirname(__file__), "static/img/calibration", f[randomfilenumber]
         )
-        self._logger.debug("selected file " + file + " ending " + file.split(".")[1])
         filetype = file.split(".")[1]
-        if filetype == "svg":
-            filetype = "svg+xml"
 
         # returns the next avaiable image
         if "type" in flask.request.values and flask.request.values["type"] == "next":
-            return flask.send_file(
+            with open(
                 os.path.join(
                     os.path.dirname(__file__),
                     "static/img/calibration/undistorted_bad1.jpg",
                 ),
-                mimetype="image/jpg",
-            )
+                "rb",
+            ) as fh:
+                buf = base64.b64encode(fh.read())
+            response = flask.make_response(buf)
+            response.headers["Content-Transfer-Encoding"] = "base64"
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            return response
         # returns the currently avaiable image
-        return flask.send_file(
-            file,
-            mimetype="image/" + filetype,
+        self._logger.debug("selected file " + file + " ending " + file.split(".")[1])
+        with open(file, "rb") as fh:
+            buf = base64.b64encode(fh.read())
+        response = flask.make_response(buf)
+        response.headers["Content-Transfer-Encoding"] = "base64"
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return response
+
+    # send plugin message via websocket to inform frontend about new image, with timestamp
+    def _informFrontend(self):
+        self._plugin_manager.send_plugin_message(
+            "camera",
+            dict(newImage=time.time()),
         )
 
     # Returns the latest unprocessed image from the camera
@@ -203,17 +216,28 @@ class CameraPlugin(
         file = os.path.join(
             os.path.dirname(__file__), "static/img/calibration/undistorted_ok.jpg"
         )
+
         # returns the next avaiable image
         if "type" in flask.request.values and flask.request.values["type"] == "next":
-            return flask.send_file(
+            with open(
                 os.path.join(
                     os.path.dirname(__file__),
                     "static/img/calibration/undistorted_bad1.jpg",
                 ),
-                mimetype="image/jpg",
-            )
+                "rb",
+            ) as fh:
+                buf = base64.b64encode(fh.read())
+            response = flask.make_response(buf)
+            response.headers["Content-Transfer-Encoding"] = "base64"
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            return response
         # returns the currently avaiable image
-        return flask.send_file(file, mimetype="image/jpg")
+        with open(file, "rb") as fh:
+            buf = base64.b64encode(fh.read())
+        response = flask.make_response(buf)
+        response.headers["Content-Transfer-Encoding"] = "base64"
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return response
 
     # Returns the timestamp of the latest available image
     @octoprint.plugin.BlueprintPlugin.route("/timestamp", methods=["GET"])
