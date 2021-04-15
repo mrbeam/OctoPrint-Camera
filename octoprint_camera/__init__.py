@@ -10,6 +10,7 @@ from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_
 
 
 from .__version import __version__
+from .camera import CameraThread
 from .util import logme, logExceptions
 
 from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
@@ -27,7 +28,7 @@ class CameraPlugin(
 
 
     def on_after_startup(self):
-        self.camera_thread = CameraThread(debug=self._settings.get(['debug']))
+        self.camera_thread = CameraThread(self._settings, debug=self._settings.get(['debug']))
         # TODO stage 2 - Only start the camera when required
         self.camera_thread.start()
 
