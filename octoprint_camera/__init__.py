@@ -27,8 +27,12 @@ class CameraPlugin(
 
 
     def on_after_startup(self):
-        # TODO Stage 1 - Start the camera.
         self.camera_thread = CameraThread(debug=self._settings.get(['debug']))
+        # TODO stage 2 - Only start the camera when required
+        self.camera_thread.start()
+
+    def on_shutdown(self):
+        self.camera_thread.stop()
 
     def get_settings_defaults(self):
         # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
@@ -43,14 +47,9 @@ class CameraPlugin(
             localFilePath="cam/beam-cam.jpg",
             localUndistImage="cam/undistorted.jpg",
             keepOriginals=False,
-            # TODO: we nee a better and unified solution for our custom paths. Some day...
             corrections=dict(
-                settingsFile="{}/cam/pic_settings.yaml".format(
-                    base_folder
-                ),
-                tmpFile="{}/cam/last_markers.json".format(
-                    base_folder
-                ),
+                settingsFile="{}/cam/pic_settings.yaml".format(base_folder),
+                tmpFile="{}/cam/last_markers.json".format(base_folder),
                 # lensCalibration={
                 #     k: os.path.join(cam_folder, camera.LENS_CALIBRATION[k])
                 #     for k in ["legacy", "user", "factory"]
@@ -69,7 +68,6 @@ class CameraPlugin(
         # TODO Stage 1 - Camera Calibration UI
         return dict(
             js=[
-                # "js/settings/camera_settings.js",#user settings
                 "js/camera.js",
                 "js/settings/camera_settings.js",
                 "js/calibration/calibration.js",
@@ -89,6 +87,8 @@ class CameraPlugin(
 
     # NOTE : Can be re-enabled for the factory mode.
     #        For now, it is always in factory mode
+    # TODO : calibration tool mode as long as the
+    #        factory calibration is not done and validated
     # @property
     # def calibration_tool_mode(self):
     #     """Get the calibration tool mode"""
