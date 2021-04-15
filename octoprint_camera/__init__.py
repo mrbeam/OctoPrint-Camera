@@ -26,7 +26,7 @@ class CameraPlugin(
 ):
     def __init__(self):
         self.camera_thread = None
-
+        self.lens_calibration_thread = None
 
     def on_after_startup(self):
         self.camera_thread = CameraThread(self._settings, debug=self._settings.get(['debug']))
@@ -89,17 +89,6 @@ class CameraPlugin(
             less=[],
         )
 
-    # NOTE : Can be re-enabled for the factory mode.
-    #        For now, it is always in factory mode
-    # TODO : calibration tool mode as long as the
-    #        factory calibration is not done and validated
-    # @property
-    # def calibration_tool_mode(self):
-    #     """Get the calibration tool mode"""
-    #     ret = check_calibration_tool_mode(self)
-    #     # self._fixEmptyUserManager()
-    #     return ret
-
     ##~~ BlueprintPlugin mixin
 
     # disable default api key check for all blueprint routes.
@@ -139,6 +128,33 @@ class CameraPlugin(
 
         r = add_non_caching_response_headers(r)
         return r
+
+    # NOTE : Can be re-enabled for the factory mode.
+    #        For now, it is always in factory mode
+    # TODO : Phase 2 - calibration tool mode as long as the
+    #        factory calibration is not done and validated
+    # @property
+    # def calibration_tool_mode(self):
+    #     """Get the calibration tool mode"""
+    #     ret = check_calibration_tool_mode(self)
+    #     # self._fixEmptyUserManager()
+    #     return ret
+
+    def start_lens_calibration_daemon(self):
+        """Start the Lens Calibration"""
+        from .lens import BoardDetectionDaemon
+        if self.lens_calibration_thread:
+            self.lens_calibration_thread.start()
+        else:
+            self.lens_calibration_thread = BoardDetectionDaemon()
+            self.lens_calibration_thread.start()
+
+    def stop_lens_calibration(self, blocking=True):
+        # TODO : blocking behaviour goes into the daemon itself
+        self.lens_calibration_thread.stop()
+        if blocking:
+            self.lens_calibration_thread.join()
+
 
 
 __plugin_name__ = "Camera"
