@@ -22,6 +22,15 @@ from .util import logme, logExceptions, image
 
 
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
+PIC_PLAIN = "plain" # The equivalent of "raw" pictures
+PIC_CORNER = "corner" # Corrected for the position of the work area corners
+PIC_LENS = "lens" # Corrected for the lens distortion
+PIC_BOTH = "both" # Corrected corners + lens
+PIC_TYPES = (PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH)
+LAST = "last"
+NEXT = "next"
+WHICH = (LAST, NEXT)
+
 
 class CameraPlugin(
     octoprint.plugin.StartupPlugin,
@@ -266,20 +275,28 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/imageRaw", methods=["GET"])
     def getRawImage(self):
         # TODO return correct raw image
-        file = os.path.join(
-            os.path.dirname(__file__), "static/img/calibration/undistorted_ok.jpg"
-        )
-        # returns the next avaiable image
-        if "type" in flask.request.values and flask.request.values["type"] == "next":
+        values = flask.request.values
+        if not values.get("type", None) in WHICH:
+            return flask.make_respone("type should be a selection of {}".format(WHICH), 403)
+
+        which=values['type']
+        if self._settings.get(['debug'], False):
+            # Return a static image
+            # returns the next avaiable image
+            if which == "next":
+                filepath = "static/img/calibration/undistorted_bad1.jpg"
+            else:
+                filepath = "static/img/calibration/undistorted_ok.jpg"
             return flask.send_file(
                 os.path.join(
                     os.path.dirname(__file__),
-                    "static/img/calibration/undistorted_bad1.jpg",
+                    filepath,
                 ),
                 mimetype="image/jpg",
             )
+        else:
+            return flask.send_file(self.get_picture("plain",) mimetype="image/jpg")
         # returns the currently avaiable image
-        return flask.send_file(file, mimetype="image/jpg")
 
     # Returns the timestamp of the latest available image
     @octoprint.plugin.BlueprintPlugin.route("/timestamp", methods=["GET"])
@@ -310,15 +327,6 @@ class CameraPlugin(
 
     ##~~ Camera Plugin
 
-    PIC_PLAIN = "plain" # The equivalent of "raw" pictures
-    PIC_CORNER = "corner" # Corrected for the position of the work area corners
-    PIC_LENS = "lens" # Corrected for the lens distortion
-    PIC_BOTH = "both" # Corrected corners + lens
-    PIC_TYPES = (PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH)
-    LAST = "last"
-    NEXT = "next"
-    WHICH = (LAST, NEXT)
-
     @logExceptions
     def get_picture(pic_type="plain", which="last", settings_corners=dict(), settings_lens=dict()):
         """Returns a jpg picture which can be corrected for
@@ -327,9 +335,9 @@ class CameraPlugin(
         Also returns a set of workspace coordinates and whether the pink circles were all found
         """
         err_txt = "Unrecognised Picture {} : {}, should be one of {}"
-        if pic_type not in self.PIC_TYPES:
+        if pic_type not in PIC_TYPES:
             raise ValueException(err_txt.format("Type", pic_type, PIC_TYPES))
-        if which not in self.WHICH:
+        if which not in WHICH:
             raise ValueException(err_txt.format("desired", which, WHICH))
         do_corners = pic_type in (PIC_CORNER, PIC_BOTH)
         do_lens = pic_type in (PIC_LENS, PIC_BOTH)
@@ -350,8 +358,8 @@ class CameraPlugin(
             positions_pink_circles = corners.find_pink_circles(img, **settings)
             # settings_corners = plugin._settings.get(['corners'], {})
             positions_pink_circles = reduce(dict_merge,
-                settings_corners.get(['factory'], {}),
-                settings_corners.get(['history'], {}),
+                self._settings.get(['corners', 'factory'], {}),
+                self._settings.get(['corners', 'history'], {}),
                 positions_pink_circles
             )
             positions_workspace_corners = corners.get_workspace_corners(positions_pink_circles, **settings)
