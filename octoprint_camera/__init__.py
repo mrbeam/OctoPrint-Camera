@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function, unicode_literals, division
+from os import path
 import platform
 import socket
 
@@ -29,16 +30,29 @@ class CameraPlugin(
     def __init__(self):
         self.camera_thread = None
         self.lens_calibration_thread = None
+        self.lens_settings = {}
+        # Shadow settings for the pink circles position history
+        self.__corners_hist_datafile = None
+        self.__corners_hist_settings = {}
+        # Shadow settings for the lens settings
+        self.__lens_datafile = None
+        self.__lens_settings = {}
+
+    ##~~ StartupPlugin mixin
 
     def on_after_startup(self):
         self.camera_thread = CameraThread(self._settings, debug=self._settings.get(['debug']))
         # TODO stage 2 - Only start the camera when required
         self.camera_thread.start()
 
+    ##~~ ShutdownPlugin mixin
+
     def on_shutdown(self):
         if self.camera_thread:
             self.camera_thread.stop()
         self._logger.debug("Camera thread joined")
+
+    ##~~ SettingsPlugin mixin
 
     def get_settings_defaults(self):
         # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
@@ -65,7 +79,12 @@ class CameraPlugin(
                 # remember_markers_across_sessions=True,
             ),
             # The list of options that usually get saved to pic_settings.yaml
-            # TODO : Get values from _getCamParams
+            # TODO : migration : Get values from _getCamParams
+            # lens=dict(
+            #     factory=dict(),
+            #     user=dict(),
+            # ),
+            lens_datafile=path.join(self.get_plugin_data_folder(), "lens.npz"),
             corners=dict(
                 factory=dict(
                     arrows_px={},
@@ -80,8 +99,62 @@ class CameraPlugin(
                     # Should only be saved on shutdown & camera stop
                     pink_circles_px={},
                 ),
+                history_datafile=path.join(self.get_plugin_data_folder(), "pink_marker_history.yaml"),
             ),
         )
+
+    def on_settings_initialized(self):
+        # shadow the lens settings and save them as a .npz file
+        self.__lens_datafile = self._settings.get(['lens_datafile'], "")
+        try:
+            self.__lens_settings = np.load(self.__lens_datafile)
+        except IOError:
+            self.__lens_settings = {}
+        # shadow the pink circle history settings - they are in a separate .yaml file
+        self.__corners_hist_datafile = self._settings.get(['corners', 'history_datafile'], "")
+        try:
+            self.__corners_hist_settings = np.load(self.__corners_hist_datafile)
+        except IOError:
+            self.__corners_hist_settings = {}
+        # update self._settings to have the shadow values available
+        # self._settings.set([], self._merge_shadow_settings({}))
+
+    def on_settings_load(self):
+        # include the shadow settings into the complete settings
+		return self._merge_shadow_settings(
+            dict(octoprint.plugin.SettingsPlugin.on_settings_load(self))
+        )
+
+    def on_settings_save(self, data):
+        return octoprint.plugin.SettingsPlugin.on_settings_save(
+            self,
+            self._remove_shadow_settings(data)
+        )
+
+    def _merge_shadow_settings(self, data):
+        return dict_merge(
+            dict(
+                corners=dict(history=self.__corners_hist_settings),
+                # lens=self.__lens_settings
+            ),
+		    data,
+        )
+
+    def _remove_shadow_settings(self, data):
+        """Save the shadow settings and remove them from `data` *in place*"""
+        # mega ugly, needs to be made properly with something
+        # like `dict_map_paths(paths, func=lambda x: del x, data)`
+        self.__lens_settings = dict_merge(self.__lens_settings, data.get('lens', {}))
+        # if 'lens' in data:
+        #     del data['lens']
+        if 'corners' in data and isinstance(data['corners'], dict):
+            self.__corners_hist_settings = dict_merge(self.__corners_hist_settings,
+                                                    data['corners'].get('history'), {}))
+            if 'history' in data['corners']:
+                del data['corners']['history']
+
+
+    ##~~ TemplatePlugin mixin
 
     def get_template_configs(self):
         # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
@@ -161,7 +234,7 @@ class CameraPlugin(
     WHICH = (LAST, NEXT)
 
     @logExceptions
-    def get_picture(pic_type="plain", which="last"):
+    def get_picture(pic_type="plain", which="last", settings_corners=dict(), settings_lens=dict()):
         """Returns a jpg picture which can be corrected for
         - lens distortion,
         - Real world coordinates
@@ -180,19 +253,19 @@ class CameraPlugin(
         elif which == NEXT:
             img_jpg = self.camera_thread.get_next_img()
         else:
-            return Exception("We shouldn't be here, huhoo..")
+            raise Exception("We shouldn't be here, huhoo..")
 
         if not (do_corners or do_lens):
-            return img, {}
+            return img_jpg, {}
         # Work is done on a numpy version of the image
         img = image.imdecode(img_jpg)
         settings = {}
         if do_corners:
             positions_pink_circles = corners.find_pink_circles(img, **settings)
-            settings_corners = self._settings.get(['corners'])
-            positions_pink_circles = dict_merge(
-                settings_corners['factory'],
-                settings_corners['history'],
+            # settings_corners = plugin._settings.get(['corners'], {})
+            positions_pink_circles = reduce(dict_merge,
+                settings_corners.get(['factory'], {}),
+                settings_corners.get(['history'], {}),
                 positions_pink_circles
             )
             positions_workspace_corners = corners.get_workspace_corners(positions_pink_circles, **settings)
