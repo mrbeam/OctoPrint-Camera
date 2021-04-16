@@ -238,44 +238,47 @@ class CameraPlugin(
     # Returns the latest available image to diplay on the interface
     @octoprint.plugin.BlueprintPlugin.route("/image", methods=["GET"])
     def getImage(self):
-        # TODO return correct image
-        # get random file for test
-        f = []
-        for root, dirs, files in os.walk(
-            os.path.join(os.path.dirname(__file__), "static/img/calibration")
-        ):
-            for filename in files:
-                f.append(filename)
-        randomfilenumber = randint(0, len(f) - 1)
+        values = flask.request.values
+        if not values.get("type", None) in WHICH:
+            return flask.make_respone("type should be a selection of {}".format(WHICH), 403)
 
-        # return file
-        file = os.path.join(
-            os.path.dirname(__file__), "static/img/calibration", f[randomfilenumber]
-        )
-        self._logger.debug("selected file " + file + " ending " + file.split(".")[1])
-        filetype = file.split(".")[1]
+        which=values['type']
+        if self._settings.get(['debug'], False):
+            # Return a static image
+            if which == "next":
+                # returns the next avaiable image
+                filepath = "static/img/calibration/undistorted_bad1.jpg"
+            else:
+                # get random file for test
+                f = []
+                for root, dirs, files in os.walk(
+                    os.path.join(os.path.dirname(__file__), "static/img/calibration")
+                ):
+                    for filename in files:
+                        f.append(filename)
+                randomfilenumber = randint(0, len(f) - 1)
+                filepath = path.join("static/img/calibration", f[randomfilenumber])
+        else:
+            # TODO return correct image
+            filepath = "static/img/calibration/undistorted_bad1.jpg"
+            pass
+
+        # Find the correct filetype from the file extension
+        filetype = filepath.split(".")[-1]
+        self._logger.debug("selected file " + filepath + " ending " + filetype)
         if filetype == "svg":
             filetype = "svg+xml"
-
-        # returns the next avaiable image
-        if "type" in flask.request.values and flask.request.values["type"] == "next":
-            return flask.send_file(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "static/img/calibration/undistorted_bad1.jpg",
-                ),
-                mimetype="image/jpg",
-            )
-        # returns the currently avaiable image
         return flask.send_file(
-            file,
+            os.path.join(
+                os.path.dirname(__file__),
+                filepath,
+            ),
             mimetype="image/" + filetype,
         )
 
     # Returns the latest unprocessed image from the camera
     @octoprint.plugin.BlueprintPlugin.route("/imageRaw", methods=["GET"])
     def getRawImage(self):
-        # TODO return correct raw image
         values = flask.request.values
         if not values.get("type", None) in WHICH:
             return flask.make_respone("type should be a selection of {}".format(WHICH), 403)
@@ -296,6 +299,7 @@ class CameraPlugin(
                 mimetype="image/jpg",
             )
         else:
+            # TODO return correct raw image
             return flask.send_file(self.get_picture("plain"), mimetype="image/jpg")
         # returns the currently avaiable image
 
