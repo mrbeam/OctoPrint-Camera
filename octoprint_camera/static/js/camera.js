@@ -39,10 +39,11 @@ $(function () {
         self.needsCornerCalibration = ko.observable(false);
         self.needsRawCornerCalibration = ko.observable(false);
 
-        self.rawUrl = "/downloads/files/local/cam/debug/raw.jpg"; // TODO get from settings
+        self.rawUrl = ko.observable(""); ///downloads/files/local/cam/debug/raw.jpg// TODO get from settings
         self.undistortedUrl =
             "/downloads/files/local/cam/debug/undistorted.jpg"; // TODO get from settings
-        self.croppedUrl = "/downloads/files/local/cam/beam-cam.jpg";
+        self.croppedUrl = ko.observable("/downloads/files/local/cam/beam-cam.jpg");
+        // self.croppedUrl = ko.observable("");
         self.timestampedCroppedImgUrl = ko.observable("");
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
@@ -78,27 +79,86 @@ $(function () {
             lens_corrected: null,
             cropped: null,
         });
+        self.picture = ko.observable();
+
         self.availablePicUrl = ko.computed(function () {
-            var ret = self._availablePicUrl();
-            var before = _.clone(ret); // shallow copy
-            for (let _t of [
-                ["cropped", self.croppedUrl],
-                ["lens_corrected", self.undistortedUrl],
-                ["raw", self.rawUrl],
-            ]) {
-                if (self.availablePic()[_t[0]])
-                    ret[_t[0]] =
-                        _t[0] === "cropped"
-                            ? self.timestampedCroppedImgUrl()
-                            : self.getTimestampedImageUrl(_t[1]);
+            // self.getImage();
+            ret = {
+                raw: self.rawUrl(),
+                cropped: self.croppedUrl(),
+                lens_corrected: self.croppedUrl(),
+
             }
-            self._availablePicUrl(ret);
-            var selectedTab = $("#camera-calibration-tabs .active a").attr(
-                "id"
-            );
-            if (selectedTab === "lenscal_tab_btn") return before;
-            else return ret;
+           return ret;
         });
+
+        self.simpleApiCommand = function (
+            command,
+            data,
+            successCallback,
+            errorCallback,
+            type
+        ) {
+            data = data || {};
+            data.command = command;
+            if (window.mrbeam.isWatterottMode()) {
+                $.ajax({
+                    url: "/plugin/camera/" + command,
+                    type: type, // POST, GET
+                    headers: {
+                        Accept: "application/json; charset=utf-8",
+                        "Content-Type": "application/json; charset=utf-8",
+                    },
+                    data: JSON.stringify(data),
+                    dataType: "text",
+                    success: successCallback,
+                    error: errorCallback,
+                });
+            } else if (self.loginState.loggedIn()) {
+                OctoPrint.simpleApiCommand("camera", command, data)
+                    .done(successCallback)
+                    .fail(errorCallback);
+            } else {
+                console.warn(
+                    "User not logged in, cannot send command '",
+                    command,
+                    "' with data",
+                    data
+                );
+            }
+        };
+        self.loadPicture = function(){
+            self.getImage();
+        }
+        self.loadPictureRaw = function(){
+            self.getImage('raw');
+        }
+        self.getImage = function (type) {
+            inputdata = null
+            let success_callbackRaw = function (data) {
+                if (typeof callback === "function") callback(data);
+                else {
+                }
+                    self.rawUrl('data:image/jpg;base64,'+data);
+            };
+            let success_callback = function (data) {
+                if (typeof callback === "function") callback(data);
+                else {
+                }
+                    self.croppedUrl('data:image/jpg;base64,'+data);
+            };
+
+            let error_callback = function (resp) {
+                console.log("image request error", resp);
+                if (typeof callback === "function") callback(resp);
+                // self.availablePicUrl().raw = self.rawUrl;
+            };
+            if(type === 'raw') {
+                self.simpleApiCommand("imageRaw", {}, success_callbackRaw, error_callback);
+            }else{
+                self.simpleApiCommand("image", {}, success_callback, error_callback);
+            }
+        }
 
         // event listener callbacks //
 
@@ -121,7 +181,7 @@ $(function () {
             self.webCamImageElem = $("#beamcam_image_svg");
             self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
-            self.croppedUrl = self.settings.settings.plugins.camera.cam.frontendUrl();
+            self.croppedUrl (self.settings.settings.plugins.camera.cam.frontendUrl());
 
             //TODO Maybe needed for user calibration
             // if (window.mrbeam.browser.is_safari) {
@@ -137,7 +197,8 @@ $(function () {
             });
 
             // trigger initial loading of the image
-            self.loadImage(self.croppedUrl);
+            // self.loadImage(self.croppedUrl());
+            self.getImage('raw');
         };
 
         // Image resolution notification //
@@ -189,12 +250,13 @@ $(function () {
                     self.cameraMarkerElem.attr({
                         style: "filter: url(#grayscale_filter)",
                     });
-                } else self.cameraMarkerElem.attr({ style: "" });
+                } else self.cameraMarkerElem.attr({style: ""});
             }
             return ret;
         });
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
+            console.log('plugin message', plugin, data);
             if (plugin !== "camera" || !data) return;
             if ("need_camera_calibration" in data) {
                 self._needCalibration(data["need_camera_calibration"]);
@@ -203,6 +265,16 @@ $(function () {
                 self.needsRawCornerCalibration(
                     data["need_raw_camera_calibration"]
                 );
+            }
+
+            if("newImageRaw" in data){
+                console.log('new Raw image get');
+                self.getImage('raw');
+            }
+
+            if("newImage" in data){
+                console.log('new image get');
+                self.getImage();
             }
 
             if ("beam_cam_new_image" in data) {
@@ -229,7 +301,8 @@ $(function () {
                 } else {
                     self.cornerMargin(0);
                 }
-                self.loadImage(self.croppedUrl);
+                // self.loadImage(self.croppedUrl());
+                self.getImage('raw');
             }
         };
 
@@ -249,55 +322,56 @@ $(function () {
             else self.needsCornerCalibration(true);
         };
 
-        self.loadImage = function (url) {
-            var myImageUrl = self.getTimestampedImageUrl(url);
-            var img = $("<img>");
-            img.load(function () {
-                self.timestampedCroppedImgUrl(myImageUrl);
-                //TODO Maybe needed for user calibration
-                // if (window.mrbeam.browser.is_safari) {
-                //     // load() event seems not to fire in Safari.
-                //     // So as a quick hack, let's set firstImageLoaded to true already here
-                //     self.firstImageLoaded = true;
-                //     self.countImagesLoaded(self.countImagesLoaded() + 1);
-                // }
-                if (this.width > 1500 && this.height > 1000)
-                    self.imgResolution("High");
-                else self.imgResolution("Low");
-
-                // respond to backend to tell we have loaded the picture
-                if (INITIAL_CALIBRATION) {
-                    $.ajax({
-                        type: "GET",
-                        url: "/plugin/camera/on_camera_picture_transfer",
-                    });
-                } else if (self.loginState.loggedIn()) {
-                    OctoPrint.simpleApiCommand(
-                        "camera",
-                        "on_camera_picture_transfer",
-                        {}
-                    );
-                } else {
-                    console.warn(
-                        "User not logged in, cannot confirm picture download."
-                    );
-                }
-                self.imagesInSession(self.imagesInSession() + 1);
-            });
-            if (!self.firstImageLoaded) {
-                img.error(function () {
-                    self.timestampedCroppedImgUrl(self.FALLBACK_IMAGE_URL);
-                });
-            }
-            img.attr({ src: myImageUrl });
-        };
+        // self.loadImage = function (url) {
+        //     self.getImage();
+        //     var myImageUrl = self.getTimestampedImageUrl(url);
+        //     var img = $("<img>");
+        //     img.load(function () {
+        //         self.timestampedCroppedImgUrl(myImageUrl);
+        //         //TODO Maybe needed for user calibration
+        //         // if (window.mrbeam.browser.is_safari) {
+        //         //     // load() event seems not to fire in Safari.
+        //         //     // So as a quick hack, let's set firstImageLoaded to true already here
+        //         //     self.firstImageLoaded = true;
+        //         //     self.countImagesLoaded(self.countImagesLoaded() + 1);
+        //         // }
+        //         if (this.width > 1500 && this.height > 1000)
+        //             self.imgResolution("High");
+        //         else self.imgResolution("Low");
+        //
+        //         // respond to backend to tell we have loaded the picture
+        //         if (INITIAL_CALIBRATION) {
+        //             $.ajax({
+        //                 type: "GET",
+        //                 url: "/plugin/camera/on_camera_picture_transfer",
+        //             });
+        //         } else if (self.loginState.loggedIn()) {
+        //             OctoPrint.simpleApiCommand(
+        //                 "camera",
+        //                 "on_camera_picture_transfer",
+        //                 {}
+        //             );
+        //         } else {
+        //             console.warn(
+        //                 "User not logged in, cannot confirm picture download."
+        //             );
+        //         }
+        //         self.imagesInSession(self.imagesInSession() + 1);
+        //     });
+        //     if (!self.firstImageLoaded) {
+        //         img.error(function () {
+        //             self.timestampedCroppedImgUrl(self.FALLBACK_IMAGE_URL);
+        //         });
+        //     }
+        //     img.attr({src: myImageUrl});
+        // };
 
         self.getTimestampedImageUrl = function (url) {
             var result = undefined;
             if (url) {
                 result = url;
-            } else if (self.croppedUrl) {
-                result = self.croppedUrl;
+            } else if (self.croppedUrl()) {
+                result = self.croppedUrl();
             }
             if (result) {
                 if (result.match(/(\?|&)ts=/))

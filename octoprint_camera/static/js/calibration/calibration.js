@@ -11,7 +11,6 @@ $(function () {
     function CalibrationViewModel(parameters) {
         let self = this;
         window.mrbeam.viewModels["calibrationViewModel"] = self;
-        console.log("this is a test");
         self.cameraSettings = parameters[0];
         self.camera = parameters[1];
         self.loginState = parameters[2];

@@ -13,6 +13,11 @@ $(function () {
         self.calibration = parameters[0];
         self.camera = parameters[1];
         self.cornerCalibration = parameters[2];//size 500 390
+        self.camera.loadPicture();
+
+        self.onAllBound = function () {
+            self.camera.loadPicture();
+        }
     }
 
     // view model class, parameters for constructor, container to bind to
