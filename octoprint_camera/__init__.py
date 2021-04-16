@@ -1,12 +1,18 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function, unicode_literals, division
+import flask
+from flask import jsonify
+import os
 from os import path
-import platform
+from random import randint
 import socket
+import time
 
 import octoprint.plugin
 from octoprint.server.util.flask import add_non_caching_response_headers
 from octoprint.settings import settings
+from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
+from octoprint_mrbeam.camera.undistort import _getCamParams
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 
 
@@ -14,8 +20,6 @@ from .__version import __version__
 from .camera import CameraThread
 from .util import logme, logExceptions, image
 
-from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
-from octoprint_mrbeam.camera.undistort import _getCamParams
 
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
 
@@ -220,6 +224,88 @@ class CameraPlugin(
 
         r = add_non_caching_response_headers(r)
         return r
+
+    # Returns the latest available image to diplay on the interface
+    @octoprint.plugin.BlueprintPlugin.route("/image", methods=["GET"])
+    def getImage(self):
+        # TODO return correct image
+        # get random file for test
+        f = []
+        for root, dirs, files in os.walk(
+            os.path.join(os.path.dirname(__file__), "static/img/calibration")
+        ):
+            for filename in files:
+                f.append(filename)
+        randomfilenumber = randint(0, len(f) - 1)
+
+        # return file
+        file = os.path.join(
+            os.path.dirname(__file__), "static/img/calibration", f[randomfilenumber]
+        )
+        self._logger.debug("selected file " + file + " ending " + file.split(".")[1])
+        filetype = file.split(".")[1]
+        if filetype == "svg":
+            filetype = "svg+xml"
+
+        # returns the next avaiable image
+        if "type" in flask.request.values and flask.request.values["type"] == "next":
+            return flask.send_file(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "static/img/calibration/undistorted_bad1.jpg",
+                ),
+                mimetype="image/jpg",
+            )
+        # returns the currently avaiable image
+        return flask.send_file(
+            file,
+            mimetype="image/" + filetype,
+        )
+
+    # Returns the latest unprocessed image from the camera
+    @octoprint.plugin.BlueprintPlugin.route("/imageRaw", methods=["GET"])
+    def getRawImage(self):
+        # TODO return correct raw image
+        file = os.path.join(
+            os.path.dirname(__file__), "static/img/calibration/undistorted_ok.jpg"
+        )
+        # returns the next avaiable image
+        if "type" in flask.request.values and flask.request.values["type"] == "next":
+            return flask.send_file(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "static/img/calibration/undistorted_bad1.jpg",
+                ),
+                mimetype="image/jpg",
+            )
+        # returns the currently avaiable image
+        return flask.send_file(file, mimetype="image/jpg")
+
+    # Returns the timestamp of the latest available image
+    @octoprint.plugin.BlueprintPlugin.route("/timestamp", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/ts", methods=["GET"])
+    def getTimestamp(self):
+        data = {"timestamp": time.time() - 5 * 60}  # TODO return correct timestamp
+        return jsonify(data)
+
+    # Returns the timestamp of the latest "raw" image
+    @octoprint.plugin.BlueprintPlugin.route("/timestamp_raw", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/ts_raw", methods=["GET"])
+    def getTimestampRaw(self):
+        data = {"timestamp": time.time()}  # TODO return correct timestamp
+        return jsonify(data)
+
+    # Whether the camera is running or not
+    @octoprint.plugin.BlueprintPlugin.route("/running", methods=["GET"])
+    def getRunningState(self):
+        data = {"running": True}  # TODO return correct state
+        return jsonify(data)
+
+    # return whether the camera can run now
+    @octoprint.plugin.BlueprintPlugin.route("/available", methods=["GET"])
+    def getAvailableState(self):
+        data = {"available": True}  # TODO return correct available state
+        return jsonify(data)
 
 
     ##~~ Camera Plugin
