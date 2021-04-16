@@ -11,6 +11,7 @@ import time
 import octoprint.plugin
 from octoprint.server.util.flask import add_non_caching_response_headers
 from octoprint.settings import settings
+from octoprint.util import dict_merge
 from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
 from octoprint_mrbeam.camera.undistort import _getCamParams
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
@@ -162,7 +163,7 @@ class CameraPlugin(
         #     del data['lens']
         if 'corners' in data and isinstance(data['corners'], dict):
             self.__corners_hist_settings = dict_merge(self.__corners_hist_settings,
-                                                    data['corners'].get('history'), {}))
+                                                    data['corners'].get('history'), {})
             if 'history' in data['corners']:
                 del data['corners']['history']
 
@@ -295,7 +296,7 @@ class CameraPlugin(
                 mimetype="image/jpg",
             )
         else:
-            return flask.send_file(self.get_picture("plain",) mimetype="image/jpg")
+            return flask.send_file(self.get_picture("plain"), mimetype="image/jpg")
         # returns the currently avaiable image
 
     # Returns the timestamp of the latest available image
