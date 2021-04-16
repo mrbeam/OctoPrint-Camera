@@ -164,20 +164,11 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/image", methods=["GET"])
     def getImage(self):
         # TODO return correct image
-        # get random file for test
-        f = []
-        for root, dirs, files in os.walk(
-            os.path.join(os.path.dirname(__file__), "static/img/calibration")
-        ):
-            for filename in files:
-                f.append(filename)
-        randomfilenumber = randint(0, len(f) - 1)
 
         # return file
         file = os.path.join(
-            os.path.dirname(__file__), "static/img/calibration", f[randomfilenumber]
+            os.path.dirname(__file__), "static/img/calibration/qa_final_rectangle.jpg"
         )
-        filetype = file.split(".")[1]
 
         # returns the next avaiable image
         if "type" in flask.request.values and flask.request.values["type"] == "next":
@@ -213,8 +204,19 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/imageRaw", methods=["GET"])
     def getRawImage(self):
         # TODO return correct raw image
+        # get random file for test
+        f = []
+        for root, dirs, files in os.walk(
+            os.path.join(os.path.dirname(__file__), "static/img/calibration")
+        ):
+            for filename in files:
+                if filename.split(".")[1] == "jpg":
+                    f.append(filename)
+        randomfilenumber = randint(0, len(f) - 1)
+
+        # return file
         file = os.path.join(
-            os.path.dirname(__file__), "static/img/calibration/undistorted_ok.jpg"
+            os.path.dirname(__file__), "static/img/calibration", f[randomfilenumber]
         )
 
         # returns the next avaiable image
