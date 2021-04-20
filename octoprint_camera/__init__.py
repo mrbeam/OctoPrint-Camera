@@ -260,8 +260,7 @@ class CameraPlugin(
                 filepath = path.join("static/img/calibration", f[randomfilenumber])
         else:
             # TODO return correct image
-            filepath = "static/img/calibration/undistorted_bad1.jpg"
-            pass
+            return flask.send_file(self.get_picture(PIC_BOTH), mimetype="image/jpg")
 
         # Find the correct filetype from the file extension
         filetype = filepath.split(".")[-1]
@@ -300,7 +299,7 @@ class CameraPlugin(
             )
         else:
             # TODO return correct raw image
-            return flask.send_file(self.get_picture("plain"), mimetype="image/jpg")
+            return flask.send_file(self.get_picture(PIC_PLAIN), mimetype="image/jpg")
         # returns the currently avaiable image
 
     # Returns the timestamp of the latest available image
