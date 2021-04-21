@@ -91,32 +91,61 @@ Most of the communication with the camera plugin could be done with a RESTish (!
 
 Each request can yield an error message `{error: <error message>, errcode: <error code>}`
 
-`[GET] /image`
-`{which: "available"/"next", pic_type: "plain"/corners/lens/both}`
+`[GET] /image`  
 
-Returns the latest available image to diplay on the interface
-
-Picture Type:
-`plain` : No corrections, just the picture taken by the camera
-`corners` : Adjust the image such that it corresponds to real-world coordinates (mapping the corner areas)
-`lens`: Adjust the lens distortion
-`both`: Do both the corners and lens corretcion
-
+Returns the latest available image to diplay on the interface  
 Should return err msg if the picture cannot be processed ...
 
-`[GET] /available_corrections`
+ - __payload__:
+   
+     ```
+    {
+      which: 'available'/'next';
+      pic_type: 'plain'/'corners'/'lens'/'both'
+    }
+     ```
 
-Return the list of possible images:
-possible returns: `[ plain, corners, lens, both ]`
+    - Which:  
+`available` : The last taken image  
+`next` : wait for the next image taken
+    - Picture Type:  
+`plain` : No corrections, just the picture taken by the camera  
+`corners` : Adjust the image such that it corresponds to real-world coordinates (mapping the corner areas)  
+`lens`: Adjust the lens distortion  
+`both`: Do both the corners and lens correction 
 
-`[GET] /timestamp` or `[GET] /ts`
-`{pic_type: "plain"/corners/lens/both}`
+ - __return__:
+   ```
+   {
+    image: <base64>,
+    timestamp: <timestamp>
+   }
+   ```
+- __error__:
+  ```
+  {
+    error: <error message>,
+    errcode: <error code>
+  }
+  ```
 
-Returns the timestamp of the latest available image
+`[GET] /available_corrections`  
+
+Return the list of possible images:  
+ - __return__:  
+   `[ plain, corners, lens, both ]`
+   
+`[GET] /timestamp` or `[GET] /ts`  
+
+Returns the timestamp of the latest available image  
+ - __return__:  
+   `{timestamp: timestamp}`
 
 `[GET] /running`
 
 Whether the camera is running or not
+ - __return__:  
+   `[ true, false ]`
 
 
 > TODO Phase 2
@@ -124,7 +153,16 @@ Whether the camera is running or not
 > Whether the camera can run now
 > For now : True all the time
 
-TODO : Websocket communication : `/picture_available`
+### WEBSOCKET
+Websocket communication : `/newImage`  
+ - __data__:
+   ```
+   {
+    timestamp: timestamp,
+    pic_type: plain/corners/lens/both
+   }
+   ```
+
 
 ### OctoPrint Events
 
@@ -173,3 +211,5 @@ After calibration, the relevant paramters should be written to a config file. (L
 As a plugin, all of the calibration values can be written into the octoprint `config.yaml` file, but it could burden the size of that config and cause performance issues.
 
 It is best to keep the calibration configuration separate, as that one shouldn't change much over time. Therefore we can keep the current files in `.octoprint/cam/`
+
+
