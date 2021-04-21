@@ -310,7 +310,6 @@ class CameraPlugin(
                 filepath = "static/img/calibration/undistorted_ok.jpg"
             # returns the next avaiable image
             return send_file_b64(filepath)
-            return flask.send_file(
         else:
             # TODO return correct raw image
             return flask.send_file(self.get_picture(PIC_PLAIN), which, mimetype="image/jpg")
