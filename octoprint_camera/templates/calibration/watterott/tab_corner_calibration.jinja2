@@ -30,7 +30,7 @@
 </svg>
 <div>
     <div style="margin-bottom:1em;">
-        <a class="accordion-toggle" data-bind="click:calibration.loadUndistortedPicture, visible: !cornerCalibrationActive()"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
+        <a class="accordion-toggle" data-bind="click:camera.loadPictureRaw, visible: !cornerCalibrationActive()"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
         <div class="marker_selection_desc calibration_waiting_for_picture"
              data-bind="visible: !cornerCalibrationActive()">
             <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['NW'] }"><i class="icon-ok"></i> NW</div>

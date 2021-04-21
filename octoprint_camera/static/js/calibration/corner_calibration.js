@@ -6,7 +6,7 @@
  */
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
-const DEFAULT_IMG_RES = [2048, 1536];
+const DEFAULT_IMG_RES = [500, 390];
 const CROPPED_IMG_RES = [500, 390];
 const LOADING_IMG_RES = [512, 384];
 
