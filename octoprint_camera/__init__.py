@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function, unicode_literals, division
+import base64
 import flask
 from flask import jsonify
 import os
@@ -20,6 +21,7 @@ from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_
 from .__version import __version__
 from .camera import CameraThread
 from .util import logme, logExceptions, image
+from .util.flask import send_file_b64
 
 
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
@@ -186,7 +188,6 @@ class CameraPlugin(
                 "js/calibration/watterott/camera_alignment.js",
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
-                "",
             ],
             css=[
                 "css/calibration_qa.css",
@@ -238,6 +239,7 @@ class CameraPlugin(
     # Returns the latest available image to diplay on the interface
     @octoprint.plugin.BlueprintPlugin.route("/image", methods=["GET"])
     def getImage(self):
+        # FIXME : Divergence between raw jpg image and b64 encoded image.
         values = flask.request.values
         if not values.get("type", None) in WHICH:
             return flask.make_respone("type should be a selection of {}".format(WHICH), 403)
@@ -249,30 +251,31 @@ class CameraPlugin(
                 # returns the next avaiable image
                 filepath = "static/img/calibration/undistorted_bad1.jpg"
             else:
-                # get random file for test
-                f = []
-                for root, dirs, files in os.walk(
-                    os.path.join(os.path.dirname(__file__), "static/img/calibration")
-                ):
-                    for filename in files:
-                        f.append(filename)
-                randomfilenumber = randint(0, len(f) - 1)
-                filepath = path.join("static/img/calibration", f[randomfilenumber])
+                # # get random file for test
+                # f = []
+                # for root, dirs, files in os.walk(
+                #     os.path.join(os.path.dirname(__file__), "static/img/calibration")
+                # ):
+                #     for filename in files:
+                #         f.append(filename)
+                # randomfilenumber = randint(0, len(f) - 1)
+                # filepath = path.join("static/img/calibration", f[randomfilenumber])
+                filepath = "static/img/calibration/qa_final_rectangle.jpg"
+            return send_file_b64(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    filepath,
+                )
+            )
         else:
             # TODO return correct image
             return flask.send_file(self.get_picture(PIC_BOTH), mimetype="image/jpg")
 
-        # Find the correct filetype from the file extension
-        filetype = filepath.split(".")[-1]
-        self._logger.debug("selected file " + filepath + " ending " + filetype)
-        if filetype == "svg":
-            filetype = "svg+xml"
-        return flask.send_file(
-            os.path.join(
-                os.path.dirname(__file__),
-                filepath,
-            ),
-            mimetype="image/" + filetype,
+    # send plugin message via websocket to inform frontend about new image, with timestamp
+    def _informFrontend(self):
+        self._plugin_manager.send_plugin_message(
+            "camera",
+            dict(newImage=time.time()),
         )
 
     # Returns the latest unprocessed image from the camera
@@ -287,20 +290,30 @@ class CameraPlugin(
             # Return a static image
             # returns the next avaiable image
             if which == "next":
+                # TODO return correct raw image
+                # get random file for test
+                f = []
+                for root, dirs, files in os.walk(
+                    os.path.join(os.path.dirname(__file__), "static/img/calibration")
+                ):
+                    for filename in files:
+                        if filename.split(".")[-1] == "jpg":
+                            f.append(filename)
+
+                # return file
+                filepath = os.path.join(
+                    os.path.dirname(__file__), "static/img/calibration", f[randint(0, len(f) - 1)]
+                )
+
                 filepath = "static/img/calibration/undistorted_bad1.jpg"
             else:
                 filepath = "static/img/calibration/undistorted_ok.jpg"
+            # returns the next avaiable image
+            return send_file_b64(filepath)
             return flask.send_file(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    filepath,
-                ),
-                mimetype="image/jpg",
-            )
         else:
             # TODO return correct raw image
             return flask.send_file(self.get_picture(PIC_PLAIN), mimetype="image/jpg")
-        # returns the currently avaiable image
 
     # Returns the timestamp of the latest available image
     @octoprint.plugin.BlueprintPlugin.route("/timestamp", methods=["GET"])
