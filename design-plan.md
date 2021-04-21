@@ -92,30 +92,39 @@ Most of the communication with the camera plugin could be done with a RESTish (!
 Each request can yield an error message `{error: <error message>, errcode: <error code>}`
 
 `[GET] /image`
-`{type: "available"/"next"}`
+`{which: "available"/"next", pic_type: "plain"/corners/lens/both}`
 
 Returns the latest available image to diplay on the interface
 
-`[GET] /image_raw`
-`{type: "available"/"next"}`
+Picture Type:
+`plain` : No corrections, just the picture taken by the camera
+`corners` : Adjust the image such that it corresponds to real-world coordinates (mapping the corner areas)
+`lens`: Adjust the lens distortion
+`both`: Do both the corners and lens corretcion
 
-Returns the latest unprocessed image from the camera
+Should return err msg if the picture cannot be processed ...
+
+`[GET] /available_corrections`
+
+Return the list of possible images:
+possible returns: `[ plain, corners, lens, both ]`
 
 `[GET] /timestamp` or `[GET] /ts`
+`{pic_type: "plain"/corners/lens/both}`
 
 Returns the timestamp of the latest available image
-
-`[GET] /timestamp_raw` or `[GET] /ts_raw`
-
-Returns the timestamp of the latest "raw" image
 
 `[GET] /running`
 
 Whether the camera is running or not
 
-`[GET] /available`
 
-Whether the camera can run now
+> TODO Phase 2
+> `[GET] /available`
+> Whether the camera can run now
+> For now : True all the time
+
+TODO : Websocket communication : `/picture_available`
 
 ### OctoPrint Events
 
