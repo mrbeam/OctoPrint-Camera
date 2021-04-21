@@ -56,14 +56,14 @@ class CameraPlugin(
 
     ##~~ StartupPlugin mixin
 
-    def on_after_startup(self):
+    def on_after_startup(self, *a, **kw):
         self.camera_thread = CameraThread(self._settings, debug=self._settings.get(['debug']))
         # TODO stage 2 - Only start the camera when required
         self.camera_thread.start()
 
     ##~~ ShutdownPlugin mixin
 
-    def on_shutdown(self):
+    def on_shutdown(self, *a, **kw):
         if self.camera_thread:
             self.camera_thread.stop()
         self._logger.debug("Camera thread joined")
@@ -119,25 +119,25 @@ class CameraPlugin(
             ),
         )
 
-    def on_settings_initialized(self):
+    # def on_settings_initialized(self):
         # shadow the lens settings and save them as a .npz file
-        self.__lens_datafile = self._settings.get(['lens_datafile'], "")
-        try:
-            self.__lens_settings = np.load(self.__lens_datafile)
-        except IOError:
-            self.__lens_settings = {}
-        # shadow the pink circle history settings - they are in a separate .yaml file
-        self.__corners_hist_datafile = self._settings.get(['corners', 'history_datafile'], "")
-        try:
-            self.__corners_hist_settings = np.load(self.__corners_hist_datafile)
-        except IOError:
-            self.__corners_hist_settings = {}
+        # self.__lens_datafile = self._settings.get(['lens_datafile'], "")
+        # try:
+        #     self.__lens_settings = np.load(self.__lens_datafile)
+        # except IOError:
+        #     self.__lens_settings = {}
+        # # shadow the pink circle history settings - they are in a separate .yaml file
+        # self.__corners_hist_datafile = self._settings.get(['corners', 'history_datafile'], "")
+        # try:
+        #     self.__corners_hist_settings = np.load(self.__corners_hist_datafile)
+        # except IOError:
+        #     self.__corners_hist_settings = {}
         # update self._settings to have the shadow values available
         # self._settings.set([], self._merge_shadow_settings({}))
 
     def on_settings_load(self):
         # include the shadow settings into the complete settings
-		return self._merge_shadow_settings(
+        return self._merge_shadow_settings(
             dict(octoprint.plugin.SettingsPlugin.on_settings_load(self))
         )
 
@@ -153,7 +153,7 @@ class CameraPlugin(
                 corners=dict(history=self.__corners_hist_settings),
                 # lens=self.__lens_settings
             ),
-		    data,
+            data,
         )
 
     def _remove_shadow_settings(self, data):

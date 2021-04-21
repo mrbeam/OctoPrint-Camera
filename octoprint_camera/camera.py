@@ -25,6 +25,7 @@ class CameraThread(object):
         self.latest_img_timestamp = None
 
     def start(self):
+        self._logger.info("Starting camera Thread")
         if self._thread:
             self._thread.start()
         else:
