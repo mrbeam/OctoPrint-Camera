@@ -269,7 +269,7 @@ class CameraPlugin(
             )
         else:
             # TODO return correct image
-            return flask.send_file(self.get_picture(PIC_BOTH), mimetype="image/jpg")
+            return flask.send_file(self.get_picture(PIC_BOTH), which, mimetype="image/jpg")
 
     # send plugin message via websocket to inform frontend about new image, with timestamp
     def _informFrontend(self):
@@ -305,7 +305,7 @@ class CameraPlugin(
                     os.path.dirname(__file__), "static/img/calibration", f[randint(0, len(f) - 1)]
                 )
 
-                filepath = "static/img/calibration/undistorted_bad1.jpg"
+                # filepath = "static/img/calibration/undistorted_bad1.jpg"
             else:
                 filepath = "static/img/calibration/undistorted_ok.jpg"
             # returns the next avaiable image
@@ -313,7 +313,7 @@ class CameraPlugin(
             return flask.send_file(
         else:
             # TODO return correct raw image
-            return flask.send_file(self.get_picture(PIC_PLAIN), mimetype="image/jpg")
+            return flask.send_file(self.get_picture(PIC_PLAIN), which, mimetype="image/jpg")
 
     # Returns the timestamp of the latest available image
     @octoprint.plugin.BlueprintPlugin.route("/timestamp", methods=["GET"])
