@@ -97,7 +97,7 @@ $(function () {
                         Accept: "application/json; charset=utf-8",
                         "Content-Type": "application/json; charset=utf-8",
                     },
-                    data: JSON.stringify(data),
+                    data: data,
                     dataType: "text",
                     success: successCallback,
                     error: errorCallback,

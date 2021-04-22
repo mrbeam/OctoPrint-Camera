@@ -2,7 +2,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import base64
 import flask
-from flask import jsonify
+from flask import jsonify, request
+import io
+import json
 import os
 from os import path
 from random import randint
@@ -22,7 +24,7 @@ from .__version import __version__
 from .camera import CameraThread
 from .util import logme, logExceptions, image
 from .util.flask import send_file_b64
-
+from . import corners, lens
 
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
 PIC_PLAIN = "plain" # The equivalent of "raw" pictures
@@ -205,6 +207,7 @@ class CameraPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
     # @calibration_tool_mode_only
+    @logExceptions
     def calibration_wrapper(self):
         from flask import make_response, render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
@@ -225,14 +228,14 @@ class CameraPlugin(
             e="null",
             gcodeThreshold=0,  # legacy
             gcodeMobileThreshold=0,  # legacy
-            get_img=dict(
+            get_img=json.dumps(dict(
                 last = LAST,
                 next = NEXT,
                 pic_plain=PIC_PLAIN,
                 pic_corner=PIC_CORNER,
                 pic_lens=PIC_LENS,
                 pic_both=PIC_BOTH,
-                pic_types=PIC_TYPES,),
+                pic_types=PIC_TYPES,)),
         )
 
         r = make_response(
@@ -246,17 +249,17 @@ class CameraPlugin(
 
     # Returns the latest available image to diplay on the interface
     @octoprint.plugin.BlueprintPlugin.route("/image", methods=["GET"])
+    @logExceptions
     def getImage(self):
         # FIXME : Divergence between raw jpg image and b64 encoded image.
-        values = flask.request.values
-        which=values.get("which")
+        values = request.values
+        which=values.get("which", "something else")
         if not which in WHICH:
-            return flask.make_response("type should be a selection of {}, not {}".format(WHICH, which), 403)
+            return flask.make_response("type should be a selection of {}, not {}".format(WHICH, which), 405)
         pic_type = values.get("pic_type")
-        if not pic_type in PIC_TYPE:
-            return flask.make_response("type should be a selection of {}, not {}".format(PIC_TYPE, pic_type), 403)
-
-        if self._settings.get(['debug'], False):
+        if not pic_type in PIC_TYPES:
+            return flask.make_response("type should be a selection of {}, not {}".format(PIC_TYPES, pic_type), 407)
+        if self._settings.get(['debug']):
             # Return a static image
             if which == "next":
                 # returns the next avaiable image
@@ -294,18 +297,21 @@ class CameraPlugin(
     # Returns the timestamp of the latest available image
     @octoprint.plugin.BlueprintPlugin.route("/timestamp", methods=["GET"])
     @octoprint.plugin.BlueprintPlugin.route("/ts", methods=["GET"])
+    @logExceptions
     def getTimestamp(self):
         data = {"timestamp": time.time() - 5 * 60}  # TODO return correct timestamp
         return jsonify(data)
 
     # Whether the camera is running or not
     @octoprint.plugin.BlueprintPlugin.route("/running", methods=["GET"])
+    @logExceptions
     def getRunningState(self):
         data = {"running": True}  # TODO return correct state
         return jsonify(data)
 
     # return whether the camera can run now
     @octoprint.plugin.BlueprintPlugin.route("/available", methods=["GET"])
+    @logExceptions
     def getAvailableState(self):
         data = {"available": True}  # TODO return correct available state
         return jsonify(data)
@@ -314,7 +320,7 @@ class CameraPlugin(
     ##~~ Camera Plugin
 
     @logExceptions
-    def get_picture(pic_type="plain", which="last", settings_corners=dict(), settings_lens=dict()):
+    def get_picture(self, pic_type="plain", which="last", settings_corners=dict(), settings_lens=dict()):
         """Returns a jpg picture which can be corrected for
         - lens distortion,
         - Real world coordinates
@@ -375,11 +381,11 @@ class CameraPlugin(
 
     def start_lens_calibration_daemon(self):
         """Start the Lens Calibration"""
-        from .lens import BoardDetectionDaemon
+        from .lens import BoardDetectorDaemon
         if self.lens_calibration_thread:
             self.lens_calibration_thread.start()
         else:
-            self.lens_calibration_thread = BoardDetectionDaemon()
+            self.lens_calibration_thread = BoardDetectorDaemon()
             self.lens_calibration_thread.start()
 
     def stop_lens_calibration(self, blocking=True):
@@ -408,6 +414,8 @@ def __plugin_load__():
                 "corewizard",
                 "octopi_support",
                 "mrbeam",
+                "mrbeamdoc",
+                "virtual_printer",
             ]  # accepts dict | pfad.yml | callable
         ),
         appearance=dict(
