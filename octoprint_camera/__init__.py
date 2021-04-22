@@ -137,39 +137,39 @@ class CameraPlugin(
         # update self._settings to have the shadow values available
         # self._settings.set([], self._merge_shadow_settings({}))
 
-    def on_settings_load(self):
-        # include the shadow settings into the complete settings
-        return self._merge_shadow_settings(
-            dict(octoprint.plugin.SettingsPlugin.on_settings_load(self))
-        )
+    # def on_settings_load(self):
+    #     # include the shadow settings into the complete settings
+    #     return self._merge_shadow_settings(
+    #         dict(octoprint.plugin.SettingsPlugin.on_settings_load(self))
+    #     )
 
-    def on_settings_save(self, data):
-        return octoprint.plugin.SettingsPlugin.on_settings_save(
-            self,
-            self._remove_shadow_settings(data)
-        )
+    # def on_settings_save(self, data):
+    #     return octoprint.plugin.SettingsPlugin.on_settings_save(
+    #         self,
+    #         self._remove_shadow_settings(data)
+    #     )
 
-    def _merge_shadow_settings(self, data):
-        return dict_merge(
-            dict(
-                corners=dict(history=self.__corners_hist_settings),
-                # lens=self.__lens_settings
-            ),
-            data,
-        )
+    # def _merge_shadow_settings(self, data):
+    #     return dict_merge(
+    #         dict(
+    #             corners=dict(history=self.__corners_hist_settings),
+    #             # lens=self.__lens_settings
+    #         ),
+    #         data,
+    #     )
 
-    def _remove_shadow_settings(self, data):
-        """Save the shadow settings and remove them from `data` *in place*"""
-        # mega ugly, needs to be made properly with something
-        # like `dict_map_paths(paths, func=lambda x: del x, data)`
-        self.__lens_settings = dict_merge(self.__lens_settings, data.get('lens', {}))
-        # if 'lens' in data:
-        #     del data['lens']
-        if 'corners' in data and isinstance(data['corners'], dict):
-            self.__corners_hist_settings = dict_merge(self.__corners_hist_settings,
-                                                    data['corners'].get('history'), {})
-            if 'history' in data['corners']:
-                del data['corners']['history']
+    # def _remove_shadow_settings(self, data):
+    #     """Save the shadow settings and remove them from `data` *in place*"""
+    #     # mega ugly, needs to be made properly with something
+    #     # like `dict_map_paths(paths, func=lambda x: del x, data)`
+    #     self.__lens_settings = dict_merge(self.__lens_settings, data.get('lens', {}))
+    #     # if 'lens' in data:
+    #     #     del data['lens']
+    #     if 'corners' in data and isinstance(data['corners'], dict):
+    #         self.__corners_hist_settings = dict_merge(self.__corners_hist_settings,
+    #                                                 data['corners'].get('history'), {})
+    #         if 'history' in data['corners']:
+    #             del data['corners']['history']
 
 
     ##~~ TemplatePlugin mixin
@@ -285,7 +285,11 @@ class CameraPlugin(
             )
         else:
             # TODO return correct image
-            return send_file_b64(self.get_picture(pic_type, which))
+            image = self.get_picture(pic_type, which)
+            if image:
+                return send_file_b64(image)
+            else:
+                return flask.make_response("No image available (yet).", 404)
 
     # send plugin message via websocket to inform frontend about new image, with timestamp
     def _informFrontend(self):
@@ -319,7 +323,6 @@ class CameraPlugin(
 
     ##~~ Camera Plugin
 
-    @logExceptions
     def get_picture(self, pic_type="plain", which="last", settings_corners=dict(), settings_lens=dict()):
         """Returns a jpg picture which can be corrected for
         - lens distortion,
@@ -340,8 +343,9 @@ class CameraPlugin(
             img_jpg = self.camera_thread.get_next_img()
         else:
             raise Exception("We shouldn't be here, huhoo..")
-
-        if not (do_corners or do_lens):
+        
+        if not (img_jpg or do_corners or do_lens):
+            # Will return if the image is None
             return img_jpg, {}
         # Work is done on a numpy version of the image
         img = image.imdecode(img_jpg)
@@ -349,10 +353,11 @@ class CameraPlugin(
         if do_corners:
             positions_pink_circles = corners.find_pink_circles(img, **settings)
             # settings_corners = plugin._settings.get(['corners'], {})
-            positions_pink_circles = reduce(dict_merge,
-                self._settings.get(['corners', 'factory'], {}),
-                self._settings.get(['corners', 'history'], {}),
-                positions_pink_circles
+            positions_pink_circles = reduce(dict_merge, [
+                    self._settings.get(['corners', 'factory']) or {},
+                    self._settings.get(['corners', 'history']) or {},
+                    positions_pink_circles,
+                ]
             )
             positions_workspace_corners = corners.get_workspace_corners(positions_pink_circles, **settings)
         else:

@@ -60,7 +60,11 @@ class CameraThread(object):
 
     def get_latest_img(self):
         # TODO read locks
-        return self._cam.worker[1]
+        if self._cam:
+            return self._cam.worker[1]
+        else:
+            self._logger.warning("Camera not initalised, cannot return an image")
+            return None
 
     def get_next_img(self):
         self._cam.wait()
