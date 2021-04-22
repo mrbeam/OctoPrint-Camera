@@ -264,15 +264,11 @@ $(function () {
         self.startCornerCalibration = function () {
             // self.analytics.send_fontend_event("corner_calibration_start", {});//todo enable analytic
             self.cornerCalibrationActive(true);
-            self.picType("plain");
-            // self.applySetting('lens_corrected')
-            self._cornerCalImgUrl(self._getImgUrl("plain", true));
+            self.picType(GET_IMG.plain);
+            self._cornerCalImgUrl(self._getImgUrl(GET_IMG.plain, true));
             self.markersFoundPositionCopy = self.markersFoundPosition();
             self.nextMarker();
 
-            $("#settingsTabs").one("click", function () {
-                self.abortCornerCalibration();
-            });
         };
 
         self.abortCornerCalibration = function () {

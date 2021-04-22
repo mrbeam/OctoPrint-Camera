@@ -125,9 +125,9 @@ $(function () {
             if ( which == null )
                 which = GET_IMG.latest
             if ( pic_type == null )
-                pic_type = GET_IMG.plain
+                pic_type = GET_IMG.pic_plain
             let success_callback = function (data) {
-                if (pic_type == GET_IMG.plain)
+                if (pic_type == GET_IMG.pic_plain)
                     self.rawUrl('data:image/jpg;base64,'+data);
                 else
                     self.croppedUrl('data:image/jpg;base64,'+data);
@@ -311,26 +311,26 @@ $(function () {
         //     img.attr({src: myImageUrl});
         // };
 
-        self.getTimestampedImageUrl = function (url) {
-            var result = undefined;
-            if (url) {
-                result = url;
-            } else if (self.croppedUrl()) {
-                result = self.croppedUrl();
-            }
-            if (result) {
-                if (result.match(/(\?|&)ts=/))
-                    result = result.replace(
-                        /(\?|&)ts=[0-9]+/,
-                        "$1ts=" + new Date().getTime()
-                    );
-                else {
-                    result += result.lastIndexOf("?") > -1 ? "&ts=" : "?ts=";
-                    result += new Date().getTime();
-                }
-            }
-            return result;
-        };
+        // self.getTimestampedImageUrl = function (url) {
+        //     var result = undefined;
+        //     if (url) {
+        //         result = url;
+        //     } else if (self.croppedUrl()) {
+        //         result = self.croppedUrl();
+        //     }
+        //     if (result) {
+        //         if (result.match(/(\?|&)ts=/))
+        //             result = result.replace(
+        //                 /(\?|&)ts=[0-9]+/,
+        //                 "$1ts=" + new Date().getTime()
+        //             );
+        //         else {
+        //             result += result.lastIndexOf("?") > -1 ? "&ts=" : "?ts=";
+        //             result += new Date().getTime();
+        //         }
+        //     }
+        //     return result;
+        // };
 
         // self.send_camera_image_to_analytics = function () {
         //     if (self.loginState.loggedIn()) {

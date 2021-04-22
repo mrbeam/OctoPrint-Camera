@@ -172,9 +172,9 @@ $(function () {
                 "GET"
             );
 
-            $("#settingsTabs").one("click", function () {
-                self.abortLensCalibration();
-            });
+            // $("#settingsTabs").on("click", function () {
+            //     self.abortLensCalibration();
+            // });
         };
 
         self.runLensCalibration = function () {
