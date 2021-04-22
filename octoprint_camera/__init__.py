@@ -282,7 +282,7 @@ class CameraPlugin(
             )
         else:
             # TODO return correct image
-            return flask.send_file(self.get_picture(pic_type), which, mimetype="image/jpg")
+            return send_file_b64(self.get_picture(pic_type, which))
 
     # send plugin message via websocket to inform frontend about new image, with timestamp
     def _informFrontend(self):
