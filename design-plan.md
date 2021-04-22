@@ -1,6 +1,6 @@
 # Camera Plugin
 
-##TODO Josef:
+## TODO Josef:
 - binding to disable plugin (Mrbeam plugin) to test for watterot (_disabled init.py file) maybe in config.yaml
 - add new classes to plugin - ui to take over ui, iobeam/iobeamhandler for button press
 - make lock when save image to save for write read error
@@ -10,6 +10,10 @@
 - restapi to get image
 - call to get images as soon as new image avaiable
 - Camera thread to take pictures, save and serve
+
+#### Problems so far
+
+- The frontend is not declarative enough
 
 
 ## Objective
@@ -114,13 +118,13 @@ Should return err msg if the picture cannot be processed ...
 `lens`: Adjust the lens distortion  
 `both`: Do both the corners and lens correction 
 
- - __return__:
-   ```
-   {
-    image: <base64>,
-    timestamp: <timestamp>
-   }
-   ```
+- __return__:
+  ```
+  {
+   image: <base64>,
+   timestamp: <timestamp>
+  }
+  ```
 - __error__:
   ```
   {

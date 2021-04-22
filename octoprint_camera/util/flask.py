@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
+import flask
 
 def send_file_b64(item):
     if isinstance(item, str):
