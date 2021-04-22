@@ -16,7 +16,7 @@
             </defs>
             <g data-bind="attr: { transform: camera.zObjectImgTransform()}">
                 <image style="filter: url(#contrast2)"
-                       data-bind="attr: {href: camera.availablePicUrl()['cropped'],
+                       data-bind="attr: {src: camera.croppedUrl,
                                   width:cornerCalibration.calImgWidth(), height:cornerCalibration.calImgHeight()}" />
             </g>
             <path d="M 398.5,300 L 101.5,300 L 101.5,90 L 398.5,90 L 398.5,300"

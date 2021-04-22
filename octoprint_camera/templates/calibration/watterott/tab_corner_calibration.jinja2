@@ -46,15 +46,15 @@
 <div data-bind="visible: !cornerCalibrationActive()" width="100%">
     <div style="margin-top:1em;">
         <button class="btn btn-default"
-                data-bind="visible: calImgReady() && !cornerCalibrationComplete() && !camera.availablePic()['cropped'], click: startCornerCalibration">
+                data-bind="visible: calImgReady() && !cornerCalibrationComplete() && !camera.availablePicTypes.corners, click: startCornerCalibration">
             {{ _('Start Corner Calibration') }}
         </button>
     </div>
-    <div data-bind="visible: cornerCalibrationComplete() && !camera.availablePic()['cropped']" >
+    <div data-bind="visible: cornerCalibrationComplete() && !camera.availablePicTypes.corners()" >
         <i class="icon icon-spinner icon-spin" style="font-weight: bold"></i>
         <span>&nbsp; {{  _('Loading image...') }}</span>
     </div>
-    <div class="qa_list_and_next" data-bind="visible: camera.availablePic()['cropped']">
+    <div class="qa_list_and_next" data-bind="visible: camera.availablePicTypes.corners">
         <h4>{{ _('Checklist') }}:</h4>
         <ul>
             <li>{{ _('The 4 arrows are aligned with the blue crosses') }}</li>
@@ -73,7 +73,7 @@
         </div>
 
     </div>
-    <div id="corner_calibration_debug" data-bind="visible: window.mrbeam.isWatterottMode() ">
+    <div id="corner_calibration_debug" data-bind="visible: window.mrbeam.isFactoryMode() ">
         <div>
             <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
             <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>

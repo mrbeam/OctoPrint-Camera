@@ -92,7 +92,7 @@ class CameraPlugin(
                 # },
                 # saveCorrectionDebugImages=False,
                 # markerRecognitionMinPixel=MIN_MARKER_PIX,
-                # remember_markers_across_sessions=True,
+                remember_markers_across_sessions=True,
             ),
             # The list of options that usually get saved to pic_settings.yaml
             # TODO : migration : Get values from _getCamParams
@@ -225,6 +225,14 @@ class CameraPlugin(
             e="null",
             gcodeThreshold=0,  # legacy
             gcodeMobileThreshold=0,  # legacy
+            get_img=dict(
+                last = LAST,
+                next = NEXT,
+                pic_plain=PIC_PLAIN,
+                pic_corner=PIC_CORNER,
+                pic_lens=PIC_LENS,
+                pic_both=PIC_BOTH,
+                pic_types=PIC_TYPES,),
         )
 
         r = make_response(
@@ -241,56 +249,19 @@ class CameraPlugin(
     def getImage(self):
         # FIXME : Divergence between raw jpg image and b64 encoded image.
         values = flask.request.values
-        if not values.get("type", None) in WHICH:
-            return flask.make_respone("type should be a selection of {}".format(WHICH), 403)
+        which=values.get("which")
+        if not which in WHICH:
+            return flask.make_response("type should be a selection of {}, not {}".format(WHICH, which), 403)
+        pic_type = values.get("pic_type")
+        if not pic_type in PIC_TYPE:
+            return flask.make_response("type should be a selection of {}, not {}".format(PIC_TYPE, pic_type), 403)
 
-        which=values['type']
         if self._settings.get(['debug'], False):
             # Return a static image
             if which == "next":
                 # returns the next avaiable image
                 filepath = "static/img/calibration/undistorted_bad1.jpg"
             else:
-                # # get random file for test
-                # f = []
-                # for root, dirs, files in os.walk(
-                #     os.path.join(os.path.dirname(__file__), "static/img/calibration")
-                # ):
-                #     for filename in files:
-                #         f.append(filename)
-                # randomfilenumber = randint(0, len(f) - 1)
-                # filepath = path.join("static/img/calibration", f[randomfilenumber])
-                filepath = "static/img/calibration/qa_final_rectangle.jpg"
-            return send_file_b64(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    filepath,
-                )
-            )
-        else:
-            # TODO return correct image
-            return flask.send_file(self.get_picture(PIC_BOTH), which, mimetype="image/jpg")
-
-    # send plugin message via websocket to inform frontend about new image, with timestamp
-    def _informFrontend(self):
-        self._plugin_manager.send_plugin_message(
-            "camera",
-            dict(newImage=time.time()),
-        )
-
-    # Returns the latest unprocessed image from the camera
-    @octoprint.plugin.BlueprintPlugin.route("/imageRaw", methods=["GET"])
-    def getRawImage(self):
-        values = flask.request.values
-        if not values.get("type", None) in WHICH:
-            return flask.make_respone("type should be a selection of {}".format(WHICH), 403)
-
-        which=values['type']
-        if self._settings.get(['debug'], False):
-            # Return a static image
-            # returns the next avaiable image
-            if which == "next":
-                # TODO return correct raw image
                 # get random file for test
                 f = []
                 for root, dirs, files in os.walk(
@@ -299,33 +270,32 @@ class CameraPlugin(
                     for filename in files:
                         if filename.split(".")[-1] == "jpg":
                             f.append(filename)
-
-                # return file
                 filepath = os.path.join(
                     os.path.dirname(__file__), "static/img/calibration", f[randint(0, len(f) - 1)]
                 )
-
-                # filepath = "static/img/calibration/undistorted_bad1.jpg"
-            else:
-                filepath = "static/img/calibration/undistorted_ok.jpg"
-            # returns the next avaiable image
-            return send_file_b64(filepath)
+                # filepath = "static/img/calibration/qa_final_rectangle.jpg"
+            return send_file_b64(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    filepath,
+                )
+            )
         else:
-            # TODO return correct raw image
-            return flask.send_file(self.get_picture(PIC_PLAIN), which, mimetype="image/jpg")
+            # TODO return correct image
+            return flask.send_file(self.get_picture(pic_type), which, mimetype="image/jpg")
+
+    # send plugin message via websocket to inform frontend about new image, with timestamp
+    def _informFrontend(self):
+        self._plugin_manager.send_plugin_message(
+            "camera",
+            dict(newImage=time.time()),
+        )
 
     # Returns the timestamp of the latest available image
     @octoprint.plugin.BlueprintPlugin.route("/timestamp", methods=["GET"])
     @octoprint.plugin.BlueprintPlugin.route("/ts", methods=["GET"])
     def getTimestamp(self):
         data = {"timestamp": time.time() - 5 * 60}  # TODO return correct timestamp
-        return jsonify(data)
-
-    # Returns the timestamp of the latest "raw" image
-    @octoprint.plugin.BlueprintPlugin.route("/timestamp_raw", methods=["GET"])
-    @octoprint.plugin.BlueprintPlugin.route("/ts_raw", methods=["GET"])
-    def getTimestampRaw(self):
-        data = {"timestamp": time.time()}  # TODO return correct timestamp
         return jsonify(data)
 
     # Whether the camera is running or not

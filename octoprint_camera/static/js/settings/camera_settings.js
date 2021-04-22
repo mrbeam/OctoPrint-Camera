@@ -44,7 +44,7 @@ $(function () {
          */
         self.statusRawImageUrl = ko.computed(function () {
             return self.settingsActive() && self.cameraSettingsActive()
-                ? self.camera.availablePicUrl()["raw"]
+                ? self.camera.availablePicTypes.plain
                 : null;
         });
 
@@ -131,9 +131,9 @@ $(function () {
 
         self.markerDetectionMode = function () {
             // retrieve the detection mode from the back end
-            remember = self.settings.plugins.camera.cam.remember_markers_across_sessions();
+            remember = self.settings.plugins.camera.corrections.remember_markers_across_sessions;
             if (remember === undefined) return "reliable";
-            else return remember ? "reliable" : "accurate";
+            else return remember() ? "reliable" : "accurate";
         };
 
         self.setMarkerDetectionMode = function (val, event) {
@@ -146,7 +146,7 @@ $(function () {
                 // self.settings.plugins.mrbeam.cam.remember_markers_across_sessions(true);
                 let _data = {
                     cam: {
-                        remember_markers_across_sessions: val === "reliable",
+                        corrections: { remember_markers_across_sessions: val === "reliable",},
                     },
                 };
                 $("#camera_settings_marker_detection button").prop(
@@ -223,7 +223,7 @@ $(function () {
                 // Can only allow to start the lens calibration if
                 // it is dead
                 if (
-                    !window.mrbeam.isWatterottMode() &&
+                    !window.mrbeam.isFactoryMode() &&
                     self.loginState.loggedIn()
                 ) {
                     OctoPrint.simpleApiCommand(

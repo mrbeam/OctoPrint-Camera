@@ -82,7 +82,7 @@
     <div id="lensCalibrationQA">
         <div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
             <div class="qa_img_wrapper">
-                <image data-bind="attr: {src: camera.availablePicUrl()['lens_corrected']}" />
+                <image data-bind="attr: {src: camera.croppedUrl}" />
                 <div id="qa_undistorted_guides"></div>
             </div>
             <ul>

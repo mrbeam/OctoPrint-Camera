@@ -40,7 +40,7 @@ $(function () {
         ) {
             data = data || {};
             data.command = command;
-            if (window.mrbeam.isWatterottMode()) {
+            if (window.mrbeam.isFactoryMode()) {
                 $.ajax({
                     url: "/plugin/camera/" + command,
                     type: type, // POST, GET
