@@ -66,7 +66,7 @@ $(function () {
         });
 
         self.onStartupComplete = function () {
-            if (window.mrbeam.isWatterottMode()) {
+            if (window.mrbeam.isFactoryMode()) {
                 self._refreshPics();
                 $("#lenscal_tab_btn").click(function () {
                     self.startLensCalibration();

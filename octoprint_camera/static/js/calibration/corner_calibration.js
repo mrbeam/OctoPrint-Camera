@@ -6,7 +6,7 @@
  */
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
-const DEFAULT_IMG_RES = [2048, 1536];
+const DEFAULT_IMG_RES = [500, 390];
 const CROPPED_IMG_RES = [500, 390];
 const LOADING_IMG_RES = [512, 384];
 
@@ -105,9 +105,10 @@ $(function () {
         self.applySetting = function (picType, applyCrossVisibility) {
             // TODO with a dictionary
             let settings = [
-                ["cropped", CROPPED_IMG_RES, "hidden", "visible"],
-                ["lens_corrected", DEFAULT_IMG_RES, "hidden", "hidden"],
-                ["raw", DEFAULT_IMG_RES, "visible", "hidden"],
+                ["corners", CROPPED_IMG_RES, "hidden", "visible"],
+                ["both", CROPPED_IMG_RES, "hidden", "visible"],
+                ["lens", DEFAULT_IMG_RES, "hidden", "hidden"],
+                ["plain", DEFAULT_IMG_RES, "visible", "hidden"],
                 ["default", LOADING_IMG_RES, "hidden", "hidden"],
             ];
             for (let _t of settings)
@@ -132,13 +133,13 @@ $(function () {
             if (type !== undefined) {
                 self.applySetting(type, applyCrossVisibility);
                 if (type == "default") return self.staticURL;
-                else return self.camera.availablePicUrl()[type];
+                else return self.camera.availablePicTypes[type]();
             }
-            for (let _t of ["cropped", "lens_corrected", "raw", "default"])
-                if (_t === "default" || self.camera.availablePic()[_t]) {
+            for (let _t of GET_IMG.pic_types)
+                if (_t === "default" || self.camera.availablePicTypes[_t]()) {
                     self.applySetting(_t, applyCrossVisibility);
                     if (_t == "default") return self.staticURL;
-                    else return self.camera.availablePicUrl()[_t];
+                    else return self.camera.availablePicTypes[_t]();
                 }
             self.applySetting("default");
             return self.staticURL; // precaution
@@ -146,10 +147,10 @@ $(function () {
 
         self.cornerCalImgUrl = ko.computed(function () {
             if (!self.cornerCalibrationActive()) {
-                if (self.camera.availablePic()["cropped"]) {
-                    self._cornerCalImgUrl(self._getImgUrl("cropped", true));
+                if (self.camera.availablePicTypes.corners()) {
+                    self._cornerCalImgUrl(self._getImgUrl("corners", true));
                 } else {
-                    self._cornerCalImgUrl(self._getImgUrl("raw", true));
+                    self._cornerCalImgUrl(self._getImgUrl("plain", true));
                 }
             }
             return self._cornerCalImgUrl();
@@ -183,7 +184,7 @@ $(function () {
         });
 
         self.onStartupComplete = function () {
-            if (window.mrbeam.isWatterottMode()) {
+            if (window.mrbeam.isFactoryMode()) {
                 self.calibration.loadUndistortedPicture();
             }
         };
@@ -216,7 +217,7 @@ $(function () {
                     }
 
                     if (
-                        window.mrbeam.isWatterottMode() &&
+                        window.mrbeam.isFactoryMode() &&
                         (selectedTab === "cornercal_tab_btn" ||
                             self.calibration.waitingForRefresh())
                     ) {
@@ -263,9 +264,9 @@ $(function () {
         self.startCornerCalibration = function () {
             // self.analytics.send_fontend_event("corner_calibration_start", {});//todo enable analytic
             self.cornerCalibrationActive(true);
-            self.picType("raw");
+            self.picType("plain");
             // self.applySetting('lens_corrected')
-            self._cornerCalImgUrl(self._getImgUrl("raw", true));
+            self._cornerCalImgUrl(self._getImgUrl("plain", true));
             self.markersFoundPositionCopy = self.markersFoundPosition();
             self.nextMarker();
 

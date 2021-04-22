@@ -11,7 +11,6 @@ $(function () {
     function CalibrationViewModel(parameters) {
         let self = this;
         window.mrbeam.viewModels["calibrationViewModel"] = self;
-        console.log("this is a test");
         self.cameraSettings = parameters[0];
         self.camera = parameters[1];
         self.loginState = parameters[2];
@@ -41,7 +40,7 @@ $(function () {
         ) {
             data = data || {};
             data.command = command;
-            if (window.mrbeam.isWatterottMode()) {
+            if (window.mrbeam.isFactoryMode()) {
                 $.ajax({
                     url: "/plugin/camera/" + command,
                     type: type, // POST, GET

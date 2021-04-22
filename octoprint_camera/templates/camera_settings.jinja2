@@ -8,7 +8,7 @@
                 data-bind="css: cameraStatusOk() == true ? 'requirement-met' : 'requirement-not-met'">
                 {{ _("Status") }}
             </h4>
-            <div data-bind="visible: !camera.availablePic()['raw']">
+            <div data-bind="visible: !rawUrl()">
                 <p>{{ _("The camera is not able to take new pictures. Please check the following:") }}</p>
             </div>
 
@@ -33,7 +33,7 @@
                 </li>
             </ul>
 
-            <table class="camera-status-images" data-bind="visible: camera.availablePic()['raw']">
+            <table class="camera-status-images" data-bind="visible: camera.rawUrl()">
                 <tr>
                     <td>
                         <svg class="camera-picture" data-bind=" attr: { viewBox: camera.zoomViewBox(), } "
@@ -51,7 +51,7 @@
                                 </image>
                             </g>
                         </svg>
-                        <a data-bind="attr: { href: camera.availablePicUrl()['cropped'] }">
+                        <a data-bind="attr: { src: camera.croppedUrl() }">
                             <i class="fa fa-download" aria-hidden="true"></i>
                         </a>
                     </td>
@@ -90,7 +90,7 @@
                 closing_tag='</a>') }}
 
                 </div>
-                <small data-bind="visible: camera.availablePic()['raw']">
+                <small data-bind="visible: camera.availablePicTypes.plain">
                     <i class="fa fa-download"
                        aria-hidden="true"></i>: {{ _("You can use the download button on the images to save your camera picture and provide it to the support team, if necessary.") }}
                 </small>
