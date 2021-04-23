@@ -21,3 +21,22 @@ def imwrite(buff, cv2_img, *a, **kw):
     returns True if successful
     """
     return cv2.imwrite(buff, cv2_img, *a, **kw) == SUCCESS_WRITE_RETVAL
+
+def corner_settings_valid(settings):
+    from typing import Mapping
+    from octoprint_mrbeam.camera.config import is_corner_calibration
+    return (
+        isinstance(settings, Mapping) 
+        and is_corner_calibration(settings)
+    )
+
+def lens_settings_valid(settings):
+    #from octoprint_mrbeam.camera.config import  is_lens_calibration_file
+    from typing import Mapping
+    return (
+        isinstance(settings, Mapping) 
+        and all(k in settings.keys() for k in ("mtx", "dist"))
+    )
+
+class SettingsError(Exception):
+    pass
