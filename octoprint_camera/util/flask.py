@@ -37,7 +37,7 @@ def send_image(image, **kw):
         buf = base64.b64encode(image.read())
     response = flask.make_response(flask.jsonify(dict(
         image=buf,
-        **kw,
+        **kw
     )))
 
     response.headers["Content-Transfer-Encoding"] = "base64"
