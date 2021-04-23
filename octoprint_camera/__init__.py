@@ -394,14 +394,17 @@ class CameraPlugin(
             raise SettingsError("Corner settings invalid - provided settings: %s" % settings_corners)
         if do_lens and not lens_settings_valid(settings_lens):
             raise SettingsError("Lens settings invalid - provided settings: %s" % settings_lens)
-        if not (img_jpg and (do_corners or do_lens)):
-            # Will return if the image is None
-            return img_jpg, ts, {}
+        
         # Work is done on a numpy version of the image
         img = util.image.imdecode(img_jpg)
         settings = {}
+        positions_pink_circles = corners.find_pink_circles(img, debug=self.debug, **settings)
+
+        if not (img_jpg and (do_corners or do_lens)):
+            # Will return if the image is None
+            return img_jpg, ts, positions_pink_circles
+        
         if do_corners:
-            positions_pink_circles = corners.find_pink_circles(img, debug=self.debug, **settings)
             # settings_corners = plugin._settings.get(['corners'], {})
             positions_pink_circles = dict_merge(settings_corners, positions_pink_circles)
             positions_workspace_corners = corners.get_workspace_corners(positions_pink_circles, **settings)
@@ -411,12 +414,12 @@ class CameraPlugin(
             img = lens.undistort(img, **settings)
             if do_corners:
                 positions_workspace_corners = lens.undist_points(positions_workspace_corners, **settings)
-        if do_corners:
+        if do_corners and len(positions_workspace_corners) == 4:
             img = corners.fit_img_to_corners(img, positions_workspace_corners)
         # Write the modified image to a jpg binary
         buff = io.BytesIO()
         util.image.imwrite(buff, img)
-        return buff, ts, positions_workspace_corners
+        return buff, ts, positions_pink_circles
 
     def start_lens_calibration_daemon(self):
         """Start the Lens Calibration"""

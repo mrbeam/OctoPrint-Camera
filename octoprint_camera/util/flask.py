@@ -5,6 +5,10 @@ import time
 
 import flask
 import sys
+
+from octoprint_mrbeam.util.log import json_serialisor
+from octoprint_mrbeam.util import dict_map
+
 PY3 = sys.version_info >= (3,)
 _basestring = str if PY3 else basestring
 
@@ -35,9 +39,13 @@ def send_image(image, **kw):
             buf = base64.b64encode(fh.read())
     else:
         buf = base64.b64encode(image.read())
-    response = flask.make_response(flask.jsonify(dict(
-        image=buf,
-        **kw
+
+    response = flask.make_response(flask.jsonify(dict_map(
+        json_serialisor, 
+        dict(
+            image=buf,
+            **kw
+        )        
     )))
 
     response.headers["Content-Transfer-Encoding"] = "base64"
