@@ -268,7 +268,9 @@ class CameraPlugin(
         values = request.values
         which=values.get("which", "something else")
         if not which in WHICH:
-            return flask.make_response("type should be a selection of {}, not {}".format(WHICH, which), 405)
+            return flask.make_response(
+                "which should be a selection of {}, not {}".format(WHICH, which), 405
+            )
         pic_type = values.get("pic_type")
         if not pic_type in PIC_TYPES:
             return flask.make_response("type should be a selection of {}, not {}".format(PIC_TYPES, pic_type), 407)
@@ -295,7 +297,9 @@ class CameraPlugin(
                     os.path.dirname(__file__),
                     filepath,
                 ),
-                timestamp=time.time()
+                timestamp=time.time(),
+                pic_type=pic_type,
+                which=which,
             )
         else:
             # TODO return correct image
@@ -309,7 +313,13 @@ class CameraPlugin(
                 return flask.make_response("Wrong camera settings for the requested picture %s" % e, 500)
             else:
                 if image:
-                    return send_image(image, timestamp=timestamp, positions_found=positions_workspace_corners)
+                    return send_image(
+                        image, 
+                        timestamp=timestamp, 
+                        pic_type=pic_type, 
+                        which=which,
+                        positions_found=positions_workspace_corners,
+                    )
                 else:
                     return flask.make_response("No image available (yet).", 404)
 

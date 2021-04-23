@@ -100,7 +100,7 @@ $(function () {
                         "Content-Type": "application/json; charset=utf-8",
                     },
                     data: data,
-                    dataType: "text",
+                    dataType: "json",
                     success: successCallback,
                     error: errorCallback,
                 });
@@ -129,11 +129,10 @@ $(function () {
             if ( pic_type == null )
                 pic_type = GET_IMG.pic_plain
             let success_callback = function (data) {
-                let _data = JSON.parse(data)
                 if (pic_type == GET_IMG.pic_plain)
-                    self.rawUrl('data:image/jpg;base64,'+_data.image);
+                    self.rawUrl('data:image/jpg;base64,'+data.image);
                 else
-                    self.croppedUrl('data:image/jpg;base64,'+_data.image);
+                    self.croppedUrl('data:image/jpg;base64,'+data.image);
                 self.timestamp = _data.timestamp;
             };
 
