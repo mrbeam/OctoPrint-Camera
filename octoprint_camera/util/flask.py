@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function, unicode_literals, division
 import base64
+import time
+
 import flask
 import sys
 PY3 = sys.version_info >= (3,)
@@ -16,7 +18,12 @@ def send_file_b64(item):
             buf = base64.b64encode(fh.read())
     else:
         buf = base64.b64encode(item.read())
-    response = flask.make_response(buf)
+    response_data = {"image": buf, "timestamp": time.time()}
+    if which:
+        response_data.update({"which": which})
+    if pic_type:
+        response_data.update({"pic_type": pic_type})
+    response = flask.make_response(flask.jsonify(response_data))
     response.headers["Content-Transfer-Encoding"] = "base64"
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     return response

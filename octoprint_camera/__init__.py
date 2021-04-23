@@ -255,7 +255,9 @@ class CameraPlugin(
         values = request.values
         which=values.get("which", "something else")
         if not which in WHICH:
-            return flask.make_response("type should be a selection of {}, not {}".format(WHICH, which), 405)
+            return flask.make_response(
+                "which should be a selection of {}, not {}".format(WHICH, which), 405
+            )
         pic_type = values.get("pic_type")
         if not pic_type in PIC_TYPES:
             return flask.make_response("type should be a selection of {}, not {}".format(PIC_TYPES, pic_type), 407)
@@ -281,13 +283,15 @@ class CameraPlugin(
                 os.path.join(
                     os.path.dirname(__file__),
                     filepath,
-                )
+                ),
+                pic_type=pic_type,
+                which=which,
             )
         else:
             # TODO return correct image
             image = self.get_picture(pic_type, which)
             if image:
-                return send_file_b64(image)
+                return send_file_b64(image, pic_type=pic_type, which=which)
             else:
                 return flask.make_response("No image available (yet).", 404)
 
