@@ -31,7 +31,7 @@ from .camera import CameraThread
 # from .image import LAST, NEXT, WHICH, PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH, PIC_TYPES
 from .util import logme, logExceptions
 from .util.image import corner_settings_valid, lens_settings_valid, SettingsError
-from .util.flask import send_file_b64
+from .util.flask import send_image
 
 
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
@@ -290,11 +290,12 @@ class CameraPlugin(
                     os.path.dirname(__file__), "static/img/calibration", f[randint(0, len(f) - 1)]
                 )
                 # filepath = "static/img/calibration/qa_final_rectangle.jpg"
-            return send_file_b64(
+            return send_image(
                 os.path.join(
                     os.path.dirname(__file__),
                     filepath,
-                )
+                ),
+                timestamp=time.time()
             )
         else:
             # TODO return correct image
@@ -303,12 +304,12 @@ class CameraPlugin(
                 self._settings.get(['corners', 'history']) or {},
             )
             try:
-                image, positions_workspace_corners = self.get_picture(pic_type, which, settings_corners=corners)
+                image, timestamp, positions_workspace_corners = self.get_picture(pic_type, which, settings_corners=corners)
             except SettingsError as e:
                 return flask.make_response("Wrong camera settings for the requested picture %s" % e, 500)
             else:
                 if image:
-                    return send_file_b64(image)
+                    return send_image(image, timestamp=timestamp, positions_found=positions_workspace_corners)
                 else:
                     return flask.make_response("No image available (yet).", 404)
 
@@ -377,6 +378,7 @@ class CameraPlugin(
             img_jpg = self.camera_thread.get_next_img()
         else:
             raise Exception("We shouldn't be here, huhoo..")
+        ts = self.camera_thread.latest_img_timestamp
         
         if do_corners and not corner_settings_valid(settings_corners):
             raise SettingsError("Corner settings invalid - provided settings: %s" % settings_corners)
@@ -384,7 +386,7 @@ class CameraPlugin(
             raise SettingsError("Lens settings invalid - provided settings: %s" % settings_lens)
         if not (img_jpg and (do_corners or do_lens)):
             # Will return if the image is None
-            return img_jpg, {}
+            return img_jpg, ts, {}
         # Work is done on a numpy version of the image
         img = util.image.imdecode(img_jpg)
         settings = {}
@@ -404,7 +406,7 @@ class CameraPlugin(
         # Write the modified image to a jpg binary
         buff = io.BytesIO()
         util.image.imwrite(buff, img)
-        return buff, positions_workspace_corners
+        return buff, ts, positions_workspace_corners
 
     def start_lens_calibration_daemon(self):
         """Start the Lens Calibration"""

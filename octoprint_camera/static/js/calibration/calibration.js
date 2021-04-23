@@ -67,39 +67,6 @@ $(function () {
             }
         };
 
-        self.loadUndistortedPicture = function (callback) {
-            let success_callback = function (data) {
-                new PNotify({
-                    title: gettext("Picture requested"),
-                    text: data["msg"],
-                    type: "info",
-                    hide: true,
-                });
-                if (typeof callback === "function") callback(data);
-                else {
-                    self.waitingForRefresh(true);
-                    console.log("Calibration picture requested.");
-                }
-            };
-            let error_callback = function (resp) {
-                new PNotify({
-                    title: gettext(
-                        "Something went wrong. It's not you, it's us."
-                    ),
-                    text: resp.responseText,
-                    type: "warning",
-                    hide: true,
-                });
-                if (typeof callback === "function") callback(resp);
-            };
-            self.simpleApiCommand(
-                "take_undistorted_picture",
-                {},
-                success_callback,
-                error_callback
-            );
-        };
-
         self._showCalibrationTool = function () {
             $("#calibration_tool_content").show();
             $("#calibration_tool_loading_overlay").hide();

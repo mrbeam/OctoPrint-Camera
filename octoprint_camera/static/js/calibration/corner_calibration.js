@@ -64,7 +64,7 @@ $(function () {
 
         self.crossSize = ko.observable(30);
 
-        self._cornerCalImgUrl = ko.observable("");
+        self._cornerCalImgUrl = ko.observable(self.camera.rawUrl());
 
         self.calImgWidth = ko.observable(DEFAULT_IMG_RES[0]);
         self.calImgHeight = ko.observable(DEFAULT_IMG_RES[1]);
@@ -185,7 +185,7 @@ $(function () {
 
         self.onStartupComplete = function () {
             if (window.mrbeam.isFactoryMode()) {
-                self.calibration.loadUndistortedPicture();
+                self.camera.getImage();
             }
         };
 

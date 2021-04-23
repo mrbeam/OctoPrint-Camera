@@ -37,7 +37,9 @@ $(function () {
         };
 
 
+        // TODO : plainPicture = {data: <base 64 src>, timestamp: <timestamp>}
         self.rawUrl = ko.observable(""); ///downloads/files/local/cam/debug/raw.jpg// TODO get from settings
+        // TODO : bestPicture = {data: <base 64 src>, timestamp: <timestamp>}
         self.croppedUrl = ko.observable("");
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
@@ -127,10 +129,12 @@ $(function () {
             if ( pic_type == null )
                 pic_type = GET_IMG.pic_plain
             let success_callback = function (data) {
+                let _data = JSON.parse(data)
                 if (pic_type == GET_IMG.pic_plain)
-                    self.rawUrl('data:image/jpg;base64,'+data);
+                    self.rawUrl('data:image/jpg;base64,'+_data.image);
                 else
-                    self.croppedUrl('data:image/jpg;base64,'+data);
+                    self.croppedUrl('data:image/jpg;base64,'+_data.image);
+                self.timestamp = _data.timestamp;
             };
 
             let error_callback = function (resp) {
