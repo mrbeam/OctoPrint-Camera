@@ -8,7 +8,12 @@ Set of functions to transform a picture to conform with real world coordinates.
 from octoprint_mrbeam.camera.undistort import _getColoredMarkerPositions
 from octoprint_mrbeam.camera.corners import add_deltas, warpImgByCorners
 
-def find_pink_circles(img, **settings):
+# This path will change to be cornerNW.jpg etc...
+DEBUG_CORNERS_PATH="/tmp/corner.jpg"
+
+def find_pink_circles(img, debug=False, **settings):
+    if debug:
+        settings.update(dict(debug_out_path=DEBUG_CORNERS_PATH))
     return _getColoredMarkerPositions(img, **settings)
 
 def get_workspace_corners(positions_pink_circles, **settings):

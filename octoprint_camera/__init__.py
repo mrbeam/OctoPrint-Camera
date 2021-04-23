@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function, unicode_literals, division
+
 import base64
 import flask
 from flask import jsonify, request
@@ -9,7 +10,10 @@ import os
 from os import path
 from random import randint
 import socket
+import sys
 import time
+
+PY3 = sys.version_info >= (3,)
 
 import octoprint.plugin
 from octoprint.server.util.flask import add_non_caching_response_headers
@@ -19,12 +23,16 @@ from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
 from octoprint_mrbeam.camera.undistort import _getCamParams
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 
+import pkg_resources
+__version__ = pkg_resources.require("octoprint_camera")
 
-from .__version import __version__
+from . import corners, lens, util
 from .camera import CameraThread
-from .util import logme, logExceptions, image
+# from .image import LAST, NEXT, WHICH, PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH, PIC_TYPES
+from .util import logme, logExceptions
+from .util.image import corner_settings_valid, lens_settings_valid, SettingsError
 from .util.flask import send_file_b64
-from . import corners, lens
+
 
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
 PIC_PLAIN = "plain" # The equivalent of "raw" pictures
@@ -56,6 +64,9 @@ class CameraPlugin(
         self.__lens_datafile = None
         self.__lens_settings = {}
 
+        from octoprint.server import debug
+        self.debug = debug
+
     ##~~ StartupPlugin mixin
 
     def on_after_startup(self, *a, **kw):
@@ -75,11 +86,10 @@ class CameraPlugin(
     def get_settings_defaults(self):
         # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
         base_folder = settings().getBaseFolder("base")
-
         return dict(
             cam_img_width=IMG_WIDTH,
             cam_img_height=IMG_HEIGHT,
-            debug=True,
+            debug=False,
             frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
             previewOpacity=1,
             localFilePath="cam/beam-cam.jpg",
@@ -211,7 +221,9 @@ class CameraPlugin(
     def calibration_wrapper(self):
         from flask import make_response, render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
-
+        from octoprint_mrbeam.util.device_info import DeviceInfo
+        device_info = DeviceInfo()
+        beamos_version, beamos_date = device_info.get_beamos_version()
         render_kwargs = dict(
             debug=debug,
             version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
@@ -220,14 +232,15 @@ class CameraPlugin(
             pluginNames=dict(),
             locales=dict(),
             supportedExtensions=[],
-            # beamOS version
-            beamosVersionNumber=__version__,
+            # beamOS version - Not the plugin version
+            beamosVersionNumber=beamos_version,
+            beamosBuildDate=beamos_date,
             hostname=socket.gethostname(),
-            # serial=self._serial_num,
+            serial=device_info.get_serial(),
             # beta_label=self.get_beta_label(),
             e="null",
-            gcodeThreshold=0,  # legacy
-            gcodeMobileThreshold=0,  # legacy
+            gcodeThreshold=0,  # legacy - OctoPrint render bug
+            gcodeMobileThreshold=0,  # legacy - OctoPrint render bug
             get_img=json.dumps(dict(
                 last = LAST,
                 next = NEXT,
@@ -289,11 +302,19 @@ class CameraPlugin(
             )
         else:
             # TODO return correct image
-            image = self.get_picture(pic_type, which)
-            if image:
-                return send_file_b64(image, pic_type=pic_type, which=which)
+            corners = dict_merge(
+                self._settings.get(['corners', 'factory']) or {},
+                self._settings.get(['corners', 'history']) or {},
+            )
+            try:
+                image, positions_workspace_corners = self.get_picture(pic_type, which, settings_corners=corners)
+            except SettingsError as e:
+                return flask.make_response("Wrong camera settings for the requested picture %s" % e, 500)
             else:
-                return flask.make_response("No image available (yet).", 404)
+                if image:
+                    return send_file_b64(image, pic_type=pic_type, which=which)
+                else:
+                    return flask.make_response("No image available (yet).", 404)
 
     # send plugin message via websocket to inform frontend about new image, with timestamp
     def _informFrontend(self):
@@ -327,55 +348,6 @@ class CameraPlugin(
 
     ##~~ Camera Plugin
 
-    def get_picture(self, pic_type="plain", which="last", settings_corners=dict(), settings_lens=dict()):
-        """Returns a jpg picture which can be corrected for
-        - lens distortion,
-        - Real world coordinates
-        Also returns a set of workspace coordinates and whether the pink circles were all found
-        """
-        err_txt = "Unrecognised Picture {} : {}, should be one of {}"
-        if pic_type not in PIC_TYPES:
-            raise ValueException(err_txt.format("Type", pic_type, PIC_TYPES))
-        if which not in WHICH:
-            raise ValueException(err_txt.format("desired", which, WHICH))
-        do_corners = pic_type in (PIC_CORNER, PIC_BOTH)
-        do_lens = pic_type in (PIC_LENS, PIC_BOTH)
-
-        if which == LAST:
-            img_jpg = self.camera_thread.get_latest_img()
-        elif which == NEXT:
-            img_jpg = self.camera_thread.get_next_img()
-        else:
-            raise Exception("We shouldn't be here, huhoo..")
-        
-        if not (img_jpg or do_corners or do_lens):
-            # Will return if the image is None
-            return img_jpg, {}
-        # Work is done on a numpy version of the image
-        img = image.imdecode(img_jpg)
-        settings = {}
-        if do_corners:
-            positions_pink_circles = corners.find_pink_circles(img, **settings)
-            # settings_corners = plugin._settings.get(['corners'], {})
-            positions_pink_circles = reduce(dict_merge, [
-                    self._settings.get(['corners', 'factory']) or {},
-                    self._settings.get(['corners', 'history']) or {},
-                    positions_pink_circles,
-                ]
-            )
-            positions_workspace_corners = corners.get_workspace_corners(positions_pink_circles, **settings)
-        else:
-            positions_workspace_corners = None
-        if do_lens:
-            img = lens.undistort(img, **settings)
-            if do_corners:
-                positions_workspace_corners = lens.undist_points(positions_workspace_corners, **settings)
-        if do_corners:
-            img = corners.fit_img_to_corners(img, positions_workspace_corners)
-        # Write the modified image to a jpg binary
-        buff = io.BytesIO()
-        image.imwrite(buff, img)
-        return buff, positions_workspace_corners
 
     # NOTE : Can be re-enabled for the factory mode.
     #        For now, it is always in factory mode
@@ -387,6 +359,56 @@ class CameraPlugin(
     #     ret = check_calibration_tool_mode(self)
     #     # self._fixEmptyUserManager()
     #     return ret
+
+    def get_picture(self, pic_type="plain", which="last", settings_corners=dict(), settings_lens=dict()):
+        """Returns a jpg     picture which can be corrected for
+        - lens distortion,
+        - Real world coordinates
+        Also returns a set of workspace coordinates and whether the pink circles were all found
+        """
+        from functools import reduce # Not necessary in PY2, but compatible
+        err_txt = "Unrecognised Picture {} : {}, should be one of {}"
+        if pic_type not in PIC_TYPES:
+            raise ValueError(err_txt.format("Type", pic_type, PIC_TYPES))
+        if which not in WHICH:
+            raise ValueError(err_txt.format("desired", which, WHICH))
+        do_corners = pic_type in (PIC_CORNER, PIC_BOTH)
+        do_lens = pic_type in (PIC_LENS, PIC_BOTH)
+
+        if which == LAST:
+            img_jpg = self.camera_thread.get_latest_img()
+        elif which == NEXT:
+            img_jpg = self.camera_thread.get_next_img()
+        else:
+            raise Exception("We shouldn't be here, huhoo..")
+        
+        if do_corners and not corner_settings_valid(settings_corners):
+            raise SettingsError("Corner settings invalid - provided settings: %s" % settings_corners)
+        if do_lens and not lens_settings_valid(settings_lens):
+            raise SettingsError("Lens settings invalid - provided settings: %s" % settings_lens)
+        if not (img_jpg and (do_corners or do_lens)):
+            # Will return if the image is None
+            return img_jpg, {}
+        # Work is done on a numpy version of the image
+        img = util.image.imdecode(img_jpg)
+        settings = {}
+        if do_corners:
+            positions_pink_circles = corners.find_pink_circles(img, debug=self.debug, **settings)
+            # settings_corners = plugin._settings.get(['corners'], {})
+            positions_pink_circles = dict_merge(settings_corners, positions_pink_circles)
+            positions_workspace_corners = corners.get_workspace_corners(positions_pink_circles, **settings)
+        else:
+            positions_workspace_corners = None
+        if do_lens:
+            img = lens.undistort(img, **settings)
+            if do_corners:
+                positions_workspace_corners = lens.undist_points(positions_workspace_corners, **settings)
+        if do_corners:
+            img = corners.fit_img_to_corners(img, positions_workspace_corners)
+        # Write the modified image to a jpg binary
+        buff = io.BytesIO()
+        util.image.imwrite(buff, img)
+        return buff, positions_workspace_corners
 
     def start_lens_calibration_daemon(self):
         """Start the Lens Calibration"""
