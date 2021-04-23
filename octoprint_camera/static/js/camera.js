@@ -133,7 +133,7 @@ $(function () {
                     self.rawUrl('data:image/jpg;base64,'+data.image);
                 else
                     self.croppedUrl('data:image/jpg;base64,'+data.image);
-                self.timestamp = _data.timestamp;
+                self.timestamp = data.timestamp;
             };
 
             let error_callback = function (resp) {
