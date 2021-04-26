@@ -71,8 +71,11 @@ class CameraPlugin(
 
     def on_after_startup(self, *a, **kw):
         self.camera_thread = CameraThread(self._settings, debug=self._settings.get(['debug']))
+        
         # TODO stage 2 - Only start the camera when required
         self.camera_thread.start()
+        # TODO Stage 2 - Only start the lens calibration daemon when required
+        self.start_lens_calibration_daemon()
 
     ##~~ ShutdownPlugin mixin
 
@@ -352,6 +355,10 @@ class CameraPlugin(
         data = {"available": True}  # TODO return correct available state
         return jsonify(data)
 
+    @octoprint.plugin.BlueprintPlugin.route("/lens_calibration_capture", methods=["POST"])
+    @logExceptions
+    def flask_capture_img_for_lens_calibration(self):
+        return jsonify(dict(ret=self.capture_img_for_lens_calibration()))
 
     ##~~ Camera Plugin
 
@@ -436,15 +443,17 @@ class CameraPlugin(
         if blocking:
             self.lens_calibration_thread.join()
 
-
+    def capture_img_for_lens_calibration(self):
+        return lens.capture_img_for_lens_calibration(self.camera_thread, self.lens_calibration_thread)
 
 __plugin_name__ = "Camera"
 __plugin_pythoncompat__ = ">=2.7,<4"
 
 
 def __plugin_load__():
+    plugin = CameraPlugin()
     global __plugin_implementation__
-    __plugin_implementation__ = CameraPlugin()
+    __plugin_implementation__ = plugin
 
     global __plugin_settings_overlay__
     __plugin_settings_overlay__ = dict(
@@ -469,3 +478,9 @@ def __plugin_load__():
             )
         ),
     )
+    global __plugin_hooks__
+    __plugin_hooks__ = {
+        "octoprint.camera.get_last_pic": plugin.get_last_pic,
+        "octoprint.camera.get_next_pic": plugin.get_next_pic,
+        "octoprint.camera.capture_pic_to_lens_calibration": plugin.capture_img_for_lens_calibration,
+    }
