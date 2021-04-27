@@ -104,8 +104,8 @@ Should return err msg if the picture cannot be processed ...
    
      ```
     {
-      which: 'available'/'next';
-      pic_type: 'plain'/'corners'/'lens'/'both'
+        which: 'available'/'next';
+        pic_type: 'plain'/'corners'/'lens'/'both'
     }
      ```
 
@@ -121,23 +121,45 @@ Should return err msg if the picture cannot be processed ...
 - __return__:
   ```
   {
-   image: <base64>,
-   timestamp: <timestamp>
+    "image": <base64>,
+    "timestamp": <timestamp>,
+    "which": <which>,
+    "pic_type": <pic_type>,
+    "positions_found": {
+        "NE": <corner_data>,
+        "NW": <corner_data>,
+        "SE": <corner_data>,
+        "SW": <corner_data>,
+    }
   }
   ```
+  __corner_Data__:  
+  if corner found:  
+  ```
+    {
+        "avg_hsv": [<float>, <float>, <float>],
+        "pix_size": <number>,
+        "pos!: [<number>, <number>]
+    }
+    ```
+  else:  `null`
 - __error__:
   ```
-  {
-    error: <error message>,
-    errcode: <error code>
-  }
+    {
+        "error": <error message>,
+        "errcode": <error code>
+    }
   ```
 
 `[GET] /available_corrections`  
 
 Return the list of possible images:  
  - __return__:  
-   `[ plain, corners, lens, both ]`
+   ```
+    {   
+        [ plain, corners, lens, both ]
+    }
+   ```
    
 `[GET] /timestamp` or `[GET] /ts`  
 
@@ -151,6 +173,13 @@ Whether the camera is running or not
  - __return__:  
    `[ true, false ]`
 
+`[POST] /save_corner_calibration`  
+
+[comment]: <> (Return the list of possible images:  )
+
+[comment]: <> ( - __return__:  )
+
+[comment]: <> (   `[ plain, corners, lens, both ]`)
 
 > TODO Phase 2
 > `[GET] /available`
