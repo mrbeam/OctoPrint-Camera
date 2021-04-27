@@ -19,16 +19,18 @@ import octoprint.plugin
 from octoprint.server.util.flask import add_non_caching_response_headers
 from octoprint.settings import settings
 from octoprint.util import dict_merge
-from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
+from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES, LENS_CALIBRATION
 from octoprint_mrbeam.camera.undistort import _getCamParams
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 
+        
 import pkg_resources
 __version__ = pkg_resources.require("octoprint_camera")
 
-from . import corners, lens, util
+from . import corners, lens, util, iobeam
 from .camera import CameraThread
 # from .image import LAST, NEXT, WHICH, PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH, PIC_TYPES
+from .iobeam import IoBeamEvents
 from .util import logme, logExceptions
 from .util.image import corner_settings_valid, lens_settings_valid, SettingsError
 from .util.flask import send_image
@@ -56,6 +58,7 @@ class CameraPlugin(
     def __init__(self):
         self.camera_thread = None
         self.lens_calibration_thread = None
+        self.iobeam_thread = None
         self.lens_settings = {}
         # Shadow settings for the pink circles position history
         self.__corners_hist_datafile = None
@@ -76,6 +79,13 @@ class CameraPlugin(
         self.camera_thread.start()
         # TODO Stage 2 - Only start the lens calibration daemon when required
         self.start_lens_calibration_daemon()
+        # TODO Stage 3 - Separate into an iobeam plugin
+        self.iobeam_thread = iobeam.IoBeamHandler(self)
+        self.iobeam_thread._initWorker()
+        # TODO Stage 3 - Remove, should only trigger via plugin hook.
+        self._event_bus.subscribe(
+            IoBeamEvents.ONEBUTTON_PRESSED, self.capture_img_for_lens_calibration
+        )
 
     ##~~ ShutdownPlugin mixin
 
@@ -116,6 +126,7 @@ class CameraPlugin(
             #     user=dict(),
             # ),
             lens_datafile=path.join(self.get_plugin_data_folder(), "lens.npz"),
+            lens_legacy_datafile=path.join("/home/pi/.octoprint/cam/", LENS_CALIBRATION["factory"]),
             corners=dict(
                 factory=dict(
                     arrows_px={},
@@ -434,7 +445,7 @@ class CameraPlugin(
         if self.lens_calibration_thread:
             self.lens_calibration_thread.start()
         else:
-            self.lens_calibration_thread = BoardDetectorDaemon()
+            self.lens_calibration_thread = BoardDetectorDaemon(self._settings.get(['lens_legacy_datafile']))
             self.lens_calibration_thread.start()
 
     def stop_lens_calibration(self, blocking=True):
@@ -443,9 +454,14 @@ class CameraPlugin(
         if blocking:
             self.lens_calibration_thread.join()
 
-    def capture_img_for_lens_calibration(self):
-        return lens.capture_img_for_lens_calibration(self.camera_thread, self.lens_calibration_thread)
-
+    def capture_img_for_lens_calibration(self, *a, **kw):
+        # Ignore the arguments in case it getas triggered by an event that wants to pass on a payload etc...
+        return lens.capture_img_for_lens_calibration(
+            self.lens_calibration_thread, 
+            self.camera_thread,
+            "/tmp"
+        )
+        
 __plugin_name__ = "Camera"
 __plugin_pythoncompat__ = ">=2.7,<4"
 
@@ -480,7 +496,7 @@ def __plugin_load__():
     )
     global __plugin_hooks__
     __plugin_hooks__ = {
-        "octoprint.camera.get_last_pic": plugin.get_last_pic,
-        "octoprint.camera.get_next_pic": plugin.get_next_pic,
+        "octoprint.camera.get_picture": plugin.get_picture,
+        # TODO Stage 3 - Trigger from iobeam or mrbeam plugin
         "octoprint.camera.capture_pic_to_lens_calibration": plugin.capture_img_for_lens_calibration,
     }
