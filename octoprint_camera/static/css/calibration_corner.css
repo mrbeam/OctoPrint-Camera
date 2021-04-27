@@ -1,0 +1,82 @@
+.calibration_click_indicator {
+  stroke: #ffffff;
+  stroke-width: 1;
+  fill: none;
+}
+
+.marker_found_indicator {
+  color: #ddd;
+  display: inline-block;
+  padding: 0 0.5em;
+}
+.marker_found_indicator.active {
+  color: #000;
+}
+.marker_debug_image:hover {
+  height: 45vh;
+}
+.marker_debug_image {
+  margin: 5px;
+  border: 1px;
+  border-style: solid;
+  border-color: black;
+  height: 15vh;
+  position: fixed;
+  max-width: 26vw;
+  max-height: 50vh;
+}
+
+#debug_NW_img {
+  top: 1vh;
+  left: 0vw;
+}
+#debug_NE_img {
+  top: 1vh;
+  right: 1vw;
+}
+#debug_SW_img {
+  bottom: 1vh;
+  left: 0vw;
+}
+#debug_SE_img {
+  bottom: 1vh;
+  right: 0vw;
+}
+
+#NE .cal-arrow {
+  transform: scale(-1, 1);
+}
+#SE .cal-arrow {
+  transform: scale(-1, -1);
+}
+#SW .cal-arrow {
+  transform: scale(1, -1);
+}
+.cal-row {
+  color: #ddd;
+  font-size: 1.2rem;
+  padding: 0.1em;
+}
+.cal-row.active {
+  color: #383e42;
+}
+.complete .cal-row {
+  display: block !important;
+  font-size: 1rem;
+}
+.cal-arrow {
+  width: 0.8em;
+  height: 0.8em;
+  background-image: url(/plugin/camera/static/img/calibration/cal_marker.svg);
+  border: 0px transparent;
+  background-repeat: no-repeat;
+  background-color: white;
+  background-size: contain;
+  display: inline-block;
+  background-position: center;
+}
+.marker_selection_desc {
+  margin-top: 0em;
+  margin-bottom: 1em;
+  display: inline-block;
+}

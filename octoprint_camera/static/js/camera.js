@@ -5,6 +5,7 @@ mrbeam.isFactoryMode = function () {
 };
 
 const MARKERS = ["NW", "NE", "SE", "SW"];
+const PIC_TYPES = ["plain", "corners", "lense", "both"];
 // var mrbeam = window.mrbeam;
 // mrbeam.viewModels = {};
 
@@ -76,10 +77,10 @@ $(function () {
         self.pic_timestamp.subscribe(self.refreshPicture)
 
         self.needsCornerCalibration = ko.computed(function () {
-            return ! self.availablePicTypes.corners();
+            return !self.availablePicTypes.corners();
         });
         self.needsLensCalibration = ko.computed(function () {
-            return ! self.availablePicTypes.lens();
+            return !self.availablePicTypes.lens();
         });
 
         self.simpleApiCommand = function (
@@ -117,23 +118,57 @@ $(function () {
                 );
             }
         };
-        self.loadPicture = function(){
+        self.loadAvaiableCorrection = function () {
+            let success_callback = function (data) {
+                console.log('corrections', data.available_corrections);
+                self.availablePicTypes.corners(true);
+                PIC_TYPES.forEach(function (m) {
+                    correctionAvailable = false;
+                    if (data.available_corrections[m]) {
+                        data.available_corrections.forEach(correction => function () {
+                            if (correction === m) {
+                                self.markersFound[m](true);
+                                correctionAvailable = true;
+                            }
+                        })
+                        if (!correctionAvailable) {
+                            self.markersFound[m](false);
+                        }
+                    }
+                });
+            };
+
+            let error_callback = function (resp) {
+                console.log("available_corrections request error", resp);
+            };
+            self.simpleApiCommand("available_corrections", {}, success_callback, error_callback, "GET");
+        }
+        self.loadPicture = function () {
             self.getImage(GET_IMG.last, GET_IMG.pic_both);
         }
-        self.loadPictureRaw = function(){
+        self.loadPictureRaw = function () {
             self.getImage(GET_IMG.last, GET_IMG.pic_plain);
         }
         self.getImage = function (which, pic_type) {
-            if ( which == null )
+            if (which == null)
                 which = GET_IMG.latest
-            if ( pic_type == null )
+            if (pic_type == null)
                 pic_type = GET_IMG.pic_plain
             let success_callback = function (data) {
                 if (pic_type == GET_IMG.pic_plain)
-                    self.rawUrl('data:image/jpg;base64,'+data.image);
+                    self.rawUrl('data:image/jpg;base64,' + data.image);
                 else
-                    self.croppedUrl('data:image/jpg;base64,'+data.image);
+                    self.croppedUrl('data:image/jpg;base64,' + data.image);
                 self.timestamp = data.timestamp;
+                if (data.positions_found) {
+                    MARKERS.forEach(function (m) {
+                        if (data.positions_found[m]) {
+                            self.markersFound[m](data.positions_found[m]);
+                        }
+
+
+                    });
+                }
             };
 
             let error_callback = function (resp) {
@@ -143,7 +178,7 @@ $(function () {
         }
 
         // event listener callbacks //
-
+        //Called after all view models have been bound, with the list of all view models as the single parameter.
         self.onAllBound = function () {
             self.cameraActive = ko.computed(function () {
                 // TODO : get value from backend / websocket
@@ -222,7 +257,7 @@ $(function () {
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             console.log('plugin message', plugin, data);
-            if("newImage" in data){
+            if ("newImage" in data) {
                 console.log('new image get');
                 self.pic_timestamp(data.timestamp)
             }
@@ -284,7 +319,7 @@ $(function () {
         //         // if (window.mrbeam.browser.is_safari) {
         //         //     // load() event seems not to fire in Safari.
         //         //     // So as a quick hack, let's set firstImageLoaded to true already here
-                                                //
+        //
         //         //     self.firstImageLoaded = true;
         //         //     self.countImagesLoaded(self.countImagesLoaded() + 1);
         //         // }

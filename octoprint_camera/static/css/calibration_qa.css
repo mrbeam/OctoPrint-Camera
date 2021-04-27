@@ -54,6 +54,19 @@
 
 .qa_img_wrapper {
   position: relative;
+  display: inline-block; /* <= shrinks container to image size */
+}
+
+.qa_img_wrapper img { /* <= optional, for responsiveness */
+   display: block;
+   max-width: 100%;
+   height: auto;
+}
+
+.qa_img_wrapper svg {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 #qa_undistorted_guides {
@@ -248,3 +261,4 @@
   margin: 0 4% 0 0;
   position: relative;
 }
+

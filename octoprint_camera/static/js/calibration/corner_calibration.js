@@ -39,7 +39,7 @@ $(function () {
 
         self.currentMarker = 0;
         self.calibrationMarkers = [
-            { name: "start", desc: "click to start", focus: [0, 0, 1] },
+            {name: "start", desc: "click to start", focus: [0, 0, 1]},
             {
                 name: "NW",
                 desc: self.camera.MARKER_DESCRIPTIONS["NW"],
@@ -96,10 +96,7 @@ $(function () {
         self.calImgReady = ko.computed(function () {
             if (Object.keys(self.camera.markersFound).length !== 4)
                 return false;
-            return Object.values(self.camera.markersFound).reduce(
-                (x, y) => x && y(),
-                true
-            );
+            return true;
         });
 
         self.applySetting = function (picType, applyCrossVisibility) {
@@ -130,15 +127,17 @@ $(function () {
         };
 
         self._getImgUrl = function (type, applyCrossVisibility) {
+            self.camera.getImage('next', 'plain');
+            return self.camera.rawUrl();
             if (type !== undefined) {
                 self.applySetting(type, applyCrossVisibility);
-                if (type == "default") return self.staticURL;
+                if (type === "default") return self.staticURL;
                 else return self.camera.availablePicTypes[type]();
             }
             for (let _t of GET_IMG.pic_types)
                 if (_t === "default" || self.camera.availablePicTypes[_t]()) {
                     self.applySetting(_t, applyCrossVisibility);
-                    if (_t == "default") return self.staticURL;
+                    if (_t === "default") return self.staticURL;
                     else return self.camera.availablePicTypes[_t]();
                 }
             self.applySetting("default");
@@ -184,6 +183,7 @@ $(function () {
         });
 
         self.onStartupComplete = function () {
+            console.log('startup corner calib complete');
             if (window.mrbeam.isFactoryMode()) {
                 self.camera.getImage();
             }
@@ -195,13 +195,39 @@ $(function () {
             }
         };
 
+        // self.onAllBound = function (){
+        //     self.camera.getImage(GET_IMG.last, GET_IMG.pic_plain);
+        // }
+
+
         self.onDataUpdaterPluginMessage = function (plugin, data) {
-            if (plugin !== "mrbeam" || !data) return;
+            if (plugin !== "camera" || !data) return;
 
             if (!self.calibration.calibrationScreenShown()) {
                 return;
             }
-
+            if ("newImage" in data) {
+                self.dbNWImgUrl(
+                    "/downloads/files/local/cam/debug/NW.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+                self.dbNEImgUrl(
+                    "/downloads/files/local/cam/debug/NE.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+                self.dbSWImgUrl(
+                    "/downloads/files/local/cam/debug/SW.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+                self.dbSEImgUrl(
+                    "/downloads/files/local/cam/debug/SE.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+            }
             if ("beam_cam_new_image" in data) {
                 // update image
                 let selectedTab = $(
@@ -222,24 +248,28 @@ $(function () {
                             self.calibration.waitingForRefresh())
                     ) {
                         self.dbNWImgUrl(
-                            "/downloads/files/local/cam/debug/NW.jpg" +
-                                "?ts=" +
-                                new Date().getTime()
+                            os.path.join(settings().getBaseFolder("uploads"), "cam/debug/NW.jpg",)
+                            // "/downloads/files/local/cam/debug/NW.jpg" +
+                            // "?ts=" +
+                            // new Date().getTime()
                         );
                         self.dbNEImgUrl(
-                            "/downloads/files/local/cam/debug/NE.jpg" +
-                                "?ts=" +
-                                new Date().getTime()
+                            os.path.join(settings().getBaseFolder("uploads"), "cam/debug/NE.jpg",)
+                            // "/downloads/files/local/cam/debug/NE.jpg" +
+                            // "?ts=" +
+                            // new Date().getTime()
                         );
                         self.dbSWImgUrl(
-                            "/downloads/files/local/cam/debug/SW.jpg" +
-                                "?ts=" +
-                                new Date().getTime()
+                            os.path.join(settings().getBaseFolder("uploads"), "cam/debug/SW.jpg",)
+                            // "/downloads/files/local/cam/debug/SW.jpg" +
+                            // "?ts=" +
+                            // new Date().getTime()
                         );
                         self.dbSEImgUrl(
-                            "/downloads/files/local/cam/debug/SE.jpg" +
-                                "?ts=" +
-                                new Date().getTime()
+                            os.path.join(settings().getBaseFolder("uploads"), "cam/debug/SE.jpg",)
+                            // "/downloads/files/local/cam/debug/SE.jpg" +
+                            // "?ts=" +
+                            // new Date().getTime()
                         );
                     }
 
@@ -268,8 +298,20 @@ $(function () {
             self._cornerCalImgUrl(self._getImgUrl(GET_IMG.plain, true));
             self.markersFoundPositionCopy = self.markersFoundPosition();
             self.nextMarker();
+            self.correctedMarkersVisibility(true);
 
         };
+
+        self.loadNewPicture = function () {
+            self.camera.loadPictureRaw();
+        }
+        self.onStartupComplete = function () {
+            // self.camera.foundCorners.subscribe(self.cornersUpdatet);
+            console.log(self.cornerCalibrationActive(), self.calImgReady(), self.cornerCalibrationComplete(), self.camera.availablePicTypes.corners());
+        }
+        self.cornersUpdatet = function () {
+            // self.
+        }
 
         self.abortCornerCalibration = function () {
             // self.analytics.send_fontend_event("corner_calibration_abort", {});//todo enable analytic
@@ -284,20 +326,18 @@ $(function () {
 
         self.saveCornerCalibrationData = function () {
             let data = {
-                result: {
-                    newMarkers: self.markersFoundPositionCopy,
-                    newCorners: self.currentResults(),
-                },
+                newMarkers: self.markersFoundPositionCopy,
+                newCorners: self.currentResults(),
             };
             console.log("Sending data:", data);
             self.calibration.simpleApiCommand(
-                "send_corner_calibration",
+                "save_corner_calibration",
                 data,
                 self._saveMarkersSuccess,
                 self._saveMarkersError,
                 "POST"
             );
-
+            self.camera.loadAvaiableCorrection() //todo find a better place
             self.resetView();
         };
 

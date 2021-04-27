@@ -308,13 +308,14 @@ $(function () {
         };
 
         self._refreshPics = function () {
-            self.calibration.simpleApiCommand(
-                "calibration_get_raw_pic",
-                {},
-                self._rawPicSuccess,
-                self._getRawPicError,
-                "GET"
-            );
+            console.error('TODO change to new api');
+            // self.calibration.simpleApiCommand(
+            //     "calibration_get_raw_pic",
+            //     {},
+            //     self._rawPicSuccess,
+            //     self._getRawPicError,
+            //     "GET"
+            // );
         };
 
         self._calcPicScore = function (bbox, found_bboxes) {
