@@ -6,6 +6,7 @@ import flask
 from flask import jsonify, request, make_response
 import io
 import json
+import numpy as np
 import os
 from os import path
 from random import randint
@@ -133,6 +134,7 @@ class CameraPlugin(
             # ),
             lens_datafile=path.join(self.get_plugin_data_folder(), "lens.npz"),
             lens_legacy_datafile=path.join("/home/pi/.octoprint/cam/", LENS_CALIBRATION["factory"]),
+            corners_legacy_datafile=path.join("/home/pi/.octoprint/cam/", "pic_settings.yaml"),
             corners=dict(
                 factory=dict(
                     arrows_px={},
@@ -404,14 +406,14 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/ts", methods=["GET"])
     @logExceptions
     def getTimestamp(self):
-        data = {"timestamp": time.time() - 5 * 60}  # TODO return correct timestamp
+        data = {"timestamp": self.camera_thread.latest_img_timestamp }
         return jsonify(data)
 
     # Whether the camera is running or not
     @octoprint.plugin.BlueprintPlugin.route("/running", methods=["GET"])
     @logExceptions
     def getRunningState(self):
-        data = {"running": True}  # TODO return correct state
+        data = {"running": self.camera_thread.active()}
         return jsonify(data)
 
     # return whether the camera can run now
@@ -424,7 +426,20 @@ class CameraPlugin(
     # return the available corretions to the image
     @octoprint.plugin.BlueprintPlugin.route("/available_corrections", methods=["GET"])
     def getAvailableCorrections(self):
-        data = {"available_corrections": ["plain", "corners"]}  # TODO return real list
+        ret = ['plain']
+        try:
+            lens_ok = lens_settings_valid(np.load(self._settings.get(['lens_legacy_datafile'])))
+        except Exception as e:
+            self._logger.error("Error when retrieving lens settings %s" % e)
+        corners_ok = corner_settings_valid(self._settings.get(['corners', 'factory']))
+        if corners_ok:
+            ret += ['corners']
+        if lens_ok:
+            ret += ['lens']
+        if lens_ok and corners_ok:
+            ret += ['both']
+
+        data = {"available_corrections": ret}
         return jsonify(data)
 
     @octoprint.plugin.BlueprintPlugin.route("/lens_calibration_capture", methods=["POST"])
@@ -432,11 +447,11 @@ class CameraPlugin(
     def flask_capture_img_for_lens_calibration(self):
         return jsonify(dict(ret=self.capture_img_for_lens_calibration()))
 
-
     @octoprint.plugin.BlueprintPlugin.route(
         "/save_corner_calibration", methods=["POST"]
     )
     # @restricted_access_or_calibration_tool_mode #TODO activate
+    @logExceptions
     def saveInitialCalibrationMarkers(self):
         if not "application/json" in request.headers["Content-Type"]:
             return make_response("Expected content-type JSON", 400)
@@ -445,16 +460,29 @@ class CameraPlugin(
         except BadRequest:
             return make_response("Malformed JSON body in request", 400)
 
-        self._logger.debug(
-            "INITIAL camera_calibration_markers() data: {}".format(json_data)
-        )
-
         if not all(k in json_data.keys() for k in ["newCorners", "newMarkers"]):
             # TODO correct error message
             return make_response("No profile included in request", 400)
-        # self.camera_calibration_markers(json_data)#TODO save corner calibration
+        corners.save_corner_calibration(
+            self._settings.get(['corners_legacy_datafile']), 
+            hostname=self._hostname,
+            plugin_version=self._plugin_version,
+            from_factory=util.factory_mode(),
+            **json_data['result']
+        )
+        key = 'factory' if util.factory_mode() else 'user'
+        self._settings.set(['corners', key], json_data)
         return NO_CONTENT
-
+    
+    def send_lens_calibration_state(self, data):
+        self._plugin_manager.send_plugin_message(
+            "camera", dict(chessboardCalibrationState=data)
+        )
+    
+    def send_lens_get_captured_img_list(self):
+        # This function will trigger the lens calibration on_change callback
+        # This callback sends the whole list of images available
+        self.lens_calibration_thread.on_change()
     ##~~ Camera Plugin
 
     # NOTE : Can be re-enabled for the factory mode.
@@ -546,7 +574,10 @@ class CameraPlugin(
         if self.lens_calibration_thread:
             self.lens_calibration_thread.start()
         else:
-            self.lens_calibration_thread = BoardDetectorDaemon(self._settings.get(['lens_legacy_datafile']))
+            self.lens_calibration_thread = BoardDetectorDaemon(
+                self._settings.get(['lens_legacy_datafile']),
+                stateChangeCallback=self.send_lens_calibration_state
+            )
             self.lens_calibration_thread.start()
 
     def stop_lens_calibration(self, blocking=True):

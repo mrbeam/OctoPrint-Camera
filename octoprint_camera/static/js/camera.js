@@ -1,13 +1,10 @@
-var mrbeam = {};
-mrbeam.viewModels = {};
+var mrbeam = window.mrbeam;
 mrbeam.isFactoryMode = function () {
     return INITIAL_CALIBRATION === true;
 };
 
 const MARKERS = ["NW", "NE", "SE", "SW"];
 const PIC_TYPES = ["plain", "corners", "lense", "both"];
-// var mrbeam = window.mrbeam;
-// mrbeam.viewModels = {};
 
 $(function () {
     function CameraViewModel(parameters) {

@@ -261,7 +261,7 @@ $(function () {
 
         self.saveRawPic = function () {
             self.calibration.simpleApiCommand(
-                "calibration_save_raw_pic",
+                "lens_calibration_capture",
                 {},
                 self._rawPicSuccess,
                 self._saveRawPicError
@@ -309,13 +309,13 @@ $(function () {
 
         self._refreshPics = function () {
             console.error('TODO change to new api');
-            // self.calibration.simpleApiCommand(
-            //     "calibration_get_raw_pic",
-            //     {},
-            //     self._rawPicSuccess,
-            //     self._getRawPicError,
-            //     "GET"
-            // );
+            self.calibration.simpleApiCommand(
+                "lens_get_captured_img_list",
+                {},
+                self._rawPicSuccess,
+                self._getRawPicError,
+                "GET"
+            );
         };
 
         self._calcPicScore = function (bbox, found_bboxes) {
