@@ -102,6 +102,7 @@ class CameraPlugin(
         if util.factory_mode():
             # Invite to take a picture for the lens calibration
             self._event_bus.fire(MrBeamEvents.LENS_CALIB_IDLE)
+        self.led_client.set_inside_brightness(1)
 
     ##~~ ShutdownPlugin mixin
 
@@ -620,6 +621,7 @@ class CameraPlugin(
             #         and some values aren't json pickable etc...
             self.lens_calibration_thread.state.rm_from_origin("factory")
             self.lens_calibration_thread.start()
+        self.lens_calibration_thread.load_dir("/tmp")
 
     def stop_lens_calibration(self, blocking=True):
         # TODO : blocking behaviour goes into the daemon itself

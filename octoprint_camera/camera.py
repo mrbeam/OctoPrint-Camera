@@ -69,7 +69,7 @@ class CameraThread(object):
     def get_next_img(self):
         # Disgusting hack: Fix race condition with a sleep because I am myself deprived of some
         import time
-        time.sleep(.5)
+        time.sleep(1.)
         # Even if we wait for the camera to be available, 
         # we will be getting the image that was taken during this call
         # hack : sleep an extra frame time

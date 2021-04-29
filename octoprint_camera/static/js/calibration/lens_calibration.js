@@ -136,6 +136,10 @@ $(function () {
             self.rawPicSelection(ko.toJS(img_arr));
         });
 
+        self.imagesAdd = function(imagesToUpdate) {
+            self.images_update(ko.toJS({...self.images, ...imagesToUpdate}))
+        }
+
         self.cameraBusy = ko.computed(function () {
             return self
                 .rawPicSelection()
@@ -219,12 +223,11 @@ $(function () {
             self.calibration.simpleApiCommand(
                 "get_lens_calibration_image",
                 JSON.stringify({"timestamp": timestamp}),
-                self.images_update,
+                self.imagesAdd,
                 self._getRawPicError,
                 "POST"
             );
         }
-
 
         self.startLensCalibration = function () {
             // self.analytics.send_fontend_event("lens_calibration_start", {});//todo enable analytic
