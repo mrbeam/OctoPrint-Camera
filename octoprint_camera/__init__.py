@@ -30,10 +30,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import dict_map
 from octoprint_mrbeam.util.log import json_serialisor
 
-
-        
 import pkg_resources
-
 __version__ = pkg_resources.require("octoprint_camera")
 
 from . import corners, lens, util, iobeam
@@ -673,18 +670,23 @@ def __plugin_load__():
     __plugin_implementation__ = plugin
 
     global __plugin_settings_overlay__
+    if util.factory_mode():
+        disabled_plugins = [
+            "cura",
+            "pluginmanager",
+            "announcements",
+            "corewizard",
+            "octopi_support",
+            "mrbeam",
+            "mrbeamdoc",
+            "virtual_printer",
+        ]
+    else:
+        # disables itself
+        disabled_plugins = ["camera",]
     __plugin_settings_overlay__ = dict(
         plugins=dict(
-            _disabled=[
-                "cura",
-                "pluginmanager",
-                "announcements",
-                "corewizard",
-                "octopi_support",
-                "mrbeam",
-                "mrbeamdoc",
-                "virtual_printer",
-            ]  # accepts dict | pfad.yml | callable
+            _disabled=disabled_plugins  # accepts dict | pfad.yml | callable
         ),
         appearance=dict(
             components=dict(
