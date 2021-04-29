@@ -3,12 +3,11 @@ $(function () {
 
     function CalibrationmodeMessageViewModel(parameters) {
         var self = this;
-        self.onAllBound = function () {
-            showDialog("#navbar_countdownDialog", function (dialog) {
+        self.onStartup = function () {
+            showDialog("#calibrationModeModal", function (dialog) {
                 calibrationModeMessage.modal('hide');
             });
-        }
-
+        };
     }
 
     OCTOPRINT_VIEWMODELS.push([
@@ -22,30 +21,30 @@ $(function () {
     ]);
 
     function showDialog(dialogId, confirmFunction) {
-
-        if (calibrationModeMessage != null && calibrationModeMessage.is(":visible")) {
+        if (calibrationModeMessage != null) {
             return;
         }
-
         calibrationModeMessage = $(dialogId);
-        var cancelButton = $("button.btn-confirm", calibrationModeMessage);
+        if(calibrationModeMessage) {
+            var cancelButton = $("button.btn-confirm", calibrationModeMessage);
 
-        cancelButton.unbind("click");
-        cancelButton.bind("click", function () {
-            confirmFunction(calibrationModeMessage);
-        });
+            cancelButton.unbind("click");
+            cancelButton.bind("click", function () {
+                confirmFunction(calibrationModeMessage);
+            });
 
-        calibrationModeMessage.modal({
-            //minHeight: function() { return Math.max($.fn.modal.defaults.maxHeight() - 80, 250); }
-            keyboard: false,
-            clickClose: false,
-            showClose: false,
-            backdrop: "static"
-        }).css({
-            width: 'auto',
-            'margin-left': function () {
-                return -($(this).width() / 2);
-            }
-        });
+            calibrationModeMessage.modal({
+                //minHeight: function() { return Math.max($.fn.modal.defaults.maxHeight() - 80, 250); }
+                keyboard: false,
+                clickClose: false,
+                showClose: false,
+                backdrop: "static"
+            }).css({
+                width: 'auto',
+                'margin-left': function () {
+                    return -($(this).width() / 2);
+                }
+            });
+        }
     }
 });
