@@ -31,41 +31,7 @@ $(function () {
             self.cameraSettings.changeUserView("settings");
         };
 
-        self.simpleApiCommand = function (
-            command,
-            data,
-            successCallback,
-            errorCallback,
-            type
-        ) {
-            data = data || {};
-            data.command = command;
-            if (window.mrbeam.isFactoryMode()) {
-                $.ajax({
-                    url: "/plugin/camera/" + command,
-                    type: type, // POST, GET
-                    headers: {
-                        Accept: "application/json; charset=utf-8",
-                        "Content-Type": "application/json; charset=utf-8",
-                    },
-                    data: JSON.stringify(data),
-                    dataType: "json",
-                    success: successCallback,
-                    error: errorCallback,
-                });
-            } else if (self.loginState.loggedIn()) {
-                OctoPrint.simpleApiCommand("camera", command, data)
-                    .done(successCallback)
-                    .fail(errorCallback);
-            } else {
-                console.warn(
-                    "User not logged in, cannot send command '",
-                    command,
-                    "' with data",
-                    data
-                );
-            }
-        };
+        self.simpleApiCommand = self.camera.simpleApiCommand;
 
         self._showCalibrationTool = function () {
             $("#calibration_tool_content").show();

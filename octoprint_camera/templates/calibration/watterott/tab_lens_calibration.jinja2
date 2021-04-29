@@ -1,11 +1,3 @@
-<div class="marker_selection_desc calibration_help" data-bind="visible:!lensCalibrationActive()">
-   <div style="margin-top:1em;">
-       <button class="btn btn-default" data-bind="click: startLensCalibration">
-           {{ _('Start Lens Calibration') }}</button>
-   </div>
-</div>
-
-<!-- Lens calibration -->
 <div id="lensCalibrationPhases" data-bind="visible: lensCalibrationActive()">
 
     <div id="lensCalibrationPictureTaking">
@@ -55,7 +47,7 @@
 
         <ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
             <li class="lens_correction_image_thumb"
-                data-bind="	style: { backgroundImage: pic.state !== 'camera_processing' ? 'url('+pic.url+'?'+pic.state+')' : '' },
+                data-bind="	style: { backgroundImage: 'url(data:image/jpg;base64,'+pic.image+')' },
                             event:{ mouseover: $root.highlightHeatmap, mouseout: $root.dehighlightHeatmap }"
                 onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
                 <div class="btn-group">
