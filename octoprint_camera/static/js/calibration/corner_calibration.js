@@ -296,7 +296,15 @@ $(function () {
             self.cornerCalibrationActive(true);
             self.picType(GET_IMG.plain);
             self._cornerCalImgUrl(self._getImgUrl(GET_IMG.plain, true));
-            self.markersFoundPositionCopy = self.markersFoundPosition();
+            // self.markersFoundPositionCopy = self.markersFoundPosition();
+            markers = {}
+            MARKERS.forEach(function (m) {
+                if (self.camera.markersFound[m]() == null) {
+                    console.log("Not all Markers found, are the pink circles obstructed?");
+                }
+                markers[m] = self.camera.markersFound[m]();
+            })
+            self.markersFoundPositionCopy = markers;
             self.nextMarker();
             self.correctedMarkersVisibility(true);
 
@@ -304,6 +312,7 @@ $(function () {
 
         self.loadNewPicture = function () {
             self.camera.loadPictureRaw();
+            // sefl.camera.self.markersFound
         }
         self.onStartupComplete = function () {
             // self.camera.foundCorners.subscribe(self.cornersUpdatet);
@@ -332,7 +341,7 @@ $(function () {
             console.log("Sending data:", data);
             self.calibration.simpleApiCommand(
                 "save_corner_calibration",
-                data,
+                JSON.stringify(data),
                 self._saveMarkersSuccess,
                 self._saveMarkersError,
                 "POST"

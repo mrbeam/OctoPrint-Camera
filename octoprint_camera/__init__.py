@@ -467,11 +467,12 @@ class CameraPlugin(
             # TODO correct error message
             return make_response("No profile included in request", 400)
         corners.save_corner_calibration(
-            self._settings.get(['corners_legacy_datafile']), 
-            hostname=self._hostname,
+            self._settings.get(["corners_legacy_datafile"]),
+            hostname=socket.gethostname(),
             plugin_version=self._plugin_version,
             from_factory=util.factory_mode(),
-            **json_data['result']
+            newCorners=json_data["newCorners"],
+            newMarkers=json_data["newMarkers"],
         )
         key = 'factory' if util.factory_mode() else 'user'
         self._settings.set(['corners', key], json_data)
@@ -511,8 +512,8 @@ class CameraPlugin(
     )
     # @restricted_access_or_calibration_tool_mode #TODO activate
     @logExceptions
-    def saveInitialCalibrationMarkers(self):
-        file_path = request.values.get("path",  None)
+    def deleteCalibrationImage(self):
+        file_path = request.values.get("path", None)
         self.lens_calibration_thread.remove(file_path)
         return NO_CONTENT
 
