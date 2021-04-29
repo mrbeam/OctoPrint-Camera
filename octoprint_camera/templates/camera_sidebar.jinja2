@@ -4,8 +4,10 @@
     </div>
     <div class="modal-body">
         <div>
-            For more details about this error, please check <a>this article in our knowledge base.
-        </a></div>
+            {{ _('Please %(opening_tag)scontact the Mr Beam Support team%(closing_tag)s to get help with this error.',
+            opening_tag='<a href="https://mr-beam.freshdesk.com/support/tickets/new" target="_blank">',
+            closing_tag='</a>') }}
+        </div>
     </div>
     <div class="modal-footer">
         <button class="btn btn-danger btn-confirm">{{ _('Close') }}</button>
