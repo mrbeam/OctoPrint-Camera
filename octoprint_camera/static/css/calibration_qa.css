@@ -53,6 +53,7 @@
 }
 
 .qa_img_wrapper {
+  width: 100%;
   position: relative;
   display: inline-block; /* <= shrinks container to image size */
 }
@@ -212,34 +213,6 @@
   padding: 0.5em 0.5em 0.1em;
   font-size: 10px;
   line-height: 12px;
-}
-
-
-#lensCalibrationPhases.qa_active #lensCalibrationPictureTaking,
-#lensCalibrationPhases #lensCalibrationQA {
-  display: none;
-}
-#lensCalibrationPhases.qa_active #lensCalibrationQA,
-#lensCalibrationPhases #lensCalibrationPictureTaking {
-  display: block;
-}
-
-#lens_calibration_take_pic {
-  color: #fff;
-  border-radius: 50%;
-  width: 5em;
-  height: 5em;
-  display: inline-block;
-  margin-top: -75px;
-  margin-left: -5px;
-  position: relative;
-  z-index: 1;
-}
-
-#lens_calibration_toggle_qa_btn {
-  position: absolute;
-  bottom: 40px;
-  right: 0;
 }
 
 #recalculate_lens_calibration_btn {

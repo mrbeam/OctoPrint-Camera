@@ -47,7 +47,7 @@
                     data-bind="click: lensCalibrationToggleQA,
                                css: {'btn-success': lensCalibrationNpzFileTs, 'btn-default': !lensCalibrationNpzFileTs()},
                                visible: rawPicSelection().length >= 9,
-                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
+                               enable: lensCalibrationNpzFileTs()">
                 <span style="font-size:1.5rem;">{{ _('Check result') }}</span>
                 <i class="icon icon-2x icon-fixed-width icon-arrow-right" data-bind="visible: lensCalibrationNpzFileTs"></i>
             </button>

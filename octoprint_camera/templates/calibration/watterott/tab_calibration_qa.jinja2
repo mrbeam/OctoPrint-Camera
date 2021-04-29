@@ -1,11 +1,6 @@
 <div class="qa_images">
 <div>
-    <div class="qa_img_wrapper">
-        <g data-bind="attr: { transform: camera.zObjectImgTransform()}">
-                <img style="filter: url(#contrast2)"
-                       data-bind="attr: {src: camera.croppedUrl(),
-                                  width:cornerCalibration.calImgWidth(), height:cornerCalibration.calImgHeight()}" />
-            </g>
+{#    <div class="qa_img_wrapper">#}
         <svg version="1.1"
              width="100%" height="100%" viewBox="0 0 512 384"
              data-bind="attr: {viewBox: cornerCalibration.calSvgViewBox()}">
@@ -20,11 +15,17 @@
                 </filter>
             </defs>
 
+        <g data-bind="attr: { transform: camera.zObjectImgTransform()}">
+                <image style="filter: url(#contrast2)"
+                       data-bind="attr: {href: camera.croppedUrl(),
+                                  width:cornerCalibration.calImgWidth(), height:cornerCalibration.calImgHeight()}" />
+            </g>
             <path d="M 398.5,300 L 101.5,300 L 101.5,90 L 398.5,90 L 398.5,300"
                   data-bind="attr: {style: 'fill:none; stroke:#4f2; opacity: 0.6;stroke-width: ' + (2 * 1 * cornerCalibration.calImgWidth() / 500)}"/>
                                        <!-- 2 * tolerance * imgWidth / work_area_width -->
         </svg>
-    </div>
+{#    </div>#}
+        <a data-bind="click:camera.loadPicture">load image</a>
 </div>
 <ul>
     <li class="example bad_example"><img src="/plugin/camera/static/img/calibration/qa_final_rectangle_bad1.jpg" /></li>
