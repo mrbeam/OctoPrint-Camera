@@ -498,12 +498,9 @@ class CameraPlugin(
     def get_lens_calibration_image(self):
         values = request.values
         timestamp = values.get("timestamp", None)
-        self._logger.warning("TIMESTAMP RECEIVED %s", timestamp)
         if timestamp:
-            
             images = self.lens_calibration_thread.get_images(timestamp)
             if images:
-                self._logger.warning("IMAGES %s", images)
                 return make_response(jsonify(dict_map(json_serialisor, images)))
         # In every other case, there is no images with that timestamp
         return make_response("The timestamp does not correspond to any known image", 406) 
