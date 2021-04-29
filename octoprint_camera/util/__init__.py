@@ -10,6 +10,4 @@ from octoprint_mrbeam.support import CALIBRATION_STICK_FILE_PATH
 
 
 def factory_mode():
-    # TODO - Phase 2 - Make it dependent on the sticks 
-    return True
     return os.path.isfile(CALIBRATION_STICK_FILE_PATH)
