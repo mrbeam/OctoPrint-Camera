@@ -4,6 +4,16 @@
     height: auto;
 }
 
+#segment_group rect {
+  fill: green;
+  fill-opacity: 0.3;
+}
+#segment_group rect.highlight {
+  fill-opacity: 0.5;
+  stroke: #00ff00;
+  stroke-width: 8px;
+}
+
 #initial_camera_calibration #heatmap_container {
     /* Factory calibration case */
     width: calc(95% - 10rem - 110px);
