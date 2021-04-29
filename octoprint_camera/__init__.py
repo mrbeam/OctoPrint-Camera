@@ -23,11 +23,13 @@ from octoprint.server.util.flask import add_non_caching_response_headers
 from octoprint.server import NO_CONTENT
 from octoprint.settings import settings
 from octoprint.util import dict_merge
-from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES, LENS_CALIBRATION
+from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES, LENS_CALIBRATION, MIN_BOARDS_DETECTED
 from octoprint_mrbeam.camera.undistort import _getCamParams
-from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+# from octoprint_mrbeam.support import check_support_mode
 from octoprint_mrbeam.util import dict_map
 from octoprint_mrbeam.util.log import json_serialisor
+
 
         
 import pkg_resources
@@ -39,6 +41,7 @@ from .camera import CameraThread
 
 # from .image import LAST, NEXT, WHICH, PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH, PIC_TYPES
 from .iobeam import IoBeamEvents
+from .leds import LedEventListener
 from .util import logme, logExceptions
 from .util.image import corner_settings_valid, lens_settings_valid, SettingsError
 from .util.flask import send_image, send_file_b64
@@ -73,10 +76,14 @@ class CameraPlugin(
         # Shadow settings for the lens settings
         self.__lens_datafile = None
         self.__lens_settings = {}
+        # Led event listener and client
+        self.led_client = None
 
         from octoprint.server import debug
-
         self.debug = debug
+
+    def initialize(self):
+        self.led_client = LedEventListener(self)
 
     ##~~ StartupPlugin mixin
 
@@ -95,6 +102,9 @@ class CameraPlugin(
         self._event_bus.subscribe(
             IoBeamEvents.ONEBUTTON_PRESSED, self.capture_img_for_lens_calibration
         )
+        if util.factory_mode():
+            # Invite to take a picture for the lens calibration
+            self._event_bus.fire(MrBeamEvents.LENS_CALIB_IDLE)
 
     ##~~ ShutdownPlugin mixin
 
@@ -434,6 +444,7 @@ class CameraPlugin(
             lens_ok = lens_settings_valid(np.load(self._settings.get(['lens_legacy_datafile'])))
         except Exception as e:
             self._logger.error("Error when retrieving lens settings %s" % e)
+            lens_ok = False
         corners_ok = corner_settings_valid(self._settings.get(['corners', 'factory']))
         if corners_ok:
             ret += ['corners']
@@ -462,7 +473,7 @@ class CameraPlugin(
             json_data = request.get_json()
         except BadRequest:
             return make_response("Malformed JSON body in request", 400)
-
+        self._logger.warning("JSON %s", json_data)
         if not all(k in json_data.keys() for k in ["newCorners", "newMarkers"]):
             # TODO correct error message
             return make_response("No profile included in request", 400)
@@ -603,6 +614,9 @@ class CameraPlugin(
                 stateChangeCallback=self.send_lens_calibration_state,
                 factory=True,
             )
+            # FIXME - Right now the npz files get loaded funny 
+            #         and some values aren't json pickable etc...
+            self.lens_calibration_thread.state.rm_from_origin("factory")
             self.lens_calibration_thread.start()
 
     def stop_lens_calibration(self, blocking=True):
@@ -612,12 +626,42 @@ class CameraPlugin(
             self.lens_calibration_thread.join()
 
     def capture_img_for_lens_calibration(self, *a, **kw):
+        from threading import Timer
         # Ignore the arguments in case it getas triggered by an event that wants to pass on a payload etc...
-        return lens.capture_img_for_lens_calibration(
+        if len(self.lens_calibration_thread) == MIN_BOARDS_DETECTED - 1:
+            self._logger.info("Last picture to be taken")
+            self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
+        elif (
+            len(self.lens_calibration_thread) >= MIN_BOARDS_DETECTED
+            and util.factory_mode()
+        ):
+            self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_FAIL)
+            self._logger.info("Ignoring this picture")
+            return
+        else:
+            self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
+        
+        lens.capture_img_for_lens_calibration(
             self.lens_calibration_thread, 
             self.camera_thread,
             "/tmp"
         )
+        if len(self.lens_calibration_thread) >= MIN_BOARDS_DETECTED:
+            if util.factory_mode():
+                # Watterott - Auto save calibration
+                self.saveLensCalibration()
+                t = Timer(
+                    1.2,
+                    self._event_bus.fire,
+                    args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,),
+                )
+                t.start()
+            else:
+                self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
+            self.lens_calibration_thread.scaleProcessors(2)
+        else:
+            self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_DONE)
+
         
 __plugin_name__ = "Camera"
 __plugin_pythoncompat__ = ">=2.7,<4"

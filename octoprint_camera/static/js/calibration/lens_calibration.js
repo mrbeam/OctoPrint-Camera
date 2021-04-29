@@ -68,11 +68,19 @@ $(function () {
                         self.images[path][key] = ko.observable(val);
                     }
                     // KO version < 3.5 hack to update the successful images
+                    //   1. self.getLensCalibrationImage receives the timestamp for the image we need
                     self.images[path].timestamp.subscribe(self.getLensCalibrationImage);
+                    //   2. Run self.getLensCalibrationImage when the state becomes successful
                     self.images[path].state.subscribe(function(newValue) {
                         if (newValue == "success")
                             self.images[path].timestamp.notifySubscribers();
                     })
+                    // Attach a processing duration attached to each image
+                    self.images[path].processing_duration = ko.computed(function() {
+                        self.images[path].tm_end() !== null
+                            ? (self.images[path].tm_end() - self.images[path].tm_proc()).toFixed(1) + " sec"
+                            : "?";
+                    });
                     // Download the image
                     self.getLensCalibrationImage(self.images[path].timestamp());
                 }
@@ -83,13 +91,13 @@ $(function () {
                 // }, function (result) {
                 //     self.getLensCalibrationImage(self.images[path].timestamp());
                 // });
-                self.images[path].processing_duration = ko.computed(function() {
-                    self.images[path].tm_end() !== null
-                        ? (self.images[path].tm_end() - self.images[path].tm_proc()).toFixed(1) + " sec"
-                        : "?";
-                });
             }
+
             // TODO : Remove images that were dropped
+            Object.keys(self.images).filter(x => ! Object.keys(imgInfo).includes(x))
+                                    .forEach(function(path){
+                delete self.images[path];
+            })
             // Hack : Refresh the array of images to display
             //        The rawPicSelection does not have direct 
             //        bindings to the observables in self.images
@@ -270,7 +278,7 @@ $(function () {
         };
 
         self.stopLensCalibration = function () {
-            self.calibration.simpleApiCommand(
+            self.camera.simpleApiCommand(
                 "camera_stop_lens_calibration",
                 {},
                 function () {
@@ -313,11 +321,11 @@ $(function () {
         };
 
         self.resetView = function () {
-            self.calibration.resetUserView();
+            self.camera.resetUserView();
         };
 
         self.saveRawPic = function () {
-            self.calibration.simpleApiCommand(
+            self.camera.simpleApiCommand(
                 "lens_calibration_capture",
                 {},
                 self._rawPicSuccess,
@@ -328,7 +336,7 @@ $(function () {
 
         self.delRawPic = function () {
             $("#heatmap_board" + this.index).remove(); // remove heatmap
-            self.calibration.simpleApiCommand(
+            self.camera.simpleApiCommand(
                 "lens_calibration_del_image",
                 { path: this["path"] },
                 self._refreshPics,
@@ -339,7 +347,7 @@ $(function () {
 
         self.restoreFactory = function () {
             // message type not defined - not implemented for Calibration tool
-            self.calibration.simpleApiCommand(
+            self.camera.simpleApiCommand(
                 "calibration_lens_restore_factory",
                 {},
                 function () {
