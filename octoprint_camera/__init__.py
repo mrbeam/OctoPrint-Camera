@@ -229,6 +229,7 @@ class CameraPlugin(
                 "css/calibration_qa.css",
                 "css/mrbeam.css",
                 "css/calibration_corner.css",
+                "css/calibration_lens.css",
             ],
             less=[],
         )
