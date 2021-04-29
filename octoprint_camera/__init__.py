@@ -502,11 +502,13 @@ class CameraPlugin(
         return NO_CONTENT
 
     # Returns the image to diplay on the interface
-    @octoprint.plugin.BlueprintPlugin.route("/get_lens_calibration_image", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/get_lens_calibration_image", methods=["POST"])
     @logExceptions
     def get_lens_calibration_image(self):
-        values = request.values
-        timestamp = values.get("timestamp", None)
+        # values = request.values
+        _json = request.get_json()
+        # timestamp = values.get("timestamp", None)
+        timestamp = _json.get("timestamp", None)
         if timestamp:
             images = self.lens_calibration_thread.get_images(timestamp)
             if images:
@@ -521,7 +523,10 @@ class CameraPlugin(
     # @restricted_access_or_calibration_tool_mode #TODO activate
     @logExceptions
     def deleteCalibrationImage(self):
-        file_path = request.values.get("path", None)
+        _json = request.get_json()
+        self._logger.warning(_json)
+        file_path = _json.get("path", None)
+        self._logger.warning(file_path)
         self.lens_calibration_thread.remove(file_path)
         return NO_CONTENT
 

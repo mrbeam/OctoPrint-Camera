@@ -218,10 +218,10 @@ $(function () {
         self.getLensCalibrationImage = function(timestamp) {
             self.calibration.simpleApiCommand(
                 "get_lens_calibration_image",
-                {"timestamp": timestamp},
+                JSON.stringify({"timestamp": timestamp}),
                 self.images_update,
                 self._getRawPicError,
-                "GET"
+                "POST"
             );
         }
 
@@ -338,7 +338,7 @@ $(function () {
             $("#heatmap_board" + this.index).remove(); // remove heatmap
             self.camera.simpleApiCommand(
                 "lens_calibration_del_image",
-                { path: this["path"] },
+                JSON.stringify({ path: this["path"] }),
                 self._refreshPics,
                 self._delRawPicError,
                 "POST"
