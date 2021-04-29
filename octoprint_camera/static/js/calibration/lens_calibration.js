@@ -16,11 +16,117 @@ $(function () {
         self.calibration = parameters[0];
         self.camera = parameters[1];
         // self.analytics = parameters[2]; //TODO disabled for watterott
-
-        self.lensCalibrationActive = ko.observable(false);
+        // TODO Pahse 2 - Determine whether the lens calibration is active from backend 
+        self.lensCalibrationActive = ko.observable(true);
 
         self.lensCalibrationNpzFileTs = ko.observable(null);
         self.rawPicSelection = ko.observableArray([]);
+        self.images = {};
+        self.updateCounter = ko.observable(0)
+        /*  Apply the info to our list of images
+            The imgInfo could also contain the b64 encoded images
+        */
+        self.images_update = function(imgInfo) {
+            // imgInfo = {
+            // '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
+            //      state: "processing",
+            //      tm_proc: 1590151819.735044,
+            //      tm_added: 1590151819.674166,
+            //      board_bbox: [[767.5795288085938, 128.93748474121094],
+            //                   [1302.0089111328125, 578.4738159179688]], // [xmin, ymin], [xmax, ymax]
+            //      board_center: [1039.291259765625, 355.92547607421875], // cx, cy
+            //      found_pattern: null,
+            //      index: 2,
+            //      board_size: [5, 6]
+            //    }, ...
+            // }
+        
+            for (const [path, value] of Object.entries(imgInfo)) {
+                value.path = ko.observable(path);
+                // Check if the image had already been saved previously
+                if (self.images[path]) {
+                    // only update the image if there is data
+                    if (value.image){
+                        if (self.images[path].image)
+                            self.images[path].image(value.image);
+                        else
+                            self.images[path].image = ko.observable(value.image);
+                    }
+                    // update all other observables
+                    for (const [key, val] of Object.entries(value)) {
+                        if (key != "image") {
+                            if (self.images[path][key] instanceof ko.observable)
+                                self.images[path][key](val)
+                            else
+                                self.images[path][key] = ko.observable(val)
+                        }
+                    }
+                } else {
+                    self.images[path] = {}
+                    // initialise our image with observables
+                    for (const [key, val] of Object.entries(value)) {
+                        self.images[path][key] = ko.observable(val);
+                    }
+                    // KO version < 3.5 hack to update the successful images
+                    self.images[path].timestamp.subscribe(self.getLensCalibrationImage);
+                    self.images[path].state.subscribe(function(newValue) {
+                        if (newValue == "success")
+                            self.images[path].timestamp.notifySubscribers();
+                    })
+                    // Download the image
+                    self.getLensCalibrationImage(self.images[path].timestamp());
+                }
+                //  KO version >= 3.5 (currently 3.4)
+                // // When there is a success, refresh the image
+                // ko.when(function () {
+                //     return self.images[path].status() == "success";
+                // }, function (result) {
+                //     self.getLensCalibrationImage(self.images[path].timestamp());
+                // });
+                self.images[path].processing_duration = ko.computed(function() {
+                    self.images[path].tm_end() !== null
+                        ? (self.images[path].tm_end() - self.images[path].tm_proc()).toFixed(1) + " sec"
+                        : "?";
+                });
+            }
+            // TODO : Remove images that were dropped
+            // Hack : Refresh the array of images to display
+            //        The rawPicSelection does not have direct 
+            //        bindings to the observables in self.images
+            self.updateCounter(self.updateCounter()+1)
+            // self.update_rawPicSelection();
+        };
+
+        self.update_rawPicSelection = ko.computed(function() {
+            // Hack : Use the counter as a direct observable 
+            //        The rawPicSelection does not have direct 
+            //        bindings to the observables in self.images
+            self.updateCounter()
+            // inneficient:
+            // 1. ko.toJS(img_arr) will make a copy of the content, 
+            //    including the images  -> huge waste of ram
+            let img_arr = [];
+            for (const [path, value] of Object.entries(self.images)) {
+                value.path = path;
+                img_arr.push(value);
+            }
+            // Add empty slots (up to 9)
+            for (let i = img_arr.length; i < 9; i++) {
+                img_arr.push({
+                    index: -1,
+                    path: null,
+                    state: "missing",
+                });
+            }
+            // Sort the array so that the pictures don't move in the grid
+            img_arr.sort(function (l, r) {
+                if (l.index == r.index) return 0;
+                else if (l.index == -1) return 1;
+                else if (r.index == -1) return -1;
+                else return l.index < r.index ? -1 : 1;
+            });
+            self.rawPicSelection(ko.toJS(img_arr));
+        });
 
         self.cameraBusy = ko.computed(function () {
             return self
@@ -68,9 +174,9 @@ $(function () {
         self.onStartupComplete = function () {
             if (window.mrbeam.isFactoryMode()) {
                 self._refreshPics();
-                $("#lenscal_tab_btn").click(function () {
-                    self.startLensCalibration();
-                });
+                // $("#lenscal_tab_btn").click(function () {
+                //     self.startLensCalibration();
+                // });
             }
         };
 
@@ -81,28 +187,13 @@ $(function () {
         };
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
-            if (plugin !== "mrbeam" || !data) return;
-
-            if (!self.calibration.calibrationScreenShown()) {
-                return;
-            }
+            if (plugin !== "camera" || !data) return;
 
             if ("chessboardCalibrationState" in data) {
                 let _d = data["chessboardCalibrationState"];
 
                 self.calibration.calibrationState(_d);
-                // { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
-                //      state: "processing",
-                //      tm_proc: 1590151819.735044,
-                //      tm_added: 1590151819.674166,
-                //      board_bbox: [[767.5795288085938, 128.93748474121094],
-                //                   [1302.0089111328125, 578.4738159179688]], // [xmin, ymin], [xmax, ymax]
-                //      board_center: [1039.291259765625, 355.92547607421875], // cx, cy
-                //      found_pattern: null,
-                //      index: 2,
-                //      board_size: [5, 6]
-                //    }, ...
-                // }
+                self.images_update(_d.pictures);
 
                 if ("lensCalibrationNpzFileTs" in _d) {
                     self.lensCalibrationNpzFileTs(
@@ -112,54 +203,20 @@ $(function () {
                     );
                 }
 
-                let heatmap_arr = [];
-                let found_bboxes = [];
-                let total_score = 0;
-                for (const [path, value] of Object.entries(_d.pictures)) {
-                    value.path = path;
-                    value.url = path.replace(
-                        "home/pi/.octoprint/uploads",
-                        "downloads/files/local"
-                    );
-                    value.processing_duration =
-                        value.tm_end !== null
-                            ? (value.tm_end - value.tm_proc).toFixed(1) + " sec"
-                            : "?";
-                    heatmap_arr.push(value);
-                    if (value.board_bbox) {
-                        // TODO individual score should be attributed when all boxes are in the list
-                        value.score = self._calcPicScore(
-                            value.board_bbox,
-                            found_bboxes
-                        );
-                        total_score += value.score;
-                        found_bboxes.push(value.board_bbox);
-                    }
-                }
                 self.updateHeatmap(_d.pictures);
-
-                // TODO mv this into updateHeatmap
-                for (let i = heatmap_arr.length; i < 9; i++) {
-                    heatmap_arr.push({
-                        index: -1,
-                        path: null,
-                        url: "",
-                        state: "missing",
-                    });
-                }
-
-                // required to refresh the heatmap
-                $("#heatmap_container").html($("#heatmap_container").html());
-                heatmap_arr.sort(function (l, r) {
-                    if (l.index == r.index) return 0;
-                    else if (l.index == -1) return 1;
-                    else if (r.index == -1) return -1;
-                    else return l.index < r.index ? -1 : 1;
-                });
-
-                self.rawPicSelection(heatmap_arr);
             }
         };
+
+        self.getLensCalibrationImage = function(timestamp) {
+            self.calibration.simpleApiCommand(
+                "get_lens_calibration_image",
+                {"timestamp": timestamp},
+                self.images_update,
+                self._getRawPicError,
+                "GET"
+            );
+        }
+
 
         self.startLensCalibration = function () {
             // self.analytics.send_fontend_event("lens_calibration_start", {});//todo enable analytic
@@ -264,15 +321,16 @@ $(function () {
                 "lens_calibration_capture",
                 {},
                 self._rawPicSuccess,
-                self._saveRawPicError
+                self._saveRawPicError,
+                "GET"
             );
         };
 
         self.delRawPic = function () {
             $("#heatmap_board" + this.index).remove(); // remove heatmap
             self.calibration.simpleApiCommand(
-                "calibration_del_pic",
-                { name: this["path"] },
+                "lens_calibration_del_image",
+                { path: this["path"] },
                 self._refreshPics,
                 self._delRawPicError,
                 "POST"
@@ -308,44 +366,13 @@ $(function () {
         };
 
         self._refreshPics = function () {
-            console.error('TODO change to new api');
             self.calibration.simpleApiCommand(
-                "lens_get_captured_img_list",
+                "send_lens_captured_img_list",
                 {},
                 self._rawPicSuccess,
                 self._getRawPicError,
                 "GET"
             );
-        };
-
-        self._calcPicScore = function (bbox, found_bboxes) {
-            if (!bbox) return 0;
-            const [x1, y1] = bbox[0];
-            const [x2, y2] = bbox[1];
-            let max_overlap = 0;
-            const area = (x2 - x1) * (y2 - y1);
-            for (var i = 0; i < found_bboxes.length; i++) {
-                var existing_bbox = found_bboxes[i];
-                max_overlap = Math.max(
-                    max_overlap,
-                    self._getBboxIntersectingArea(bbox, existing_bbox)
-                );
-            }
-            const score = (1 - max_overlap / area) * MAX_BOARD_SCORE;
-            return score;
-        };
-
-        self._getBboxIntersectingArea = function (bb1, bb2) {
-            // precondition: bb = [[xmin, ymin], [xmax, ymax]] with always _min < _max
-            const [x11, y11] = bb1[0];
-            const [x21, y21] = bb1[1];
-            const [x12, y12] = bb2[0];
-            const [x22, y22] = bb2[1];
-            if (x21 < x12 || x11 > x22) return 0; // bboxes don't overlap on the x axis
-            if (y21 < y12 || y11 > y22) return 0; // bboxes don't overlap on the y axis
-            const dx = Math.min(x21, x22) - Math.max(x11, x12);
-            const dy = Math.min(y21, y22) - Math.max(y11, y12);
-            return dx * dy;
         };
 
         // HEATMAP
@@ -382,6 +409,8 @@ $(function () {
             let heatmapGroup = $("#segment_group");
             heatmapGroup.empty();
             heatmapGroup.append(boxes);
+            // required to refresh the heatmap
+            $("#heatmap_container").html($("#heatmap_container").html());
         };
 
         // RAW PIC

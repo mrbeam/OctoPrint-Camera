@@ -12,17 +12,21 @@ from octoprint_mrbeam.util import dict_map
 PY3 = sys.version_info >= (3,)
 _basestring = str if PY3 else basestring
 
+def file_to_b64(item):
+    if isinstance(item, _basestring):
+        with open(item, "rb",) as fh:
+            buf = base64.b64encode(fh.read())
+    else:
+        buf = base64.b64encode(item.read())
+    return buf
+
 def send_file_b64(item, **kw):
     """
     Return the item as a base 64 encoded binary in a flask response
     The item should either be a file path or an item which implements
     a 1`read()` function
     """
-    if isinstance(item, _basestring):
-        with open(item, "rb",) as fh:
-            buf = base64.b64encode(fh.read())
-    else:
-        buf = base64.b64encode(item.read())
+    buf = file_to_b64(item)
     response = flask.make_response(buf)
     response.headers["Content-Transfer-Encoding"] = "base64"
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -34,12 +38,7 @@ def send_image(image, **kw):
     The item should either be a file path or an item which implements
     a 1`read()` function
     """
-    if isinstance(image, _basestring):
-        with open(image, "rb",) as fh:
-            buf = base64.b64encode(fh.read())
-    else:
-        buf = base64.b64encode(image.read())
-
+    buf = file_to_b64(image)
     response = flask.make_response(flask.jsonify(dict_map(
         json_serialisor, 
         dict(

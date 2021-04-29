@@ -26,6 +26,8 @@ from octoprint.util import dict_merge
 from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES, LENS_CALIBRATION
 from octoprint_mrbeam.camera.undistort import _getCamParams
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
+from octoprint_mrbeam.util import dict_map
+from octoprint_mrbeam.util.log import json_serialisor
 
         
 import pkg_resources
@@ -381,7 +383,7 @@ class CameraPlugin(
                 )
             except SettingsError as e:
                 return flask.make_response(
-                    "Wrong camera settings for the requested picture %s" % e, 500
+                    "Wrong camera settings for the requested picture %s" % e, 506
                 )
             else:
                 if image:
@@ -399,7 +401,7 @@ class CameraPlugin(
     def _informFrontend(self):
         self._plugin_manager.send_plugin_message(
             "camera",
-            dict(newImage=time.time()),
+            dict_map(json_serialisor, dict(newImage=time.time())),
         )
 
     # Returns the timestamp of the latest available image
@@ -407,7 +409,7 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/ts", methods=["GET"])
     @logExceptions
     def getTimestamp(self):
-        data = {"timestamp": self.camera_thread.latest_img_timestamp }
+        data = dict_map(json_serialisor, {"timestamp": self.camera_thread.latest_img_timestamp })
         return jsonify(data)
 
     # Whether the camera is running or not
@@ -443,7 +445,7 @@ class CameraPlugin(
         data = {"available_corrections": ret}
         return jsonify(data)
 
-    @octoprint.plugin.BlueprintPlugin.route("/lens_calibration_capture", methods=["POST"])
+    @octoprint.plugin.BlueprintPlugin.route("/lens_calibration_capture", methods=["GET"])
     @logExceptions
     def flask_capture_img_for_lens_calibration(self):
         return jsonify(dict(ret=self.capture_img_for_lens_calibration()))
@@ -475,27 +477,50 @@ class CameraPlugin(
         self._settings.set(['corners', key], json_data)
         return NO_CONTENT
     
+    @logExceptions
     def send_lens_calibration_state(self, data):
         self._plugin_manager.send_plugin_message(
-            "camera", dict(chessboardCalibrationState=data)
+            "camera", dict_map(json_serialisor, dict(chessboardCalibrationState=data))
         )
-    
-    def send_lens_get_captured_img_list(self):
+
+    @octoprint.plugin.BlueprintPlugin.route(    
+        "/send_lens_captured_img_list", methods=["GET"]
+    )
+    def send_lens_captured_img_list(self):
         # This function will trigger the lens calibration on_change callback
         # This callback sends the whole list of images available
-        self.lens_calibration_thread.on_change()
-    ##~~ Camera Plugin
+        self.lens_calibration_thread.state.onChange()
+        return NO_CONTENT
 
-    # NOTE : Can be re-enabled for the factory mode.
-    #        For now, it is always in factory mode
-    # TODO : Phase 2 - calibration tool mode as long as the
-    #        factory calibration is not done and validated
-    # @property
-    # def calibration_tool_mode(self):
-    #     """Get the calibration tool mode"""
-    #     ret = check_calibration_tool_mode(self)
-    #     # self._fixEmptyUserManager()
-    #     return ret
+    # Returns the image to diplay on the interface
+    @octoprint.plugin.BlueprintPlugin.route("/get_lens_calibration_image", methods=["GET"])
+    @logExceptions
+    def get_lens_calibration_image(self):
+        values = request.values
+        timestamp = values.get("timestamp", None)
+        self._logger.warning("TIMESTAMP RECEIVED %s", timestamp)
+        if timestamp:
+            
+            images = self.lens_calibration_thread.get_images(timestamp)
+            if images:
+                self._logger.warning("IMAGES %s", images)
+                return make_response(jsonify(dict_map(json_serialisor, images)))
+        # In every other case, there is no images with that timestamp
+        return make_response("The timestamp does not correspond to any known image", 406) 
+
+
+    @octoprint.plugin.BlueprintPlugin.route(
+        "/lens_calibration_del_image", methods=["POST"]
+    )
+    # @restricted_access_or_calibration_tool_mode #TODO activate
+    @logExceptions
+    def saveInitialCalibrationMarkers(self):
+        file_path = request.values.get("path",  None)
+        self.lens_calibration_thread.remove(file_path)
+        return NO_CONTENT
+
+
+    ##~~ Camera Plugin
 
     def get_picture(
         self,
@@ -577,7 +602,8 @@ class CameraPlugin(
         else:
             self.lens_calibration_thread = BoardDetectorDaemon(
                 self._settings.get(['lens_legacy_datafile']),
-                stateChangeCallback=self.send_lens_calibration_state
+                stateChangeCallback=self.send_lens_calibration_state,
+                factory=True,
             )
             self.lens_calibration_thread.start()
 
