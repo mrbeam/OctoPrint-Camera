@@ -102,7 +102,7 @@ class CameraPlugin(
         if util.factory_mode():
             # Invite to take a picture for the lens calibration
             self._event_bus.fire(MrBeamEvents.LENS_CALIB_IDLE)
-        self.led_client.set_inside_brightness(1)
+            self.led_client.set_inside_brightness(1)
 
     ##~~ ShutdownPlugin mixin
 
@@ -255,7 +255,7 @@ class CameraPlugin(
     # @calibration_tool_mode_only
     @logExceptions
     def calibration_wrapper(self):
-        from flask import make_response, render_template
+        from flask import render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
         from octoprint_mrbeam.util.device_info import DeviceInfo
         device_info = DeviceInfo()
@@ -513,7 +513,7 @@ class CameraPlugin(
         if timestamp:
             images = self.lens_calibration_thread.get_images(timestamp)
             if images:
-                return make_response(jsonify(dict_map(json_serialisor, images)))
+                return make_response(images, default=json_serialisor)
         # In every other case, there is no images with that timestamp
         return make_response("The timestamp does not correspond to any known image", 406) 
 
@@ -616,6 +616,7 @@ class CameraPlugin(
                 self._settings.get(['lens_legacy_datafile']),
                 stateChangeCallback=self.send_lens_calibration_state,
                 factory=True,
+                runCalibrationAsap=util.factory_mode(),
             )
             # FIXME - Right now the npz files get loaded funny 
             #         and some values aren't json pickable etc...
@@ -651,17 +652,7 @@ class CameraPlugin(
             "/tmp"
         )
         if len(self.lens_calibration_thread) >= MIN_BOARDS_DETECTED:
-            if util.factory_mode():
-                # Watterott - Auto save calibration
-                self.saveLensCalibration()
-                t = Timer(
-                    1.2,
-                    self._event_bus.fire,
-                    args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,),
-                )
-                t.start()
-            else:
-                self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
+            self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
             self.lens_calibration_thread.scaleProcessors(2)
         else:
             self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_DONE)
