@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import base64
+import cv2
 import flask
 from flask import jsonify, request, make_response
 import io
@@ -531,6 +532,7 @@ class CameraPlugin(
     # @restricted_access_or_calibration_tool_mode #TODO activate
     @logExceptions
     def deleteCalibrationImage(self):
+        self._logger.warning("DELETING PICTURE")
         _json = request.get_json()
         self._logger.warning(_json)
         file_path = _json.get("path", None)

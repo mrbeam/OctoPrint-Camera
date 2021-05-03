@@ -18,7 +18,6 @@ $(function () {
         // self.analytics = parameters[2]; //TODO disabled for watterott
         // TODO Pahse 2 - Determine whether the lens calibration is active from backend 
         self.lensCalibrationActive = ko.observable(true);
-
         self.lensCalibrationNpzFileTs = ko.observable(null);
         self.rawPicSelection = ko.observableArray([]);
         self.images = {};
@@ -338,11 +337,23 @@ $(function () {
         };
 
         self.delRawPic = function () {
-            $("#heatmap_board" + this.index).remove(); // remove heatmap
+            let index = this.index;
+            let path = this.path;
+            // TODO gray out image while waiting for confirmation
+            //      - A bit more difficult than expected. 
+            //        Probably requires to update self.rawPicSelection
+            new PNotify({
+                title: gettext("Deleting picture..."),
+                text: gettext("Please wait a second..."),
+                type: "warning",
+                hide: true,});
             self.camera.simpleApiCommand(
                 "lens_calibration_del_image",
-                JSON.stringify({ path: this["path"] }),
-                self._refreshPics,
+                JSON.stringify({ path: path }),
+                function() {
+                    $("#heatmap_board" + index).remove();
+                    self._refreshPics();
+                },
                 self._delRawPicError,
                 "POST"
             );
