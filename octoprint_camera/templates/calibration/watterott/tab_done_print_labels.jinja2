@@ -1,10 +1,10 @@
 <div class="qa_list_and_next" style="border: 1px solid grey;" data-bind="visible:!qaDone()">
     <h4>{{ _('Calibration not finished') }}</h4>
     <ul>
-        <li>{{ _('Is the lens calibration finished?') }} <i class="icon icon-ok" data-bind="visible: calibration.camera.availablePicTypes.corners()"></i>
-                                                <i class="icon icon-remove" data-bind="visible: !calibration.camera.availablePicTypes.corners()"></i></li>
-        <li>{{ _('is the corner calibration finished?') }} <i class="icon icon-ok" data-bind="visible: lensCalibration.lensCalibrationComplete()"></i>
+        <li>{{ _('is the lens calibration finished?') }} <i class="icon icon-ok" data-bind="visible: lensCalibration.lensCalibrationComplete()"></i>
                                                 <i class="icon icon-remove" data-bind="visible: !lensCalibration.lensCalibrationComplete()"></i></li>
+        <li>{{ _('Is the corner calibration finished?') }} <i class="icon icon-ok" data-bind="visible: calibration.camera.availablePicTypes.corners()"></i>
+                                                <i class="icon icon-remove" data-bind="visible: !calibration.camera.availablePicTypes.corners()"></i></li>
     </ul>
 </div>
 <div data-bind="visible: qaDone()">

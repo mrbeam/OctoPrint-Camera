@@ -127,7 +127,7 @@ $(function () {
 
         self._getImgUrl = function (type, applyCrossVisibility) {
             console.log('newimgurl cornercalib');
-            self.camera.getImage('next', 'plain');
+            self.camera.getImage('next', type);
             return self.camera.rawUrl();
             if (type !== undefined) {
                 self.applySetting(type, applyCrossVisibility);
@@ -174,7 +174,6 @@ $(function () {
         });
 
         self.onStartupComplete = function () {
-            console.log('startup corner calib complete');
             if (window.mrbeam.isFactoryMode()) {
                 self.camera.getImage();
             }
@@ -188,12 +187,13 @@ $(function () {
                 } else {
                     self._stopReloadImageLoop();
                 }
-            })
+            });
+            self._reloadImageLoop();
         };
 
 
         self._reloadImageLoop = function () {
-            if (self.tabActive()) {
+            // if (self.tabActive()) {
                 if (!self.cornerCalibrationActive()) {
                     if (self.camera.availablePicTypes.corners()) {
                         self.cornerCalImgUrl(self._getImgUrl("corners", true));
@@ -221,7 +221,7 @@ $(function () {
                         new Date().getTime()
                     );
                 }
-            }
+            // }
         }
         self._startReloadImageLoop = function () {
             self.interval = setInterval(self._reloadImageLoop, 3000);//reloads image every 3 seconds

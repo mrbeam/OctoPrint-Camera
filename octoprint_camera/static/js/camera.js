@@ -85,6 +85,7 @@ $(function () {
         self.needsLensCalibration = ko.computed(function () {
             return !self.availablePicTypes.lens();
         });
+        self._reloadImageInterval = null;
 
         self.simpleApiCommand = function (
             command,
@@ -162,21 +163,23 @@ $(function () {
                     pic_type = GET_IMG.pic_plain
                 let success_callback = function (data) {
                     self.imageLoading(false);
-                    let imgData = 'data:image/jpg;base64,' + data.image
-                    if (pic_type == GET_IMG.pic_plain)
-                        self.rawUrl(imgData);
-                    else if (pic_type == GET_IMG.pic_corner)
-                        self.cornerUrl(imgData);
-                    else if (pic_type == GET_IMG.pic_lens)
-                        self.lensUrl(imgData);
-                    else
-                        self.croppedUrl(imgData);
-                    self.timestamp = data.timestamp;
-                    if (data.positions_found) {
+                    if(data.image) {
+                        let imgData = 'data:image/jpg;base64,' + data.image
+                        if (pic_type == GET_IMG.pic_plain)
+                            self.rawUrl(imgData);
+                        else if (pic_type == GET_IMG.pic_corner)
+                            self.cornerUrl(imgData);
+                        else if (pic_type == GET_IMG.pic_lens)
+                            self.lensUrl(imgData);
+                        else
+                            self.croppedUrl(imgData);
+                        self.timestamp = data.timestamp;
+                        if (data.positions_found) {
                             MARKERS.forEach(function (m) {
                                 self.markersFound[m](data.positions_found[m]);
                             });
                         }
+                    }
                 };
 
                 let error_callback = function (resp) {
@@ -190,6 +193,13 @@ $(function () {
             } else {
                 console.log('image already loading, waiting for response');
             }
+        }
+
+        self.startReloadImageLoop = function (which="last", pic_type="plain") {
+            self._reloadImageInterval = setInterval(function(){self.getImage(which, pic_type);}, 3000);//reloads image every 3 seconds
+        }
+        self.stopReloadImageLoop = function () {
+            clearInterval(self._reloadImageInterval);
         }
 
         // event listener callbacks //

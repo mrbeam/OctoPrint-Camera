@@ -14,6 +14,7 @@ $(function () {
         self.camera = parameters[1];
         self.lensCalibration = parameters[2];
         self.qa_cameraalignment_image_loaded = ko.observable(false);
+        self._tabActive = ko.observable(true);
 
         self.camera.rawUrl.subscribe(function(newValue){
            if (newValue) {
@@ -22,6 +23,22 @@ $(function () {
                self.qa_cameraalignment_image_loaded(false);
            }
         });
+        self.camera.startReloadImageLoop();
+        self.calibration.activeTab.subscribe(function (activeTab) {
+                self._tabActive(activeTab === self.calibration.TABS.alignment);
+            })
+            // self._reloadImageLoop();
+            self._tabActive.subscribe(function (active) {
+                if (active) {
+                    console.log('reload image loop alignment');
+                    self.camera.startReloadImageLoop();
+                } else {
+                    console.log('stop image loop alignment')
+                    self.camera.stopReloadImageLoop();
+                }
+            })
+
+
     }
 
     // view model class, parameters for constructor, container to bind to
