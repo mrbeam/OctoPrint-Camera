@@ -157,7 +157,7 @@ $(function () {
             if (!self.imageLoading()) {
                 self.imageLoading(true);
                 if (which == null)
-                    which = GET_IMG.latest
+                    which = GET_IMG.last
                 if (pic_type == null)
                     pic_type = GET_IMG.pic_plain
                 let success_callback = function (data) {
@@ -179,17 +179,10 @@ $(function () {
                         }
                 };
 
-                let error_callback = function (resp) {
-                    self.imageLoading(false);
-                    console.log("image request error", resp);
-                };
-                self.simpleApiCommand("image", {
-                    which: which,
-                    pic_type: pic_type
-                }, success_callback, error_callback, "GET");
-            } else {
-                console.log('image already loading, waiting for response');
-            }
+            let error_callback = function (resp) {
+                console.log("image request error", resp);
+            };
+            self.simpleApiCommand("image", {which: which, pic_type: pic_type}, success_callback, error_callback, "GET");
         }
 
         // event listener callbacks //

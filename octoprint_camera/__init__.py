@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import base64
+import cv2
 import flask
 from flask import jsonify, request, make_response
 import io
@@ -444,6 +445,7 @@ class CameraPlugin(
 
     # return the available corretions to the image
     @octoprint.plugin.BlueprintPlugin.route("/available_corrections", methods=["GET"])
+    @logExceptions
     def getAvailableCorrections(self):
         ret = ['plain']
         try:
@@ -504,6 +506,7 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route(    
         "/send_lens_captured_img_list", methods=["GET"]
     )
+    @logExceptions
     def send_lens_captured_img_list(self):
         # This function will trigger the lens calibration on_change callback
         # This callback sends the whole list of images available
@@ -532,6 +535,7 @@ class CameraPlugin(
     # @restricted_access_or_calibration_tool_mode #TODO activate
     @logExceptions
     def deleteCalibrationImage(self):
+        self._logger.warning("DELETING PICTURE")
         _json = request.get_json()
         self._logger.warning(_json)
         file_path = _json.get("path", None)
