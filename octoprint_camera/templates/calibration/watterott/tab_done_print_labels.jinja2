@@ -1,15 +1,34 @@
-<div>
-    <div class="qa_done_block">
-        <i class="icon-ok-sign"></i> {{ _('Done') }}
-    </div>
+<div class="qa_list_and_next" style="border: 1px solid grey;" data-bind="visible:!qaDone()">
+    <h4>{{ _('Calibration not finished') }}</h4>
+    <ul>
+        <li>{{ _('Is the lens calibration finished?') }} <i class="icon icon-ok" data-bind="visible: calibration.camera.availablePicTypes.corners()"></i>
+                                                <i class="icon icon-remove" data-bind="visible: !calibration.camera.availablePicTypes.corners()"></i></li>
+        <li>{{ _('is the corner calibration finished?') }} <i class="icon icon-ok" data-bind="visible: lensCalibration.lensCalibrationComplete()"></i>
+                                                <i class="icon icon-remove" data-bind="visible: !lensCalibration.lensCalibrationComplete()"></i></li>
+    </ul>
 </div>
-<div class="qa_done_buttons">
-    <div><h4>{{ _('Print Labels') }}:</h4></div>
-    <div></div>
-    <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('deviceLabel', e)}">
-        <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Device Label') }}</button></div>
-    <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('boxLabel', e)}">
-        <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Box Label') }}</button></div>
-    <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('eanLabel', e)}">
-        <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('EAN Labels') }}</button></div>
+<div data-bind="visible: qaDone()">
+    <div>
+        <div class="qa_done_block">
+            <i class="icon-ok-sign"></i> {{ _('Done') }}
+        </div>
+    </div>
+    <div class="qa_done_buttons">
+        <div><h4>{{ _('Print Labels') }}:</h4></div>
+        <div></div>
+        <div>
+            <button class="btn print_btn" data-bind="click: function(d, e){printLabel('deviceLabel', e)}">
+                <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Device Label') }}
+            </button>
+        </div>
+        <div>
+            <button class="btn print_btn" data-bind="click: function(d, e){printLabel('boxLabel', e)}">
+                <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Box Label') }}</button>
+        </div>
+        <div>
+            <button class="btn print_btn" data-bind="click: function(d, e){printLabel('eanLabel', e)}">
+                <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('EAN Labels') }}
+            </button>
+        </div>
+    </div>
 </div>

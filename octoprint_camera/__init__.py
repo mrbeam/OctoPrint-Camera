@@ -6,6 +6,7 @@ import flask
 from flask import jsonify, request, make_response
 import io
 import json
+import platform
 import numpy as np
 import os
 from os import path
@@ -25,6 +26,7 @@ from octoprint.settings import settings
 from octoprint.util import dict_merge
 from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES, LENS_CALIBRATION, MIN_BOARDS_DETECTED
 from octoprint_mrbeam.camera.undistort import _getCamParams
+from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 # from octoprint_mrbeam.support import check_support_mode
 from octoprint_mrbeam.util import dict_map
@@ -55,6 +57,7 @@ PIC_TYPES = (PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH)
 LAST = "last"
 NEXT = "next"
 WHICH = (LAST, NEXT)
+IS_X86 = platform.machine() == "x86_64"
 
 
 class CameraPlugin(
@@ -528,6 +531,12 @@ class CameraPlugin(
         self.lens_calibration_thread.remove(file_path)
         return NO_CONTENT
 
+    @octoprint.plugin.BlueprintPlugin.route("/print_label", methods=["POST"])
+    # @calibration_tool_mode_only
+    def printLabel(self):
+        res = labelPrinter(self, use_dummy_values=IS_X86).print_label(request)
+        self._logger.info("print label %s", res.response)
+        return make_response(jsonify(res), 200 if res["success"] else 502)
 
     ##~~ Camera Plugin
 

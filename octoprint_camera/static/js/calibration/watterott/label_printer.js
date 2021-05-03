@@ -11,6 +11,12 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels["labelPrinterViewModel"] = self;
         self.calibration = parameters[0];
+        self.lensCalibration = parameters[1];
+
+        self.qaDone = ko.computed(function() {
+                self.calibration.camera.availablePicTypes.corners() && self.lensCalibration.lensCalibrationComplete()
+            }
+        );
 
         self.printLabel = function (labelType, event) {
             let button = $(event.target);
@@ -18,7 +24,7 @@ $(function () {
             button.prop("disabled", true);
             self.calibration.simpleApiCommand(
                 "print_label",
-                { labelType: labelType, blink: true },
+                JSON.stringify({ command: 'print_label', labelType: labelType, blink: true }),
                 function () {
                     button.prop("disabled", false);
                     new PNotify({
@@ -37,7 +43,7 @@ $(function () {
                         hide: false,
                     });
                 },
-                "POST"
+                "POST",
             );
         };
     }
@@ -47,7 +53,7 @@ $(function () {
         LabelPrinterViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["calibrationViewModel"],
+        ["calibrationViewModel", "lensCalibrationViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#tab_done_print_labels"],
