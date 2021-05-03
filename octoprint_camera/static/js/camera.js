@@ -179,10 +179,17 @@ $(function () {
                         }
                 };
 
-            let error_callback = function (resp) {
-                console.log("image request error", resp);
-            };
-            self.simpleApiCommand("image", {which: which, pic_type: pic_type}, success_callback, error_callback, "GET");
+                let error_callback = function (resp) {
+                    self.imageLoading(false);
+                    console.log("image request error", resp);
+                };
+                self.simpleApiCommand("image", {
+                    which: which,
+                    pic_type: pic_type
+                }, success_callback, error_callback, "GET");
+            } else {
+                console.log('image already loading, waiting for response');
+            }
         }
 
         // event listener callbacks //
