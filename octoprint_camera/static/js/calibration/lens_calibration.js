@@ -466,7 +466,7 @@ $(function () {
         self.lensCalibrationToggleQA = function () {
             $("#lensCalibrationPhases").toggleClass("qa_active");
             if ($("#lensCalibrationPhases").hasClass("qa_active"))
-                self.refreshQAImg(GET_IMG.next);
+                self.refreshQAImg(GET_IMG.latest);
         };
 
         self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {
