@@ -43,6 +43,7 @@ $(function () {
         self.isCamCalibrated = false;
         self.countImagesLoaded = ko.observable(0);
         self.imagesInSession = ko.observable(0);
+        self.imageLoading = ko.observable(false);
 
         self.markersFound = {
             NW: ko.observable(),
@@ -50,6 +51,9 @@ $(function () {
             SE: ko.observable(),
             NE: ko.observable(),
         };
+        self.allMarkersFound = ko.computed(function(){
+            return self.markersFound['NW']() && self.markersFound['SW']() && self.markersFound['SE']() && self.markersFound['NE']();
+        })
         self.maxObjectHeight = 38; // in mm
         self.defaultMargin = self.maxObjectHeight / 582;
         self.objectZ = ko.observable(0); // in mm
@@ -85,7 +89,7 @@ $(function () {
             data,
             successCallback,
             errorCallback,
-            type
+            type,
         ) {
             data = data || {};
             data.command = command;
@@ -118,18 +122,19 @@ $(function () {
         self.loadAvaiableCorrection = function () {
             let success_callback = function (data) {
                 console.log('corrections', data.available_corrections);
-                self.availablePicTypes.corners(true);
                 PIC_TYPES.forEach(function (m) {
                     correctionAvailable = false;
-                    if (data.available_corrections[m]) {
+                    // console.log('available corrections', m);
+                    if (data.available_corrections.includes(m)) {
+                        console.log('available corrections', m, data.available_corrections.includes(m), );
                         data.available_corrections.forEach(correction => function () {
                             if (correction === m) {
-                                self.markersFound[m](true);
                                 correctionAvailable = true;
+                                self.availablePicTypes[correction](true);
                             }
                         })
                         if (!correctionAvailable) {
-                            self.markersFound[m](false);
+                            self.availablePicTypes[m](false);
                         }
                     }
                 });
@@ -147,31 +152,43 @@ $(function () {
             self.getImage(GET_IMG.last, GET_IMG.pic_plain);
         }
         self.getImage = function (which, pic_type) {
-            if (which == null)
-                which = GET_IMG.latest
-            if (pic_type == null)
-                pic_type = GET_IMG.pic_plain
-            let success_callback = function (data) {
-                if (pic_type == GET_IMG.pic_plain)
-                    self.rawUrl('data:image/jpg;base64,' + data.image);
-                else
-                    self.croppedUrl('data:image/jpg;base64,' + data.image);
-                self.timestamp = data.timestamp;
-                if (data.positions_found) {
-                    MARKERS.forEach(function (m) {
-                        if (data.positions_found[m]) {
-                            self.markersFound[m](data.positions_found[m]);
-                        }
+            if (!self.imageLoading()) {
+                self.imageLoading(true);
+
+                if (which == null)
+                    which = GET_IMG.latest
+                if (pic_type == null)
+                    pic_type = GET_IMG.pic_plain
+                let success_callback = function (data) {
+                    self.imageLoading(false);
+                    if (pic_type == GET_IMG.pic_plain && data.image)
+                        self.rawUrl('data:image/jpg;base64,' + data.image);
+                    else
+                        self.croppedUrl('data:image/jpg;base64,' + data.image);
+                    self.timestamp = data.timestamp;
+                    if (data.positions_found) {
+                        console.log('markers', data.positions_found, self.markersFound);
+                        MARKERS.forEach(function (m) {
+                            // if (data.positions_found[m]) {
+                                self.markersFound[m](data.positions_found[m]);
+                            // }
 
 
-                    });
-                }
-            };
+                        });
+                    }
+                };
 
-            let error_callback = function (resp) {
-                console.log("image request error", resp);
-            };
-            self.simpleApiCommand("image", {which: which, pic_type: pic_type}, success_callback, error_callback, "GET");
+                let error_callback = function (resp) {
+                    self.imageLoading(false);
+                    console.log("image request error", resp);
+                };
+                self.simpleApiCommand("image", {
+                    which: which,
+                    pic_type: pic_type
+                }, success_callback, error_callback, "GET");
+            } else {
+                console.log('image already loading, waiting for response');
+            }
         }
 
         // event listener callbacks //

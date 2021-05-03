@@ -49,7 +49,8 @@
                                         </li>
                                         <li id="tab_corner_calibration_wrap">
                                             <a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}
-                                                <i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete() || camera.availablePicTypes.corners()"></i>
+                                                <i class="icon icon-ok" data-bind="visible: camera.availablePicTypes.corners()"></i>
+{#                                                <i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete() || camera.availablePicTypes.corners()"></i>#}
                                                 <!-- <i class="icon icon-remove" data-bind="visible: !cornerCalibrationComplete()"></i> -->
                                             </a>
                                         </li>

@@ -60,7 +60,7 @@
 <div data-bind="visible: !cornerCalibrationActive()" width="100%">
     <div style="margin-top:1em;">
         <button class="btn btn-default"
-                data-bind="visible: calImgReady() && !cornerCalibrationComplete() && !camera.availablePicTypes.corners(), click: startCornerCalibration">
+                data-bind="visible: camera.allMarkersFound() && calImgReady() && !cornerCalibrationComplete() && !camera.availablePicTypes.corners(), click: startCornerCalibration">
             {{ _('Start Corner Calibration') }}
         </button>
     </div>
@@ -68,7 +68,7 @@
         <i class="icon icon-spinner icon-spin" style="font-weight: bold"></i>
         <span>&nbsp; {{ _('Loading image...') }}</span>
     </div>
-    <div class="qa_list_and_next" data-bind="visible: camera.availablePicTypes.corners">
+    <div class="qa_list_and_next" data-bind="visible: camera.availablePicTypes.corners()">
         <h4>{{ _('Checklist') }}:</h4>
         <ul>
             <li>{{ _('The 4 arrows are aligned with the blue crosses') }}</li>

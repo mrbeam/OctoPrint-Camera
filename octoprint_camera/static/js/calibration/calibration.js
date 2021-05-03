@@ -7,16 +7,26 @@
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 const STATIC_URL = "/plugin/camera/static/img/calibration/calpic_wait.svg";
 
+
 $(function () {
     function CalibrationViewModel(parameters) {
         let self = this;
         window.mrbeam.viewModels["calibrationViewModel"] = self;
+        self.TABS = {
+            alignment: "camalignment_tab_btn",
+            lens: "lenscal_tab_btn",
+            corner: "cornercal_tab_btn",
+            quality: "qacal_tab_btn",
+            labels: "done_tab_btn",
+            debug: "debug_tab_btn"
+        }
         self.cameraSettings = parameters[0];
         self.camera = parameters[1];
         self.loginState = parameters[2];
 
         self.calibrationScreenShown = ko.observable(false);
-        self.waitingForRefresh = ko.observable(true);
+        self.activeTab = ko.observable();
+
 
         // calibrationState is constantly refreshed by the backend
         // as an immutable array that contains the whole state of the calibration
@@ -36,7 +46,16 @@ $(function () {
         self._showCalibrationTool = function () {
             $("#calibration_tool_content").show();
             $("#calibration_tool_loading_overlay").hide();
+            $('a[data-toggle="tab"]').on('shown', function (e) {
+                console.log("Tab activated", e.target.id, e.relatedTarget.id);
+                // e.target // activated tab
+                // e.relatedTarget // previous tab
+                self.activeTab(e.target.id);
+            })
         };
+
+
+
 
         // This isn't used for now, but it's planned to use it for Watterott
         self.engrave_markers_without_gui = function () {
@@ -82,6 +101,6 @@ $(function () {
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        [],
+        [""],
     ]);
 });

@@ -14,9 +14,18 @@ $(function () {
         self.camera = parameters[1];
         self.cornerCalibration = parameters[2];//size 500 390
         self.camera.loadPicture();
+        self.qa_image_loaded = ko.observable(false);
+        self.camera.croppedUrl.subscribe(function (newValue) {
+            if (newValue) {
+                self.qa_image_loaded(true);
+            } else {
+                self.qa_image_loaded(false);
+            }
+        });
 
         self.onAllBound = function () {
-            self.camera.loadPicture();
+            // self.camera.loadPicture();
+
         }
     }
 

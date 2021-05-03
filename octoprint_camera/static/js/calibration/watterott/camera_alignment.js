@@ -13,10 +13,14 @@ $(function () {
         self.calibration = parameters[0];
         self.camera = parameters[1];
         self.lensCalibration = parameters[2];
-
         self.qa_cameraalignment_image_loaded = ko.observable(false);
-        $("#qa_cameraalignment_image").load(function () {
-            self.qa_cameraalignment_image_loaded(true);
+
+        self.camera.rawUrl.subscribe(function(newValue){
+           if (newValue) {
+               self.qa_cameraalignment_image_loaded(true);
+           }else{
+               self.qa_cameraalignment_image_loaded(false);
+           }
         });
     }
 
