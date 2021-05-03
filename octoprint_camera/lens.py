@@ -18,7 +18,7 @@ def capture_img_for_lens_calibration(board_detect_thread, camera_thread, datafol
         f.write(img.getvalue())
     board_detect_thread.add(str(path), extra_kw=dict(timestamp=ts))
 
-SYMLINK_IMG_DIR = symlink_path = "/home/pi/.octoprint/uploads/cam/debug"
+SYMLINK_IMG_DIR = "/home/pi/.octoprint/uploads/cam/debug"
 
 class BoardDetectorDaemon(lens.BoardDetectorDaemon):
     def __init__(self, 
@@ -27,16 +27,16 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
         rawImgLock=None,
         **kw
     ):
-        self.state = CalibrationState(
-            changeCallback=stateChangeCallback,
-            npzPath=output_calib,
-            rawImgLock=rawImgLock,
-        )
         lens.BoardDetectorDaemon.__init__(
             self,
             output_calib,
             stateChangeCallback=stateChangeCallback,
             rawImgLock=rawImgLock,
+            state=CalibrationState(
+                changeCallback=stateChangeCallback,
+                npzPath=output_calib,
+                rawImgLock=rawImgLock,
+            ),
             **kw
         )
     
@@ -55,11 +55,13 @@ class CalibrationState(lens.CalibrationState):
         lens.CalibrationState.add(self, path, *a, **kw)
         octoprint_mrbeam.util.makedirs(SYMLINK_IMG_DIR)
         symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
+        self._logger.warning("Symlink %s PATH %s", symlink_path, path)
         if not os.path.islink(symlink_path):
             os.symlink(path, symlink_path)
 
     def remove(self, path):
-        lens.BoardDetectorDaemon.remove(self, path)
+        lens.CalibrationState.remove(self, path)
         symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
+        self._logger.warning("Symlink %s PATH %s", symlink_path, path)
         if os.path.islink(symlink_path):
             os.remove(symlink_path)

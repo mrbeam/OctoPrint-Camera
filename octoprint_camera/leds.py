@@ -5,6 +5,10 @@ from octoprint_mrbeam import led_events
 
 class LedEventListener(led_events.LedEventListener):
     def __init__(self, plugin):
+        # Do not disturb the lights with client connections
+        self.LED_EVENTS[Events.STARTUP] = "echo not doing anything"
+        self.LED_EVENTS[Events.CLIENT_OPENED] = "echo not doing anything"
+        self.LED_EVENTS[Events.CLIENT_CLOSED] = "echo not doing anything"
         # Do not use the CommandTrigger class because we do not have a printer
         self._plugin = plugin
         self._event_bus = plugin._event_bus

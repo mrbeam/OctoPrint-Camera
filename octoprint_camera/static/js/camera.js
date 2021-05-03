@@ -39,6 +39,8 @@ $(function () {
         self.rawUrl = ko.observable(""); ///downloads/files/local/cam/debug/raw.jpg// TODO get from settings
         // TODO : bestPicture = {data: <base 64 src>, timestamp: <timestamp>}
         self.croppedUrl = ko.observable("");
+        self.cornerUrl = ko.observable("");
+        self.lensUrl = ko.observable("");
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.countImagesLoaded = ko.observable(0);
@@ -89,7 +91,7 @@ $(function () {
             data,
             successCallback,
             errorCallback,
-            type,
+            type
         ) {
             data = data || {};
             data.command = command;
@@ -154,28 +156,27 @@ $(function () {
         self.getImage = function (which, pic_type) {
             if (!self.imageLoading()) {
                 self.imageLoading(true);
-
                 if (which == null)
                     which = GET_IMG.latest
                 if (pic_type == null)
                     pic_type = GET_IMG.pic_plain
                 let success_callback = function (data) {
                     self.imageLoading(false);
-                    if (pic_type == GET_IMG.pic_plain && data.image)
-                        self.rawUrl('data:image/jpg;base64,' + data.image);
+                    let imgData = 'data:image/jpg;base64,' + data.image
+                    if (pic_type == GET_IMG.pic_plain)
+                        self.rawUrl(imgData);
+                    else if (pic_type == GET_IMG.pic_corner)
+                        self.cornerUrl(imgData);
+                    else if (pic_type == GET_IMG.pic_lens)
+                        self.lensUrl(imgData);
                     else
-                        self.croppedUrl('data:image/jpg;base64,' + data.image);
+                        self.croppedUrl(imgData);
                     self.timestamp = data.timestamp;
                     if (data.positions_found) {
-                        console.log('markers', data.positions_found, self.markersFound);
-                        MARKERS.forEach(function (m) {
-                            // if (data.positions_found[m]) {
+                            MARKERS.forEach(function (m) {
                                 self.markersFound[m](data.positions_found[m]);
-                            // }
-
-
-                        });
-                    }
+                            });
+                        }
                 };
 
                 let error_callback = function (resp) {

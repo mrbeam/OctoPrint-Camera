@@ -47,7 +47,7 @@
 
         <ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
             <li class="lens_correction_image_thumb"
-                data-bind="	style: { backgroundImage: 'url(data:image/jpg;base64,'+pic.image+')' },
+                data-bind="	style: { backgroundImage: 'url('+pic.url+')' },
                             event:{ mouseover: $root.highlightHeatmap, mouseout: $root.dehighlightHeatmap }"
                 onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
                 <div class="btn-group">
@@ -74,7 +74,7 @@
     <div id="lensCalibrationQA">
         <div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
             <div class="qa_img_wrapper">
-                <image data-bind="attr: {src: camera.croppedUrl}" />
+                <image data-bind="attr: {src: camera.lensUrl}" />
                 <div id="qa_undistorted_guides"></div>
             </div>
             <ul>

@@ -23,6 +23,12 @@ $(function () {
         self.rawPicSelection = ko.observableArray([]);
         self.images = {};
         self.updateCounter = ko.observable(0)
+        self.basename = function(str, sep) {
+            if (sep === undefined){
+                sep = "/";
+            }
+            return str.substr(str.lastIndexOf(sep) + 1);
+        };
         /*  Apply the info to our list of images
             The imgInfo could also contain the b64 encoded images
         */
@@ -40,7 +46,7 @@ $(function () {
             //      board_size: [5, 6]
             //    }, ...
             // }
-        
+
             for (const [path, value] of Object.entries(imgInfo)) {
                 value.path = ko.observable(path);
                 // Check if the image had already been saved previously
@@ -67,22 +73,29 @@ $(function () {
                     for (const [key, val] of Object.entries(value)) {
                         self.images[path][key] = ko.observable(val);
                     }
-                    // KO version < 3.5 hack to update the successful images
-                    //   1. self.getLensCalibrationImage receives the timestamp for the image we need
-                    self.images[path].timestamp.subscribe(self.getLensCalibrationImage);
-                    //   2. Run self.getLensCalibrationImage when the state becomes successful
-                    self.images[path].state.subscribe(function(newValue) {
-                        if (newValue == "success")
-                            self.images[path].timestamp.notifySubscribers();
-                    })
-                    // Attach a processing duration attached to each image
-                    self.images[path].processing_duration = ko.computed(function() {
-                        self.images[path].tm_end() !== null
-                            ? (self.images[path].tm_end() - self.images[path].tm_proc()).toFixed(1) + " sec"
-                            : "?";
+                    if (! self.images[path].timestamp)
+                        self.images[path].timestamp = ko.observable();
+                    self.images[path].url = ko.computed(function() {
+                        // self.updateCounter(self.updateCounter()+1)
+                        let query=(self.images[path].state() == "success") ? "success" : "wait";
+                        return "/downloads/files/local/cam/debug/" + self.basename(path) + "?" + query;
                     });
-                    // Download the image
-                    self.getLensCalibrationImage(self.images[path].timestamp());
+                    // // KO version < 3.5 hack to update the successful images
+                    // //   1. self.getLensCalibrationImage receives the timestamp for the image we need
+                    // self.images[path].timestamp.subscribe(self.getLensCalibrationImage);
+                    // //   2. Run self.getLensCalibrationImage when the state becomes successful
+                    // self.images[path].state.subscribe(function(newValue) {
+                    //     if (newValue == "success")
+                    //         self.images[path].timestamp.notifySubscribers();
+                    // })
+                    // // Attach a processing duration attached to each image
+                    // self.images[path].processing_duration = ko.computed(function() {
+                    //     self.images[path].tm_end() !== null
+                    //         ? (self.images[path].tm_end() - self.images[path].tm_proc()).toFixed(1) + " sec"
+                    //         : "?";
+                    // });
+                    // // Download the image
+                    // self.getLensCalibrationImage(self.images[path].timestamp());
                 }
                 //  KO version >= 3.5 (currently 3.4)
                 // // When there is a success, refresh the image
@@ -136,23 +149,14 @@ $(function () {
             self.rawPicSelection(ko.toJS(img_arr));
         });
 
+        // self.imagesAdd = function(imagesToUpdate) {
+        //     self.images_update({...self.images, ...imagesToUpdate})
+        // }
+
         self.cameraBusy = ko.computed(function () {
             return self
                 .rawPicSelection()
                 .some((elm) => elm.state === "camera_processing");
-        });
-
-        self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {
-            const ts = self.lensCalibrationNpzFileTs();
-            if (ts !== null) {
-                const d = new Date(ts);
-                const verbose = d.toLocaleString("de-DE", {
-                    timeZone: "Europe/Berlin",
-                });
-                return `Using .npz created at ${verbose}`;
-            } else {
-                return "No .npz file available";
-            }
         });
 
         self.lensCalibrationComplete = ko.computed(function () {
@@ -215,16 +219,15 @@ $(function () {
             }
         };
 
-        self.getLensCalibrationImage = function(timestamp) {
-            self.calibration.simpleApiCommand(
-                "get_lens_calibration_image",
-                {"timestamp": timestamp},
-                self.images_update,
-                self._getRawPicError,
-                "GET"
-            );
-        }
-
+        // self.getLensCalibrationImage = function(timestamp) {
+        //     self.calibration.simpleApiCommand(
+        //         "get_lens_calibration_image",
+        //         JSON.stringify({"timestamp": timestamp}),
+        //         self.imagesAdd,
+        //         self._getRawPicError,
+        //         "POST"
+        //     );
+        // }
 
         self.startLensCalibration = function () {
             // self.analytics.send_fontend_event("lens_calibration_start", {});//todo enable analytic
@@ -338,7 +341,7 @@ $(function () {
             $("#heatmap_board" + this.index).remove(); // remove heatmap
             self.camera.simpleApiCommand(
                 "lens_calibration_del_image",
-                { path: this["path"] },
+                JSON.stringify({ path: this["path"] }),
                 self._refreshPics,
                 self._delRawPicError,
                 "POST"
@@ -454,10 +457,30 @@ $(function () {
             });
         };
 
-        // WATTEROTT ONLY
+        /* Lens Calibration QA view - Factory only */
+        self.refreshQAImg = function(which) {
+            // which : GET_IMG.latest or GET_IMG.next
+            return self.camera.getImage(which, GET_IMG.pic_lens);
+        };
+
         self.lensCalibrationToggleQA = function () {
             $("#lensCalibrationPhases").toggleClass("qa_active");
+            if ($("#lensCalibrationPhases").hasClass("qa_active"))
+                self.refreshQAImg(GET_IMG.latest);
         };
+
+        self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {
+            const ts = self.lensCalibrationNpzFileTs();
+            if (ts !== null) {
+                const d = new Date(ts);
+                const verbose = d.toLocaleString("de-DE", {
+                    timeZone: "Europe/Berlin",
+                });
+                return `Using .npz created at ${verbose}`;
+            } else {
+                return "No .npz file available";
+            }
+        });
     }
 
     // view model class, parameters for constructor, container to bind to

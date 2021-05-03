@@ -32,10 +32,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import dict_map
 from octoprint_mrbeam.util.log import json_serialisor
 
-
-        
 import pkg_resources
-
 __version__ = pkg_resources.require("octoprint_camera")
 
 from . import corners, lens, util, iobeam
@@ -108,6 +105,7 @@ class CameraPlugin(
         if util.factory_mode():
             # Invite to take a picture for the lens calibration
             self._event_bus.fire(MrBeamEvents.LENS_CALIB_IDLE)
+            self.led_client.set_inside_brightness(1)
 
     ##~~ ShutdownPlugin mixin
 
@@ -260,7 +258,7 @@ class CameraPlugin(
     # @calibration_tool_mode_only
     @logExceptions
     def calibration_wrapper(self):
-        from flask import make_response, render_template
+        from flask import render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
         from octoprint_mrbeam.util.device_info import DeviceInfo
         device_info = DeviceInfo()
@@ -390,9 +388,14 @@ class CameraPlugin(
                 self._settings.get(["corners", "factory"]) or {},
                 self._settings.get(["corners", "history"]) or {},
             )
+            lens_settings_path = self._settings.get(['lens_legacy_datafile']) or ""
+            if os.path.isfile(lens_settings_path):
+                settings_lens = np.load(lens_settings_path)
+            else:
+                settings_lens = {}
             try:
                 image, timestamp, positions_workspace_corners = self.get_picture(
-                    pic_type, which, settings_corners=corners
+                    pic_type, which, settings_corners=corners, settings_lens=settings_lens,
                 )
             except SettingsError as e:
                 return flask.make_response(
@@ -508,15 +511,17 @@ class CameraPlugin(
         return NO_CONTENT
 
     # Returns the image to diplay on the interface
-    @octoprint.plugin.BlueprintPlugin.route("/get_lens_calibration_image", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/get_lens_calibration_image", methods=["POST"])
     @logExceptions
     def get_lens_calibration_image(self):
-        values = request.values
-        timestamp = values.get("timestamp", None)
+        # values = request.values
+        _json = request.get_json()
+        # timestamp = values.get("timestamp", None)
+        timestamp = _json.get("timestamp", None)
         if timestamp:
             images = self.lens_calibration_thread.get_images(timestamp)
             if images:
-                return make_response(jsonify(dict_map(json_serialisor, images)))
+                return make_response(images, default=json_serialisor)
         # In every other case, there is no images with that timestamp
         return make_response("The timestamp does not correspond to any known image", 406) 
 
@@ -527,7 +532,10 @@ class CameraPlugin(
     # @restricted_access_or_calibration_tool_mode #TODO activate
     @logExceptions
     def deleteCalibrationImage(self):
-        file_path = request.values.get("path", None)
+        _json = request.get_json()
+        self._logger.warning(_json)
+        file_path = _json.get("path", None)
+        self._logger.warning(file_path)
         self.lens_calibration_thread.remove(file_path)
         return NO_CONTENT
 
@@ -599,16 +607,15 @@ class CameraPlugin(
         else:
             positions_workspace_corners = None
         if do_lens:
-            img = lens.undistort(img, **settings)
+            img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
             if do_corners:
                 positions_workspace_corners = lens.undist_points(
-                    positions_workspace_corners, **settings
+                    positions_workspace_corners, settings_lens['mtx'], settings_lens['dist']
                 )
         if do_corners and len(positions_workspace_corners) == 4:
             img = corners.fit_img_to_corners(img, positions_workspace_corners)
         # Write the modified image to a jpg binary
-        buff = io.BytesIO()
-        util.image.imwrite(buff, img)
+        buff = util.image.imencode(img)
         return buff, ts, positions_pink_circles
 
     def start_lens_calibration_daemon(self):
@@ -622,11 +629,13 @@ class CameraPlugin(
                 self._settings.get(['lens_legacy_datafile']),
                 stateChangeCallback=self.send_lens_calibration_state,
                 factory=True,
+                runCalibrationAsap=util.factory_mode(),
             )
             # FIXME - Right now the npz files get loaded funny 
             #         and some values aren't json pickable etc...
             self.lens_calibration_thread.state.rm_from_origin("factory")
             self.lens_calibration_thread.start()
+        self.lens_calibration_thread.load_dir("/tmp")
 
     def stop_lens_calibration(self, blocking=True):
         # TODO : blocking behaviour goes into the daemon itself
@@ -656,17 +665,7 @@ class CameraPlugin(
             "/tmp"
         )
         if len(self.lens_calibration_thread) >= MIN_BOARDS_DETECTED:
-            if util.factory_mode():
-                # Watterott - Auto save calibration
-                self.saveLensCalibration()
-                t = Timer(
-                    1.2,
-                    self._event_bus.fire,
-                    args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,),
-                )
-                t.start()
-            else:
-                self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
+            self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
             self.lens_calibration_thread.scaleProcessors(2)
         else:
             self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_DONE)
@@ -682,18 +681,23 @@ def __plugin_load__():
     __plugin_implementation__ = plugin
 
     global __plugin_settings_overlay__
+    if util.factory_mode():
+        disabled_plugins = [
+            "cura",
+            "pluginmanager",
+            "announcements",
+            "corewizard",
+            "octopi_support",
+            "mrbeam",
+            "mrbeamdoc",
+            "virtual_printer",
+        ]
+    else:
+        # disables itself
+        disabled_plugins = ["camera",]
     __plugin_settings_overlay__ = dict(
         plugins=dict(
-            _disabled=[
-                "cura",
-                "pluginmanager",
-                "announcements",
-                "corewizard",
-                "octopi_support",
-                "mrbeam",
-                "mrbeamdoc",
-                "virtual_printer",
-            ]  # accepts dict | pfad.yml | callable
+            _disabled=disabled_plugins  # accepts dict | pfad.yml | callable
         ),
         appearance=dict(
             components=dict(

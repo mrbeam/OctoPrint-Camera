@@ -38,7 +38,7 @@ class CameraThread(object):
         self._active = True
         with mrbCamera(
             camera_worker,
-            framerate=1,
+            framerate=.5,
             resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
         ) as self._cam:
             while not self._stop:
@@ -67,5 +67,11 @@ class CameraThread(object):
             return None
 
     def get_next_img(self):
+        # Disgusting hack: Fix race condition with a sleep because I am myself deprived of some
+        import time
+        time.sleep(1.)
+        # Even if we wait for the camera to be available, 
+        # we will be getting the image that was taken during this call
+        # hack : sleep an extra frame time
         self._cam.wait()
         return self.get_latest_img()
