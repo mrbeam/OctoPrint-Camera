@@ -385,9 +385,14 @@ class CameraPlugin(
                 self._settings.get(["corners", "factory"]) or {},
                 self._settings.get(["corners", "history"]) or {},
             )
+            lens_settings_path = self._settings.get(['lens_legacy_datafile']) or ""
+            if os.path.isfile(lens_settings_path):
+                settings_lens = np.load(lens_settings_path)
+            else:
+                settings_lens = {}
             try:
                 image, timestamp, positions_workspace_corners = self.get_picture(
-                    pic_type, which, settings_corners=corners
+                    pic_type, which, settings_corners=corners, settings_lens=settings_lens,
                 )
             except SettingsError as e:
                 return flask.make_response(
@@ -593,16 +598,15 @@ class CameraPlugin(
         else:
             positions_workspace_corners = None
         if do_lens:
-            img = lens.undistort(img, **settings)
+            img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
             if do_corners:
                 positions_workspace_corners = lens.undist_points(
-                    positions_workspace_corners, **settings
+                    positions_workspace_corners, settings_lens['mtx'], settings_lens['dist']
                 )
         if do_corners and len(positions_workspace_corners) == 4:
             img = corners.fit_img_to_corners(img, positions_workspace_corners)
         # Write the modified image to a jpg binary
-        buff = io.BytesIO()
-        util.image.imwrite(buff, img)
+        buff = util.image.imencode(img)
         return buff, ts, positions_pink_circles
 
     def start_lens_calibration_daemon(self):

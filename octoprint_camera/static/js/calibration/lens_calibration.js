@@ -46,7 +46,7 @@ $(function () {
             //      board_size: [5, 6]
             //    }, ...
             // }
-        
+
             for (const [path, value] of Object.entries(imgInfo)) {
                 value.path = ko.observable(path);
                 // Check if the image had already been saved previously
@@ -157,19 +157,6 @@ $(function () {
             return self
                 .rawPicSelection()
                 .some((elm) => elm.state === "camera_processing");
-        });
-
-        self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {
-            const ts = self.lensCalibrationNpzFileTs();
-            if (ts !== null) {
-                const d = new Date(ts);
-                const verbose = d.toLocaleString("de-DE", {
-                    timeZone: "Europe/Berlin",
-                });
-                return `Using .npz created at ${verbose}`;
-            } else {
-                return "No .npz file available";
-            }
         });
 
         self.lensCalibrationComplete = ko.computed(function () {
@@ -470,10 +457,30 @@ $(function () {
             });
         };
 
-        // WATTEROTT ONLY
+        /* Lens Calibration QA view - Factory only */
+        self.refreshQAImg = function(which) {
+            // which : GET_IMG.latest or GET_IMG.next
+            return self.camera.getImage(which, GET_IMG.pic_lens);
+        };
+
         self.lensCalibrationToggleQA = function () {
             $("#lensCalibrationPhases").toggleClass("qa_active");
+            if ($("#lensCalibrationPhases").hasClass("qa_active"))
+                self.refreshQAImg(GET_IMG.next);
         };
+
+        self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {
+            const ts = self.lensCalibrationNpzFileTs();
+            if (ts !== null) {
+                const d = new Date(ts);
+                const verbose = d.toLocaleString("de-DE", {
+                    timeZone: "Europe/Berlin",
+                });
+                return `Using .npz created at ${verbose}`;
+            } else {
+                return "No .npz file available";
+            }
+        });
     }
 
     // view model class, parameters for constructor, container to bind to
