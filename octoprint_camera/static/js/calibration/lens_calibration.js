@@ -459,14 +459,14 @@ $(function () {
 
         /* Lens Calibration QA view - Factory only */
         self.refreshQAImg = function(which) {
-            // which : GET_IMG.latest or GET_IMG.next
+            // which : GET_IMG.last or GET_IMG.next
             return self.camera.getImage(which, GET_IMG.pic_lens);
         };
 
         self.lensCalibrationToggleQA = function () {
             $("#lensCalibrationPhases").toggleClass("qa_active");
             if ($("#lensCalibrationPhases").hasClass("qa_active"))
-                self.refreshQAImg(GET_IMG.latest);
+                self.refreshQAImg(GET_IMG.last);
         };
 
         self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {

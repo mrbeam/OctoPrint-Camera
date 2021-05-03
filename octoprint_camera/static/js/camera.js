@@ -150,7 +150,7 @@ $(function () {
         }
         self.getImage = function (which, pic_type) {
             if (which == null)
-                which = GET_IMG.latest
+                which = GET_IMG.last
             if (pic_type == null)
                 pic_type = GET_IMG.pic_plain
             let success_callback = function (data) {

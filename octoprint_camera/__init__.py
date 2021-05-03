@@ -441,6 +441,7 @@ class CameraPlugin(
 
     # return the available corretions to the image
     @octoprint.plugin.BlueprintPlugin.route("/available_corrections", methods=["GET"])
+    @logExceptions
     def getAvailableCorrections(self):
         ret = ['plain']
         try:
@@ -501,6 +502,7 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route(    
         "/send_lens_captured_img_list", methods=["GET"]
     )
+    @logExceptions
     def send_lens_captured_img_list(self):
         # This function will trigger the lens calibration on_change callback
         # This callback sends the whole list of images available
