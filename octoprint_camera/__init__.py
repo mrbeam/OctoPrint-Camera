@@ -601,7 +601,7 @@ class CameraPlugin(
         if img is None:
             return None, -1, {}
         settings = {}
-        positions_pink_circles = corners.find_pink_circles(img, debug=self.debug, **settings)
+        positions_pink_circles = corners.find_pink_circles(img, debug=util.factory_mode(), **settings)
 
         if not (img_jpg and (do_corners or do_lens)):
             # Will return if the image is None
