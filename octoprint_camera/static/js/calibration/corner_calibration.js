@@ -20,7 +20,7 @@ $(function () {
         self.camera = parameters[1];
         // self.analytics = parameters[4]; //TODO disabled for watterott//todo enable analytic
         self.tabActive = ko.computed(function () {
-            self.calibration.activeTab() === self.calibration.TABS.corner;
+            return self.calibration.activeTab() === self.calibration.TABS.corner;
         });
         self.interval = null;
         self.cornerCalibrationActive = ko.observable(false);
