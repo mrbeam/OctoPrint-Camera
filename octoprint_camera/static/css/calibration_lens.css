@@ -21,9 +21,15 @@
     display: inline-block;
 }
 
+#initial_camera_calibration .tab-pane {
+  width: fit-content;
+  margin: auto;
+}
 #initial_camera_calibration #tab_lens_calibration.tab-pane {
     position: center;
+    width:100%;
 }
+
 
 #lensCalibrationPhases.qa_active #lensCalibrationPictureTaking,
 #lensCalibrationPhases #lensCalibrationQA {
@@ -33,6 +39,10 @@
 #lensCalibrationPhases.qa_active #lensCalibrationQA,
 #lensCalibrationPhases #lensCalibrationPictureTaking {
     display: block;
+}
+
+#lensCalibrationPictureTaking {
+  width: auto;
 }
 
 #lens_calibration_take_pic {

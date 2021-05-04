@@ -47,9 +47,11 @@
   display: grid;
   grid-template-columns: 2fr 1fr;
   margin: 0;
-  width: 100%;
+  width: fit-content;
+  grid-row-gap: 1em;
   grid-row-gap: 1em;
   grid-column-gap: 1em;
+  margin: auto;
 }
 
 .qa_img_wrapper {
@@ -147,8 +149,8 @@
 }
 
 #qa_cameraalignment_image {
-  width: 100%;
-  min-height: 360px;
+  width: auto;
+  height: calc(max(360px, 50vh));
   background: url(/plugin/camera/static/img/calibration/calpic_wait.svg) center
     no-repeat;
   background-size: cover;

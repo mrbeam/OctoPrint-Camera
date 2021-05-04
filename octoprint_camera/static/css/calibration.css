@@ -1,0 +1,8 @@
+.camera_calibration_tabs {
+  border-width: 1px;
+  padding: 1em;
+  height: 90vh;
+  overflow-y: unset;
+  padding-bottom: 0;
+  position: relative;
+}
