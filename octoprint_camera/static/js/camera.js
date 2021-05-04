@@ -36,7 +36,8 @@ $(function () {
 
 
         // TODO : plainPicture = {data: <base 64 src>, timestamp: <timestamp>}
-        self.rawUrl = ko.observable(""); ///downloads/files/local/cam/debug/raw.jpg// TODO get from settings
+        self.rawUrl = ko.observable(""); 
+        ///downloads/files/local/cam/debug/raw.jpg// TODO get from settings
         // TODO : bestPicture = {data: <base 64 src>, timestamp: <timestamp>}
         self.croppedUrl = ko.observable("");
         self.cornerUrl = ko.observable("");
@@ -203,7 +204,7 @@ $(function () {
         }
 
         // event listener callbacks //
-        //Called after all view models have been bound, with the list of all view models as the single parameter.
+        // Called after all view models have been bound, with the list of all view models as the single parameter.
         self.onAllBound = function () {
             self.cameraActive = ko.computed(function () {
                 // TODO : get value from backend / websocket
