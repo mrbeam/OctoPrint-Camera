@@ -144,7 +144,13 @@ $(function () {
             return self.staticURL; // precaution
         };
 
-        self.cornerCalImgUrl = ko.observable(self.camera.rawUrl());
+        // self.cornerCalImgUrl = ko.observable(self.camera.rawUrl);
+        self.cornerCalImgUrl = ko.computed(function () {
+            if (self.camera.cornerUrl() && self.camera.availablePicTypes.corners() && !self.cornerCalibrationActive()) {
+                return self.camera.cornerUrl();
+            }
+            return self.camera.rawUrl();
+        });
 
         self.cornerCalibrationComplete = ko.computed(function () {
             if (Object.keys(self.currentResults()).length !== 4) return false;
@@ -176,6 +182,7 @@ $(function () {
         self.onStartupComplete = function () {
             if (window.mrbeam.isFactoryMode()) {
                 self.camera.getImage();
+                console.log('corner get image');
             }
             self.calibration.activeTab.subscribe(function (activeTab) {
                 self.tabActive(activeTab === self.calibration.TABS.corner);
@@ -183,6 +190,7 @@ $(function () {
             // self._reloadImageLoop();
             self.tabActive.subscribe(function (active) {
                 if (active) {
+                    console.log('corner get image');
                     self._startReloadImageLoop();
                 } else {
                     self._stopReloadImageLoop();
@@ -193,35 +201,34 @@ $(function () {
 
 
         self._reloadImageLoop = function () {
-            // if (self.tabActive()) {
-                if (!self.cornerCalibrationActive()) {
-                    if (self.camera.availablePicTypes.corners()) {
-                        self.cornerCalImgUrl(self._getImgUrl("corners", true));
-                    } else {
-                        self.cornerCalImgUrl(self._getImgUrl("plain", true));
-                    }
-                    self.dbNWImgUrl(
-                        "/downloads/files/local/cam/debug/NW.jpg" +
-                        "?ts=" +
-                        new Date().getTime()
-                    );
-                    self.dbNEImgUrl(
-                        "/downloads/files/local/cam/debug/NE.jpg" +
-                        "?ts=" +
-                        new Date().getTime()
-                    );
-                    self.dbSWImgUrl(
-                        "/downloads/files/local/cam/debug/SW.jpg" +
-                        "?ts=" +
-                        new Date().getTime()
-                    );
-                    self.dbSEImgUrl(
-                        "/downloads/files/local/cam/debug/SE.jpg" +
-                        "?ts=" +
-                        new Date().getTime()
-                    );
+            if (!self.cornerCalibrationActive()) {
+                self.camera.loadAvaiableCorrection();
+                if (self.camera.availablePicTypes.corners()) {
+                    self._getImgUrl("corner", true)
+                } else {
+                    self._getImgUrl("plain", true)
                 }
-            // }
+                self.dbNWImgUrl(
+                    "/downloads/files/local/cam/debug/NW.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+                self.dbNEImgUrl(
+                    "/downloads/files/local/cam/debug/NE.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+                self.dbSWImgUrl(
+                    "/downloads/files/local/cam/debug/SW.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+                self.dbSEImgUrl(
+                    "/downloads/files/local/cam/debug/SE.jpg" +
+                    "?ts=" +
+                    new Date().getTime()
+                );
+            }
         }
         self._startReloadImageLoop = function () {
             self.interval = setInterval(self._reloadImageLoop, 3000);//reloads image every 3 seconds
@@ -266,73 +273,14 @@ $(function () {
                     new Date().getTime()
                 );
             }
-            // if ("beam_cam_new_image" in data) {
-            //     // update image
-            //     let selectedTab = $(
-            //         "#camera-calibration-tabs li.active:not(li.tabdrop) a"
-            //     ).attr("id");
-            //     let _d = data["beam_cam_new_image"];
-            //     if (
-            //         _d["undistorted_saved"] &&
-            //         !self.cornerCalibrationActive()
-            //     ) {
-            //         if (_d["available"]) {
-            //             self.camera.availablePic(_d["available"]);
-            //         }
-            //
-            //         if (
-            //             window.mrbeam.isFactoryMode() &&
-            //             (selectedTab === "cornercal_tab_btn" ||
-            //                 self.calibration.waitingForRefresh())
-            //         ) {
-            //             self.dbNWImgUrl(
-            //                 // os.path.join(settings().getBaseFolder("uploads"), "cam/debug/NW.jpg",)
-            //                 "/downloads/files/local/cam/debug/NW.jpg?ts=" + new Date().getTime()
-            //             );
-            //             self.dbNEImgUrl(
-            //                 // os.path.join(settings().getBaseFolder("uploads"), "cam/debug/NE.jpg",)
-            //                 "/downloads/files/local/cam/debug/NE.jpg" +
-            //                 "?ts=" +
-            //                 new Date().getTime()
-            //             );
-            //             self.dbSWImgUrl(
-            //                 // os.path.join(settings().getBaseFolder("uploads"), "cam/debug/SW.jpg",)
-            //                 "/downloads/files/local/cam/debug/SW.jpg" +
-            //                 "?ts=" +
-            //                 new Date().getTime()
-            //             );
-            //             self.dbSEImgUrl(
-            //                 // os.path.join(settings().getBaseFolder("uploads"), "cam/debug/SE.jpg",)
-            //                 "/downloads/files/local/cam/debug/SE.jpg" +
-            //                 "?ts=" +
-            //                 new Date().getTime()
-            //             );
-            //         }
-            //
-            //         // check if all markers are found and image is good for calibration
-            //         if (self.calImgReady() && !self.cornerCalibrationActive()) {
-            //             // console.log("Remembering markers for Calibration", markers);
-            //             self.markersFoundPosition(
-            //                 data["beam_cam_new_image"]["markers_pos"]
-            //             );
-            //         } else if (self.cornerCalibrationActive()) {
-            //             console.log(
-            //                 "Not all Markers found, are the pink circles obstructed?"
-            //             );
-            //             // As long as all the corners were not found, the camera will continue to take pictures
-            //             // self.calibration.loadUndistortedPicture();
-            //         }
-            //         self.calibration.waitingForRefresh(false);
-            //     }
-            // }
         };
 
         self.startCornerCalibration = function () {
             // self.analytics.send_fontend_event("corner_calibration_start", {});//todo enable analytic
             self.cornerCalibrationActive(true);
             self.picType(GET_IMG.plain);
-            self.cornerCalImgUrl(self._getImgUrl(GET_IMG.plain, true));
-            // self.markersFoundPositionCopy = self.markersFoundPosition();
+            self._stopReloadImageLoop();
+            self._getImgUrl("plain", true)
             markers = {}
             MARKERS.forEach(function (m) {
                 if (self.camera.markersFound[m]() == null) {
@@ -358,7 +306,6 @@ $(function () {
 
         self.stopCornerCalibration = function () {
             self.cornerCalibrationActive(false);
-            self.cornerCalImgUrl(); // trigger refresh
         };
 
         self.saveCornerCalibrationData = function () {
@@ -385,6 +332,7 @@ $(function () {
             self.currentMarker = 0;
 
             self.calibration.resetUserView();
+            self._startReloadImageLoop();
         };
 
         self._saveMarkersError = function () {
