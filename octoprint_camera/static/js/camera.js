@@ -4,7 +4,7 @@ mrbeam.isFactoryMode = function () {
 };
 
 const MARKERS = ["NW", "NE", "SE", "SW"];
-const PIC_TYPES = ["plain", "corners", "lense", "both"];
+const PIC_TYPES = ["plain", "corners", "lens", "both"];
 
 $(function () {
     function CameraViewModel(parameters) {
@@ -127,20 +127,7 @@ $(function () {
             let success_callback = function (data) {
                 console.log('corrections', data.available_corrections);
                 PIC_TYPES.forEach(function (m) {
-                    correctionAvailable = false;
-                    // console.log('available corrections', m);
-                    if (data.available_corrections.includes(m)) {
-                        console.log('available corrections', m, data.available_corrections.includes(m), );
-                        data.available_corrections.forEach(correction => function () {
-                            if (correction === m) {
-                                correctionAvailable = true;
-                                self.availablePicTypes[correction](true);
-                            }
-                        })
-                        if (!correctionAvailable) {
-                            self.availablePicTypes[m](false);
-                        }
-                    }
+                    self.availablePicTypes[m](data.available_corrections.includes(m));
                 });
             };
 
