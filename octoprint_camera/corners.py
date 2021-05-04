@@ -32,3 +32,6 @@ def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
 
 def save_corner_calibration(path, *a, **kw):
     return corners.save_corner_calibration(path, *a, **kw)
+
+def get_corner_calibration(pic_settings):
+    return corners.get_corner_calibration(pic_settings)

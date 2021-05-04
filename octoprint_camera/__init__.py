@@ -453,7 +453,7 @@ class CameraPlugin(
         except Exception as e:
             self._logger.error("Error when retrieving lens settings %s" % e)
             lens_ok = False
-        corners_ok = corner_settings_valid(self._settings.get(['corners', 'factory']))
+        corners_ok = corner_settings_valid(corners.get_corner_calibration(self._settings.get(['corners_legacy_datafile'])))
         if corners_ok:
             ret += ['corners']
         if lens_ok:
@@ -580,6 +580,8 @@ class CameraPlugin(
             img_jpg = self.camera_thread.get_next_img()
         else:
             raise Exception("We shouldn't be here, huhoo..")
+        if not img_jpg:
+            return None, -1, {}
         ts = self.camera_thread.latest_img_timestamp
 
         if do_corners and not corner_settings_valid(settings_corners):
@@ -593,6 +595,8 @@ class CameraPlugin(
 
         # Work is done on a numpy version of the image
         img = util.image.imdecode(img_jpg)
+        if img is None:
+            return None, -1, {}
         settings = {}
         positions_pink_circles = corners.find_pink_circles(img, debug=self.debug, **settings)
 
