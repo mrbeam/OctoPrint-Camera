@@ -8,6 +8,7 @@ from octoprint_mrbeam.camera import corners, lens
 from octoprint_mrbeam.camera.undistort import _getColoredMarkerPositions
 from octoprint_mrbeam.camera.corners import add_deltas, warpImgByCorners
 
+from . import util
 
 # This path will change to be cornerNW.jpg etc...
 DEBUG_CORNERS_PATH="/tmp/corner.jpg"
@@ -17,8 +18,8 @@ def find_pink_circles(img, debug=False, **settings):
         settings.update(dict(debug_out_path=DEBUG_CORNERS_PATH))
     return _getColoredMarkerPositions(img, **settings)
 
-def get_workspace_corners(positions_pink_circles, **settings):
-    return add_deltas(positions_pink_circles, **settings)
+def get_workspace_corners(positions_pink_circles, pic_settings):
+    return add_deltas(positions_pink_circles, pic_settings, False, from_factory=util.factory_mode())
 
 def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
     """

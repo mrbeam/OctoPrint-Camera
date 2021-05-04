@@ -44,32 +44,19 @@ $(function () {
         self.croppedMarkersVisibility = ko.observable("hidden");
 
         self.currentMarker = 0;
-        self.calibrationMarkers = [
-            {name: "start", desc: "click to start", focus: [0, 0, 1]},
-            {
-                name: "NW",
-                desc: self.camera.MARKER_DESCRIPTIONS["NW"],
-                focus: [0, 0, 4],
-            },
-            {
-                name: "SW",
-                desc: self.camera.MARKER_DESCRIPTIONS["SW"],
-                focus: [0, DEFAULT_IMG_RES[1], 4],
-            },
-            {
-                name: "SE",
-                desc: self.camera.MARKER_DESCRIPTIONS["SE"],
-                focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4],
-            },
-            {
-                name: "NE",
-                desc: self.camera.MARKER_DESCRIPTIONS["NE"],
-                focus: [DEFAULT_IMG_RES[0], 0, 4],
-            },
-        ];
 
         self.crossSize = ko.observable(30);
 
+        self.calImgSize = ko.computed(function() {
+            if (self._cornerCalImgUrl()) {
+                let img = new Image();
+                img.onload = function(){
+                    self.calImgWidth(img.width);
+                    self.calImgHeight(img.height);
+                }
+                img.src = self._cornerCalImgUrl();
+            }
+        });
         self.calImgWidth = ko.observable(DEFAULT_IMG_RES[0]);
         self.calImgHeight = ko.observable(DEFAULT_IMG_RES[1]);
         self.calSvgOffX = ko.observable(0);
@@ -77,6 +64,32 @@ $(function () {
         self.calSvgDx = ko.observable(0);
         self.calSvgDy = ko.observable(0);
         self.calSvgScale = ko.observable(1);
+
+        self.calibrationMarkers = ko.computed(function() {
+            return [
+                {name: "start", desc: "click to start", focus: [0, 0, 1]},
+                {
+                    name: "NW",
+                    desc: self.camera.MARKER_DESCRIPTIONS["NW"],
+                    focus: [0, 0, 4],
+                },
+                {
+                    name: "SW",
+                    desc: self.camera.MARKER_DESCRIPTIONS["SW"],
+                    focus: [0, self.calImgHeight(), 4],
+                },
+                {
+                    name: "SE",
+                    desc: self.camera.MARKER_DESCRIPTIONS["SE"],
+                    focus: [self.calImgWidth(), self.calImgHeight(), 4],
+                },
+                {
+                    name: "NE",
+                    desc: self.camera.MARKER_DESCRIPTIONS["NE"],
+                    focus: [self.calImgWidth(), 0, 4],
+                },
+            ];
+        });
 
         self.calSvgViewBox = ko.computed(function () {
             var zoom = self.calSvgScale();
@@ -412,19 +425,19 @@ $(function () {
         // MARKER NAVIGATION
         self.goToMarker = function (markerNum) {
             self.currentMarker = markerNum;
-            self._highlightStep(self.calibrationMarkers[markerNum]);
+            self._highlightStep(self.calibrationMarkers()[markerNum]);
         };
 
         self.previousMarker = function () {
             let i = self.currentMarker - 1;
             if (!self.cornerCalibrationComplete() && i === 0) i = -1;
-            if (i < 0) i = self.calibrationMarkers.length - 1;
+            if (i < 0) i = self.calibrationMarkers().length - 1;
             self.goToMarker(i);
         };
 
         self.nextMarker = function () {
             self.currentMarker =
-                (self.currentMarker + 1) % self.calibrationMarkers.length;
+                (self.currentMarker + 1) % self.calibrationMarkers().length;
             if (!self.cornerCalibrationComplete() && self.currentMarker === 0)
                 self.currentMarker = 1;
             self.goToMarker(self.currentMarker);
@@ -453,7 +466,7 @@ $(function () {
                 }
 
             // save current stepResult
-            var step = self.calibrationMarkers[self.currentMarker];
+            var step = self.calibrationMarkers()[self.currentMarker];
             if (self.currentMarker > 0) {
                 var cPos = self._getClickPos(ev);
                 var x = Math.round(cPos.xImg);

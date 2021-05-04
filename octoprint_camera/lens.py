@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import os
 import octoprint_mrbeam
-from octoprint_mrbeam.camera.lens import undistort, undist_points
+from octoprint_mrbeam.camera.lens import undistort, undist_dict
 from octoprint_mrbeam.camera import lens, save_debug_img
 
 from .util.flask import file_to_b64
