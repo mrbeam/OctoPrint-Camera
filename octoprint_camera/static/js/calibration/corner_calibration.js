@@ -19,7 +19,9 @@ $(function () {
         // self.conversion = parameters[2]; //TODO in MRBEAM plugin included
         self.camera = parameters[1];
         // self.analytics = parameters[4]; //TODO disabled for watterott//todo enable analytic
-        self.tabActive = ko.observable(false);
+        self.tabActive = ko.computed(function () {
+            self.calibration.activeTab() === self.calibration.TABS.corner;
+        });
         self.interval = null;
         self.cornerCalibrationActive = ko.observable(false);
         self.currentResults = ko.observable({});
@@ -33,8 +35,11 @@ $(function () {
         self.dbNEImgUrl = ko.observable("");
         self.dbSWImgUrl = ko.observable("");
         self.dbSEImgUrl = ko.observable("");
+        // Shadow calibration image shown to the user,
+        // allows to keep showing this image during the calibration
+        self._cornerCalImgUrl = ko.observable();
 
-        self.picType = ko.observable(""); // raw, lens_corrected, cropped
+        // self.picType = ko.observable(""); // raw, lens_corrected, cropped
         self.correctedMarkersVisibility = ko.observable("hidden");
         self.croppedMarkersVisibility = ko.observable("hidden");
 
@@ -98,32 +103,32 @@ $(function () {
             return true;
         });
 
-        self.applySetting = function (picType, applyCrossVisibility) {
-            // TODO with a dictionary
-            let settings = [
-                ["corners", CROPPED_IMG_RES, "hidden", "visible"],
-                ["both", CROPPED_IMG_RES, "hidden", "visible"],
-                ["lens", DEFAULT_IMG_RES, "hidden", "hidden"],
-                ["plain", DEFAULT_IMG_RES, "visible", "hidden"],
-                ["default", LOADING_IMG_RES, "hidden", "hidden"],
-            ];
-            for (let _t of settings)
-                if (_t[0] === picType) {
-                    self.calImgWidth(_t[1][0]);
-                    self.calImgHeight(_t[1][1]);
-                    if (applyCrossVisibility) {
-                        self.correctedMarkersVisibility(_t[2]);
-                        self.croppedMarkersVisibility(_t[3]);
-                    }
-                    return;
-                }
-            new PNotify({
-                title: gettext("Error"),
-                text: "Something went wrong (applySettings)",
-                type: "error",
-                hide: true,
-            });
-        };
+        // self.applySetting = function (picType, applyCrossVisibility) {
+        //     // TODO with a dictionary
+        //     let settings = [
+        //         ["corners", CROPPED_IMG_RES, "hidden", "visible"],
+        //         ["both", CROPPED_IMG_RES, "hidden", "visible"],
+        //         ["lens", DEFAULT_IMG_RES, "hidden", "hidden"],
+        //         ["plain", DEFAULT_IMG_RES, "visible", "hidden"],
+        //         ["default", LOADING_IMG_RES, "hidden", "hidden"],
+        //     ];
+        //     for (let _t of settings)
+        //         if (_t[0] === picType) {
+        //             self.calImgWidth(_t[1][0]);
+        //             self.calImgHeight(_t[1][1]);
+        //             if (applyCrossVisibility) {
+        //                 self.correctedMarkersVisibility(_t[2]);
+        //                 self.croppedMarkersVisibility(_t[3]);
+        //             }
+        //             return;
+        //         }
+        //     new PNotify({
+        //         title: gettext("Error"),
+        //         text: "Something went wrong (applySettings)",
+        //         type: "error",
+        //         hide: true,
+        //     });
+        // };
 
         self._getImgUrl = function (type, applyCrossVisibility) {
             console.log('newimgurl cornercalib');
@@ -144,13 +149,30 @@ $(function () {
             return self.staticURL; // precaution
         };
 
-        // self.cornerCalImgUrl = ko.observable(self.camera.rawUrl);
-        self.cornerCalImgUrl = ko.computed(function () {
-            if (self.camera.cornerUrl() && self.camera.availablePicTypes.corners() && !self.cornerCalibrationActive()) {
-                return self.camera.cornerUrl();
+        self.cornerCalImgUrl = ko.computed(function(){
+            if (!self.cornerCalibrationActive()){
+                if (self.camera.availablePicTypes.corners()) {
+                    self._cornerCalImgUrl(self.camera.cornerUrl());
+                    self.correctedMarkersVisibility("hidden");
+                    self.croppedMarkersVisibility("visible");
+                } else {
+                    self._cornerCalImgUrl(self.camera.rawUrl());
+                    self.correctedMarkersVisibility("visible");
+                    self.croppedMarkersVisibility("hidden");
+                }
             }
-            return self.camera.rawUrl();
+            return self._cornerCalImgUrl();
         });
+
+        self.cornerCalibrationActive.subscribe(function(isActive){
+            // Change the plain picture when the calibration is started,
+            // Only triggers once per state change.
+            if (isActive) {
+                self._cornerCalImgUrl(self.camera.rawUrl());
+                self.correctedMarkersVisibility("visible");
+                self.croppedMarkersVisibility("hidden");
+            }
+        })
 
         self.cornerCalibrationComplete = ko.computed(function () {
             if (Object.keys(self.currentResults()).length !== 4) return false;
@@ -180,13 +202,6 @@ $(function () {
         });
 
         self.onStartupComplete = function () {
-            if (window.mrbeam.isFactoryMode()) {
-                self.camera.getImage();
-                console.log('corner get image');
-            }
-            self.calibration.activeTab.subscribe(function (activeTab) {
-                self.tabActive(activeTab === self.calibration.TABS.corner);
-            })
             // self._reloadImageLoop();
             self.tabActive.subscribe(function (active) {
                 if (active) {
@@ -201,12 +216,14 @@ $(function () {
 
 
         self._reloadImageLoop = function () {
+            // Make sure that the latest plain and/or corner corrected pictures
+            // are available to display.
             if (!self.cornerCalibrationActive()) {
                 self.camera.loadAvaiableCorrection();
                 if (self.camera.availablePicTypes.corners()) {
-                    self._getImgUrl("corner", true)
+                    self.camera.getImage(GET_IMG.last, GET_IMG.pic_corner);
                 } else {
-                    self._getImgUrl("plain", true)
+                    self.camera.getImage(GET_IMG.last, GET_IMG.pic_plain);
                 }
                 self.dbNWImgUrl(
                     "/downloads/files/local/cam/debug/NW.jpg" +
@@ -251,36 +268,17 @@ $(function () {
                 return;
             }
             if ("newImage" in data) {
-                console.log('new image conrer calib');
-                self.dbNWImgUrl(
-                    "/downloads/files/local/cam/debug/NW.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
-                );
-                self.dbNEImgUrl(
-                    "/downloads/files/local/cam/debug/NE.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
-                );
-                self.dbSWImgUrl(
-                    "/downloads/files/local/cam/debug/SW.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
-                );
-                self.dbSEImgUrl(
-                    "/downloads/files/local/cam/debug/SE.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
-                );
+                console.log('new image corner calibration');
+                self._reloadImageLoop();
+                // Trigger reload if calibration not started
             }
         };
 
         self.startCornerCalibration = function () {
             // self.analytics.send_fontend_event("corner_calibration_start", {});//todo enable analytic
             self.cornerCalibrationActive(true);
-            self.picType(GET_IMG.plain);
             self._stopReloadImageLoop();
-            self._getImgUrl("plain", true)
+            // self.markersFoundPositionCopy = self.markersFoundPosition();
             markers = {}
             MARKERS.forEach(function (m) {
                 if (self.camera.markersFound[m]() == null) {
