@@ -453,7 +453,7 @@ class CameraPlugin(
         except Exception as e:
             self._logger.error("Error when retrieving lens settings %s" % e)
             lens_ok = False
-        corners_ok = corner_settings_valid(self._settings.get(['corners', 'factory']))
+        corners_ok = corner_settings_valid(corners.get_corner_calibration(self._settings.get(['corners_legacy_datafile'])))
         if corners_ok:
             ret += ['corners']
         if lens_ok:
@@ -580,8 +580,13 @@ class CameraPlugin(
             img_jpg = self.camera_thread.get_next_img()
         else:
             raise Exception("We shouldn't be here, huhoo..")
+        if not img_jpg:
+            return None, -1, {}
         ts = self.camera_thread.latest_img_timestamp
-
+        
+        if do_corners:
+            # Hack to get the show on the road
+            settings_corners = corners.get_corner_calibration(self._settings.get(['corners_legacy_datafile']))
         if do_corners and not corner_settings_valid(settings_corners):
             raise SettingsError(
                 "Corner settings invalid - provided settings: %s" % settings_corners
@@ -593,8 +598,10 @@ class CameraPlugin(
 
         # Work is done on a numpy version of the image
         img = util.image.imdecode(img_jpg)
+        if img is None:
+            return None, -1, {}
         settings = {}
-        positions_pink_circles = corners.find_pink_circles(img, debug=self.debug, **settings)
+        positions_pink_circles = corners.find_pink_circles(img, debug=util.factory_mode(), **settings)
 
         if not (img_jpg and (do_corners or do_lens)):
             # Will return if the image is None
@@ -602,21 +609,26 @@ class CameraPlugin(
         
         if do_corners:
             # settings_corners = plugin._settings.get(['corners'], {})
-            positions_pink_circles = dict_merge(
-                settings_corners, positions_pink_circles
-            )
+            # positions_pink_circles = dict_merge(
+            #     settings_corners, positions_pink_circles
+            # )
+            simple_pos = {qd: v["pos"] for qd, v in positions_pink_circles.items()}
+            self._logger.warning(simple_pos)
             positions_workspace_corners = corners.get_workspace_corners(
-                positions_pink_circles, **settings
+                simple_pos, settings_corners
             )
         else:
             positions_workspace_corners = None
         if do_lens:
+            self._logger.warning("DISTORTING IMAGE %s", positions_workspace_corners)
             img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
             if do_corners:
-                positions_workspace_corners = lens.undist_points(
+                positions_workspace_corners = dict(lens.undist_dict(
                     positions_workspace_corners, settings_lens['mtx'], settings_lens['dist']
-                )
-        if do_corners and len(positions_workspace_corners) == 4:
+                ))
+                self._logger.warning("LENS CORRECTED %s", positions_workspace_corners)
+        if do_corners and len(dict(positions_workspace_corners)) == 4:
+            self._logger.warning("CORNERS IMAGE %s", positions_workspace_corners)
             img = corners.fit_img_to_corners(img, positions_workspace_corners)
         # Write the modified image to a jpg binary
         buff = util.image.imencode(img)

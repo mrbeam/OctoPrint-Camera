@@ -35,10 +35,10 @@ def imwrite(buff, cv2_img, *a, **kw):
 
 def corner_settings_valid(settings):
     from typing import Mapping
-    from octoprint_mrbeam.camera.config import is_corner_calibration
+    from octoprint_mrbeam.camera.config import is_corner_calibration, get_corner_calibration
     return (
         isinstance(settings, Mapping) 
-        and is_corner_calibration(settings)
+        and is_corner_calibration(get_corner_calibration(settings))
     )
 
 def lens_settings_valid(settings):
