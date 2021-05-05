@@ -23,7 +23,7 @@ $(function () {
                self.qa_cameraalignment_image_loaded(false);
            }
         });
-        self.camera.startReloadImageLoop();
+        self.camera.startReloadImageLoop("last", "plain", "alignment init");
         self.calibration.activeTab.subscribe(function (activeTab) {
                 self._tabActive(activeTab === self.calibration.TABS.alignment);
             })
@@ -31,7 +31,7 @@ $(function () {
             self._tabActive.subscribe(function (active) {
                 if (active) {
                     console.log('reload image loop alignment');
-                    self.camera.startReloadImageLoop();
+                    self.camera.startReloadImageLoop("last", "plain",tab='alignment tab active');
                 } else {
                     console.log('stop image loop alignment')
                     self.camera.stopReloadImageLoop();

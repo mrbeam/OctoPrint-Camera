@@ -14,7 +14,7 @@ $(function () {
         self.lensCalibration = parameters[1];
 
         self.qaDone = ko.computed(function() {
-                self.calibration.camera.availablePicTypes.corners() && self.lensCalibration.lensCalibrationComplete()
+                return self.calibration.camera.availablePicTypes.corners() && self.lensCalibration.lensCalibrationComplete()
             }
         );
 

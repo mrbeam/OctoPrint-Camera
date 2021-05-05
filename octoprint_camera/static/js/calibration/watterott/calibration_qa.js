@@ -14,6 +14,9 @@ $(function () {
         self.camera = parameters[1];
         self.cornerCalibration = parameters[2];//size 500 390
         self.camera.loadPicture();
+        self.tabActive = ko.computed(function () {
+            return self.calibration.activeTab() === self.calibration.TABS.quality;
+        });
         self.qa_image_loaded = ko.observable(false);
         self.camera.croppedUrl.subscribe(function (newValue) {
             if (newValue) {
@@ -22,11 +25,20 @@ $(function () {
                 self.qa_image_loaded(false);
             }
         });
+        self.croppedImgWidth = 500;
+        self.croppedImgHeight = 390;
 
-        self.onAllBound = function () {
-            // self.camera.loadPicture();
-
-        }
+        self.onStartupComplete = function () {
+            // self._reloadImageLoop();
+            self.tabActive.subscribe(function (active) {
+                if (active) {
+                    console.log('qa tab get image');
+                    self.camera.startReloadImageLoop("last", "both", "qa");
+                } else {
+                    self.camera.stopReloadImageLoop();
+                }
+            });
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

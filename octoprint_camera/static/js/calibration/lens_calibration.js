@@ -477,6 +477,21 @@ $(function () {
                 self.refreshQAImg(GET_IMG.last);
         };
 
+        self.camera.startReloadImageLoop("last", "plain", "alignment init");
+        self.calibration.activeTab.subscribe(function (activeTab) {
+                self._tabActive(activeTab === self.calibration.TABS.alignment);
+            })
+            // self._reloadImageLoop();
+            self._tabActive.subscribe(function (active) {
+                if (active) {
+                    console.log('reload image loop alignment');
+                    self.camera.startReloadImageLoop("last", "plain",tab='alignment tab active');
+                } else {
+                    console.log('stop image loop alignment')
+                    self.camera.stopReloadImageLoop();
+                }
+            })
+
         self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {
             const ts = self.lensCalibrationNpzFileTs();
             if (ts !== null) {

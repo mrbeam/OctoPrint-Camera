@@ -51,3 +51,7 @@ def lens_settings_valid(settings):
 
 class SettingsError(Exception):
     pass
+
+
+class MarkerError(Exception):
+    pass

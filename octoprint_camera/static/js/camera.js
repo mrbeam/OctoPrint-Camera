@@ -183,8 +183,9 @@ $(function () {
             }
         }
 
-        self.startReloadImageLoop = function (which="last", pic_type="plain") {
-            self._reloadImageInterval = setInterval(function(){self.getImage(which, pic_type);}, 3000);//reloads image every 3 seconds
+        self.startReloadImageLoop = function (which="last", pic_type="plain", tab="undefined") {
+            self.stopReloadImageLoop();
+            self._reloadImageInterval = setInterval(function(){console.log('getImage', which, pic_type, tab);self.getImage(which, pic_type);}, 3000);//reloads image every 3 seconds
         }
         self.stopReloadImageLoop = function () {
             clearInterval(self._reloadImageInterval);

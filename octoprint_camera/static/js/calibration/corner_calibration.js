@@ -215,7 +215,6 @@ $(function () {
         });
 
         self.onStartupComplete = function () {
-            // self._reloadImageLoop();
             self.tabActive.subscribe(function (active) {
                 if (active) {
                     console.log('corner get image');
@@ -306,7 +305,7 @@ $(function () {
         };
 
         self.loadNewPicture = function () {
-            self.camera.loadPictureRaw();
+            self._reloadImageLoop();
         }
 
         self.abortCornerCalibration = function () {

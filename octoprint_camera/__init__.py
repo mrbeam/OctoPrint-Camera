@@ -43,7 +43,12 @@ from .camera import CameraThread
 from .iobeam import IoBeamEvents
 from .leds import LedEventListener
 from .util import logme, logExceptions
-from .util.image import corner_settings_valid, lens_settings_valid, SettingsError
+from .util.image import (
+    corner_settings_valid,
+    lens_settings_valid,
+    SettingsError,
+    MarkerError,
+)
 from .util.flask import send_image, send_file_b64
 
 IMG_WIDTH, IMG_HEIGHT = LEGACY_STILL_RES
@@ -402,6 +407,8 @@ class CameraPlugin(
                 return flask.make_response(
                     "Wrong camera settings for the requested picture %s" % e, 506
                 )
+            except MarkerError as e:
+                return flask.make_response("Didn't found all Markers %s" % e, 506)
             else:
                 if image:
                     return send_image(
@@ -614,11 +621,15 @@ class CameraPlugin(
             # positions_pink_circles = dict_merge(
             #     settings_corners, positions_pink_circles
             # )
-            simple_pos = {qd: v["pos"] for qd, v in positions_pink_circles.items()}
-            self._logger.warning(simple_pos)
-            positions_workspace_corners = corners.get_workspace_corners(
-                simple_pos, settings_corners
-            )
+            try:
+                simple_pos = {qd: v["pos"] for qd, v in positions_pink_circles.items()}
+                self._logger.warning(simple_pos)
+                positions_workspace_corners = corners.get_workspace_corners(
+                    simple_pos, settings_corners
+                )
+            except Exception as e:
+                self._logger.debug("do corners error %s", e)
+                raise MarkerError("Not all pink cirlces found" % positions_pink_circles)
         else:
             positions_workspace_corners = None
         if do_lens:
