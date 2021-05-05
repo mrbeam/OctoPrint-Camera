@@ -8,6 +8,9 @@ from octoprint_mrbeam.camera import lens, save_debug_img
 from octoprint_mrbeam.camera.definitions import CB_ROWS, CB_COLS, STATE_PENDING_CAMERA
 from .util.flask import file_to_b64
 
+BOARD_COLS = 9
+BOARD_ROWS = 6
+
 def capture_img_for_lens_calibration(board_detect_thread, camera_thread, datafolder=None):
     path = board_detect_thread.next_tmp_img_name() # From board_detect
     if datafolder:
@@ -43,7 +46,7 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
     def add(
         self,
         image,
-        chessboardSize=(CB_ROWS+1, CB_COLS+3),
+        chessboardSize=(BOARD_ROWS, BOARD_COLS),
         state=STATE_PENDING_CAMERA,
         index=None,
         **kw

@@ -159,10 +159,7 @@ $(function () {
         });
 
         self.lensCalibrationComplete = ko.computed(function () {
-            return "lensCalibration" in self.calibration.calibrationState()
-                ? self.calibration.calibrationState().lensCalibration ===
-                      "success"
-                : false;
+            return self.camera.availablePicTypes.lens();
         });
 
         self.lensCalibrationBusy = ko.computed(function () {
