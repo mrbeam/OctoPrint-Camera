@@ -9,26 +9,31 @@ from octoprint_mrbeam.camera import corners, lens
 from octoprint_mrbeam.camera.definitions import QD_KEYS
 from octoprint_mrbeam.camera.undistort import _getColoredMarkerPositions
 from octoprint_mrbeam.camera.corners import add_deltas, warpImgByCorners
-
+from octoprint_mrbeam.util import makedirs
 from . import util
 
 # This path will change to be cornerNW.jpg etc...
-DEBUG_CORNERS_PATH="/tmp/.jpg"
+DEBUG_CORNERS_PATH = "/tmp/.jpg"
+LEGACY_CAM_DEBUG_DIR = "/home/pi/.octoprint/uploads/cam/debug/"
 
 def find_pink_circles(img, debug=False, **settings):
     if debug:
         settings.update(dict(debug_out_path=DEBUG_CORNERS_PATH))
-        # Hack : symlink the debug images in the tm folder to the uploads folder
+    ret = _getColoredMarkerPositions(img, **settings)
+    if debug:
+        makedirs(LEGACY_CAM_DEBUG_DIR)
+        # Hack : symlink the debug images in the tmp folder to the uploads folder
+        # Issue : will throw errors if the target doesn't exist
         for qd in QD_KEYS:
             img_name = ""+qd+".jpg"
-            sym_path = "/home/pi/.octoprint/uploads/cam/debug/" + img_name
+            sym_path = LEGACY_CAM_DEBUG_DIR + img_name
             target = "/tmp/"+ img_name
             if not os.path.islink(sym_path):
                 os.symlink(
                     target,
                     sym_path,
                 )
-    return _getColoredMarkerPositions(img, **settings)
+    return ret
 
 def get_workspace_corners(positions_pink_circles, pic_settings):
     return add_deltas(positions_pink_circles, pic_settings, False, from_factory=util.factory_mode())
