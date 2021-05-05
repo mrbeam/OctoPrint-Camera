@@ -5,7 +5,7 @@ import os
 import octoprint_mrbeam
 from octoprint_mrbeam.camera.lens import undistort, undist_dict
 from octoprint_mrbeam.camera import lens, save_debug_img
-
+from octoprint_mrbeam.camera.definitions import CB_ROWS, CB_COLS, STATE_PENDING_CAMERA
 from .util.flask import file_to_b64
 
 def capture_img_for_lens_calibration(board_detect_thread, camera_thread, datafolder=None):
@@ -40,6 +40,24 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
             **kw
         )
     
+    def add(
+        self,
+        image,
+        chessboardSize=(CB_ROWS+1, CB_COLS+3),
+        state=STATE_PENDING_CAMERA,
+        index=None,
+        **kw
+    ):
+        """prototype board detection with 1 extra row + 3 extra columns"""
+        return lens.BoardDetectorDaemon.add(
+            self, 
+            image,
+            chessboardSize=chessboardSize,
+            state=state,
+            index=index,
+            **kw
+        )
+
     def get_images(self, timestamp):
         recorded_images = self.state.get_from_timestamp(timestamp)
         for img_path in recorded_images.keys():
