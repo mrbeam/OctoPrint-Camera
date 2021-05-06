@@ -488,7 +488,7 @@ body {
 }
 
 .octoprint-container .tab-content {
-  padding: 9px 0px 0px;
+  /*padding: 9px 0px 0px;*/ /* Adds a horizontal scrollbar */
   border-left: 0px solid #ddd;
   border-right: 0px solid #ddd;
   border-bottom: 0px solid #ddd;

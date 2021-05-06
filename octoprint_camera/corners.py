@@ -49,6 +49,9 @@ def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
     return warpImgByCorners(img, positions_workspace_corners, zoomed_out)
 
 def save_corner_calibration(path, *a, **kw):
+    # Save the pink circle positions to provide 
+    # history for the new user
+    
     return corners.save_corner_calibration(path, *a, **kw)
 
 def get_corner_calibration(pic_settings):

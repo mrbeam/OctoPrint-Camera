@@ -45,7 +45,7 @@ $(function () {
 
         self.currentMarker = 0;
 
-        self.crossSize = ko.observable(30);
+        self.crossSize = ko.observable(50);
 
         self.calImgSize = ko.computed(function() {
             if (self._cornerCalImgUrl()) {
