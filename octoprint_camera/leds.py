@@ -3,6 +3,7 @@ import logging
 from octoprint.events import Events, GenericEventListener
 from octoprint_mrbeam import led_events
 
+
 class LedEventListener(led_events.LedEventListener):
     def __init__(self, plugin):
         # Do not disturb the lights with client connections
@@ -23,7 +24,7 @@ class LedEventListener(led_events.LedEventListener):
         # Addition : immediatly subscribe to events
         self._initSubscriptions()
         self._logger.warning("INIT LEDS subcriptions : %s", self._subscriptions)
-    
+
     def eventCallback(self, event, payload=None):
         self._logger.warning("EVENT %s", event)
         GenericEventListener.eventCallback(self, event, payload)
@@ -56,12 +57,13 @@ class LedEventListener(led_events.LedEventListener):
                 command = self.COMMAND_LISTENING_NET
         self.log_listening_state(command=command)
         return command
-    
+
     def _processCommand(self, command, payload):
         # Remove self._printer logic
         json_string = "{}"
         if payload:
             import json
+
             try:
                 json_string = json.dumps(payload)
             except:
@@ -73,13 +75,13 @@ class LedEventListener(led_events.LedEventListener):
             "__progress": "0",
             "__data": str(payload),
             "__json": json_string,
-            "__now": datetime.datetime.now().isoformat()
+            "__now": datetime.datetime.now().isoformat(),
         }
         # now add the payload keys as well
         if isinstance(payload, dict):
             params.update(payload)
 
         return command.format(**params)
-    
+
     def _executeGcodeCommand(self, command, debug=False):
         pass

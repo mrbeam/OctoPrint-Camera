@@ -25,15 +25,21 @@ from octoprint.server.util.flask import add_non_caching_response_headers
 from octoprint.server import NO_CONTENT
 from octoprint.settings import settings
 from octoprint.util import dict_merge
-from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES, LENS_CALIBRATION, MIN_BOARDS_DETECTED
+from octoprint_mrbeam.camera.definitions import (
+    LEGACY_STILL_RES,
+    LENS_CALIBRATION,
+    MIN_BOARDS_DETECTED,
+)
 from octoprint_mrbeam.camera.undistort import _getCamParams
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+
 # from octoprint_mrbeam.support import check_support_mode
 from octoprint_mrbeam.util import dict_map, get_thread
 from octoprint_mrbeam.util.log import json_serialisor
 
 import pkg_resources
+
 __version__ = pkg_resources.require("octoprint_camera")
 
 from . import corners, lens, util, iobeam
@@ -86,6 +92,7 @@ class CameraPlugin(
         self.led_client = None
 
         from octoprint.server import debug
+
         self.debug = debug
 
     def initialize(self):
@@ -106,7 +113,8 @@ class CameraPlugin(
         self.iobeam_thread._initWorker()
         # TODO Stage 3 - Remove, should only trigger via plugin hook.
         self._event_bus.subscribe(
-            IoBeamEvents.ONEBUTTON_PRESSED, get_thread()(self.capture_img_for_lens_calibration)
+            IoBeamEvents.ONEBUTTON_PRESSED,
+            get_thread()(self.capture_img_for_lens_calibration),
         )
         if util.factory_mode():
             # Invite to take a picture for the lens calibration
@@ -152,8 +160,12 @@ class CameraPlugin(
             #     user=dict(),
             # ),
             lens_datafile=path.join(self.get_plugin_data_folder(), "lens.npz"),
-            lens_legacy_datafile=path.join("/home/pi/.octoprint/cam/", LENS_CALIBRATION["factory"]),
-            corners_legacy_datafile=path.join("/home/pi/.octoprint/cam/", "pic_settings.yaml"),
+            lens_legacy_datafile=path.join(
+                "/home/pi/.octoprint/cam/", LENS_CALIBRATION["factory"]
+            ),
+            corners_legacy_datafile=path.join(
+                "/home/pi/.octoprint/cam/", "pic_settings.yaml"
+            ),
             corners=dict(
                 factory=dict(
                     arrows_px={},
@@ -267,6 +279,7 @@ class CameraPlugin(
         from flask import render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
         from octoprint_mrbeam.util.device_info import DeviceInfo
+
         device_info = DeviceInfo()
         beamos_version, beamos_date = device_info.get_beamos_version()
         render_kwargs = dict(
@@ -286,14 +299,17 @@ class CameraPlugin(
             e="null",
             gcodeThreshold=0,  # legacy - OctoPrint render bug
             gcodeMobileThreshold=0,  # legacy - OctoPrint render bug
-            get_img=json.dumps(dict(
-                last = LAST,
-                next = NEXT,
-                pic_plain=PIC_PLAIN,
-                pic_corner=PIC_CORNER,
-                pic_lens=PIC_LENS,
-                pic_both=PIC_BOTH,
-                pic_types=PIC_TYPES,)),
+            get_img=json.dumps(
+                dict(
+                    last=LAST,
+                    next=NEXT,
+                    pic_plain=PIC_PLAIN,
+                    pic_corner=PIC_CORNER,
+                    pic_lens=PIC_LENS,
+                    pic_both=PIC_BOTH,
+                    pic_types=PIC_TYPES,
+                )
+            ),
         )
 
         r = make_response(
@@ -394,14 +410,17 @@ class CameraPlugin(
                 self._settings.get(["corners", "factory"]) or {},
                 self._settings.get(["corners", "history"]) or {},
             )
-            lens_settings_path = self._settings.get(['lens_legacy_datafile']) or ""
+            lens_settings_path = self._settings.get(["lens_legacy_datafile"]) or ""
             if os.path.isfile(lens_settings_path):
                 settings_lens = np.load(lens_settings_path)
             else:
                 settings_lens = {}
             try:
                 image, timestamp, positions_workspace_corners = self.get_picture(
-                    pic_type, which, settings_corners=corners, settings_lens=settings_lens,
+                    pic_type,
+                    which,
+                    settings_corners=corners,
+                    settings_lens=settings_lens,
                 )
             except SettingsError as e:
                 return flask.make_response(
@@ -446,7 +465,9 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/ts", methods=["GET"])
     @logExceptions
     def getTimestamp(self):
-        data = dict_map(json_serialisor, {"timestamp": self.camera_thread.latest_img_timestamp })
+        data = dict_map(
+            json_serialisor, {"timestamp": self.camera_thread.latest_img_timestamp}
+        )
         return jsonify(data)
 
     # Whether the camera is running or not
@@ -467,24 +488,32 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/available_corrections", methods=["GET"])
     @logExceptions
     def getAvailableCorrections(self):
-        ret = ['plain']
+        ret = ["plain"]
         try:
-            lens_ok = lens_settings_valid(np.load(self._settings.get(['lens_legacy_datafile'])))
+            lens_ok = lens_settings_valid(
+                np.load(self._settings.get(["lens_legacy_datafile"]))
+            )
         except Exception as e:
             self._logger.error("Error when retrieving lens settings %s" % e)
             lens_ok = False
-        corners_ok = corner_settings_valid(corners.get_corner_calibration(self._settings.get(['corners_legacy_datafile'])))
+        corners_ok = corner_settings_valid(
+            corners.get_corner_calibration(
+                self._settings.get(["corners_legacy_datafile"])
+            )
+        )
         if corners_ok:
-            ret += ['corners']
+            ret += ["corners"]
         if lens_ok:
-            ret += ['lens']
+            ret += ["lens"]
         if lens_ok and corners_ok:
-            ret += ['both']
+            ret += ["both"]
 
         data = {"available_corrections": ret}
         return jsonify(data)
 
-    @octoprint.plugin.BlueprintPlugin.route("/lens_calibration_capture", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route(
+        "/lens_calibration_capture", methods=["GET"]
+    )
     @logExceptions
     def flask_capture_img_for_lens_calibration(self):
         return jsonify(dict(ret=self.capture_img_for_lens_calibration()))
@@ -513,17 +542,17 @@ class CameraPlugin(
             newCorners=json_data["newCorners"],
             newMarkers=json_data["newMarkers"],
         )
-        key = 'factory' if util.factory_mode() else 'user'
-        self._settings.set(['corners', key], json_data)
+        key = "factory" if util.factory_mode() else "user"
+        self._settings.set(["corners", key], json_data)
         return NO_CONTENT
-    
+
     @logExceptions
     def send_lens_calibration_state(self, data):
         self._plugin_manager.send_plugin_message(
             "camera", dict_map(json_serialisor, dict(chessboardCalibrationState=data))
         )
 
-    @octoprint.plugin.BlueprintPlugin.route(    
+    @octoprint.plugin.BlueprintPlugin.route(
         "/send_lens_captured_img_list", methods=["GET"]
     )
     @logExceptions
@@ -534,7 +563,9 @@ class CameraPlugin(
         return NO_CONTENT
 
     # Returns the image to diplay on the interface
-    @octoprint.plugin.BlueprintPlugin.route("/get_lens_calibration_image", methods=["POST"])
+    @octoprint.plugin.BlueprintPlugin.route(
+        "/get_lens_calibration_image", methods=["POST"]
+    )
     @logExceptions
     def get_lens_calibration_image(self):
         # values = request.values
@@ -546,8 +577,9 @@ class CameraPlugin(
             if images:
                 return make_response(images, default=json_serialisor)
         # In every other case, there is no images with that timestamp
-        return make_response("The timestamp does not correspond to any known image", 406) 
-
+        return make_response(
+            "The timestamp does not correspond to any known image", 406
+        )
 
     @octoprint.plugin.BlueprintPlugin.route(
         "/lens_calibration_del_image", methods=["POST"]
@@ -603,10 +635,12 @@ class CameraPlugin(
         if not img_jpg:
             return None, -1, {}
         ts = self.camera_thread.latest_img_timestamp
-        
+
         if do_corners:
             # Hack to get the show on the road
-            settings_corners = corners.get_corner_calibration(self._settings.get(['corners_legacy_datafile']))
+            settings_corners = corners.get_corner_calibration(
+                self._settings.get(["corners_legacy_datafile"])
+            )
         if do_corners and not corner_settings_valid(settings_corners):
             raise SettingsError(
                 "Corner settings invalid - provided settings: %s" % settings_corners
@@ -620,15 +654,17 @@ class CameraPlugin(
         img = util.image.imdecode(img_jpg)
         if img is None:
             return None, -1, {}
-        # Hack again : Ask the camera to adjust brightness -> Do auto inside the capture() 
+        # Hack again : Ask the camera to adjust brightness -> Do auto inside the capture()
         self.camera_thread._cam.compensate_shutter_speed(img)
         settings = {}
-        positions_pink_circles = corners.find_pink_circles(img, debug=util.factory_mode(), **settings)
+        positions_pink_circles = corners.find_pink_circles(
+            img, debug=util.factory_mode(), **settings
+        )
 
         if not (img_jpg and (do_corners or do_lens)):
             # Will return if the image is None
             return img_jpg, ts, positions_pink_circles
-        
+
         if do_corners:
             # settings_corners = plugin._settings.get(['corners'], {})
             # positions_pink_circles = dict_merge(
@@ -650,11 +686,15 @@ class CameraPlugin(
             positions_workspace_corners = None
         if do_lens:
             self._logger.warning("DISTORTING IMAGE %s", positions_workspace_corners)
-            img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
+            img, _ = lens.undistort(img, settings_lens["mtx"], settings_lens["dist"])
             if do_corners:
-                positions_workspace_corners = dict(lens.undist_dict(
-                    positions_workspace_corners, settings_lens['mtx'], settings_lens['dist']
-                ))
+                positions_workspace_corners = dict(
+                    lens.undist_dict(
+                        positions_workspace_corners,
+                        settings_lens["mtx"],
+                        settings_lens["dist"],
+                    )
+                )
                 self._logger.warning("LENS CORRECTED %s", positions_workspace_corners)
         if do_corners and len(dict(positions_workspace_corners)) == 4:
             self._logger.warning("CORNERS IMAGE %s", positions_workspace_corners)
@@ -671,12 +711,12 @@ class CameraPlugin(
             self.lens_calibration_thread.start()
         else:
             self.lens_calibration_thread = BoardDetectorDaemon(
-                self._settings.get(['lens_legacy_datafile']),
+                self._settings.get(["lens_legacy_datafile"]),
                 stateChangeCallback=self.send_lens_calibration_state,
                 factory=True,
                 runCalibrationAsap=util.factory_mode(),
             )
-            # FIXME - Right now the npz files get loaded funny 
+            # FIXME - Right now the npz files get loaded funny
             #         and some values aren't json pickable etc...
             self.lens_calibration_thread.state.rm_from_origin("factory")
             self.lens_calibration_thread.start()
@@ -690,6 +730,7 @@ class CameraPlugin(
 
     def capture_img_for_lens_calibration(self, *a, **kw):
         from threading import Timer
+
         # Ignore the arguments in case it getas triggered by an event that wants to pass on a payload etc...
         if len(self.lens_calibration_thread) == MIN_BOARDS_DETECTED - 1:
             self._logger.info("Last picture to be taken")
@@ -703,11 +744,9 @@ class CameraPlugin(
             return
         else:
             self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
-        
+
         lens.capture_img_for_lens_calibration(
-            self.lens_calibration_thread, 
-            self.camera_thread,
-            "/tmp"
+            self.lens_calibration_thread, self.camera_thread, "/tmp"
         )
         if len(self.lens_calibration_thread) >= MIN_BOARDS_DETECTED:
             self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
@@ -739,11 +778,11 @@ def __plugin_load__():
         ]
     else:
         # disables itself
-        disabled_plugins = ["camera",]
+        disabled_plugins = [
+            "camera",
+        ]
     __plugin_settings_overlay__ = dict(
-        plugins=dict(
-            _disabled=disabled_plugins  # accepts dict | pfad.yml | callable
-        ),
+        plugins=dict(_disabled=disabled_plugins),  # accepts dict | pfad.yml | callable
         appearance=dict(
             components=dict(
                 disabled=dict(

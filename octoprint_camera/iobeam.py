@@ -2,9 +2,11 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from octoprint_mrbeam.iobeam import iobeam_handler
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+
 # TODO - pahse 3: Create a separate iobeam plugin
 
 IoBeamEvents
+
 
 class IoBeamHandler(iobeam_handler.IoBeamHandler):
     def _handle_dataset(self, name, dataset):
@@ -18,7 +20,7 @@ class IoBeamHandler(iobeam_handler.IoBeamHandler):
         if self.MESSAGE_DEVICE_ONEBUTTON in dataset:
             self._handle_onebutton(dataset[self.MESSAGE_DEVICE_ONEBUTTON])
         return 0
-    
+
     def get_client_msg(self):
         """
         Make and return client identification message in required format

@@ -5,6 +5,7 @@ from datetime import datetime
 import logging
 
 from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES
+
 # camera is a function that creates a new Camera object
 # or returns the currently used camera object
 from octoprint_mrbeam.camera.mrbcamera import mrbCamera
@@ -38,7 +39,7 @@ class CameraThread(object):
         self._active = True
         with mrbCamera(
             camera_worker,
-            framerate=.5,
+            framerate=0.5,
             resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
         ) as self._cam:
             while not self._stop:
@@ -69,8 +70,9 @@ class CameraThread(object):
     def get_next_img(self):
         # Disgusting hack: Fix race condition with a sleep because I am myself deprived of some
         import time
-        time.sleep(1.)
-        # Even if we wait for the camera to be available, 
+
+        time.sleep(1.0)
+        # Even if we wait for the camera to be available,
         # we will be getting the image that was taken during this call
         # hack : sleep an extra frame time
         self._cam.wait()

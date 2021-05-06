@@ -11,25 +11,25 @@ from .util.flask import file_to_b64
 BOARD_COLS = 9
 BOARD_ROWS = 6
 
-def capture_img_for_lens_calibration(board_detect_thread, camera_thread, datafolder=None):
-    path = board_detect_thread.next_tmp_img_name() # From board_detect
+
+def capture_img_for_lens_calibration(
+    board_detect_thread, camera_thread, datafolder=None
+):
+    path = board_detect_thread.next_tmp_img_name()  # From board_detect
     if datafolder:
         path = os.path.join(datafolder, path)
     img = camera_thread.get_next_img()
     ts = camera_thread.latest_img_timestamp
-    with open(path, 'wb') as f:
+    with open(path, "wb") as f:
         f.write(img.getvalue())
     board_detect_thread.add(str(path), extra_kw=dict(timestamp=ts))
 
+
 SYMLINK_IMG_DIR = "/home/pi/.octoprint/uploads/cam/debug"
 
+
 class BoardDetectorDaemon(lens.BoardDetectorDaemon):
-    def __init__(self, 
-        output_calib,
-        stateChangeCallback=None,
-        rawImgLock=None,
-        **kw
-    ):
+    def __init__(self, output_calib, stateChangeCallback=None, rawImgLock=None, **kw):
         lens.BoardDetectorDaemon.__init__(
             self,
             output_calib,
@@ -42,7 +42,7 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
             ),
             **kw
         )
-    
+
     def add(
         self,
         image,
@@ -53,12 +53,7 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
     ):
         """prototype board detection with 1 extra row + 3 extra columns"""
         return lens.BoardDetectorDaemon.add(
-            self, 
-            image,
-            chessboardSize=chessboardSize,
-            state=state,
-            index=index,
-            **kw
+            self, image, chessboardSize=chessboardSize, state=state, index=index, **kw
         )
 
     def get_images(self, timestamp):
@@ -66,13 +61,11 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
         for img_path in recorded_images.keys():
             recorded_images[img_path]["image"] = file_to_b64(img_path)
         return recorded_images
-            
+
 
 class CalibrationState(lens.CalibrationState):
     # Add / Remove symlink to uploads/cam/debug folder
-    def add(
-        self, path, *a, **kw
-    ):
+    def add(self, path, *a, **kw):
         lens.CalibrationState.add(self, path, *a, **kw)
         octoprint_mrbeam.util.makedirs(SYMLINK_IMG_DIR)
         symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
