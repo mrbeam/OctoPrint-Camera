@@ -30,7 +30,7 @@ from octoprint_mrbeam.camera.undistort import _getCamParams
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 # from octoprint_mrbeam.support import check_support_mode
-from octoprint_mrbeam.util import dict_map
+from octoprint_mrbeam.util import dict_map, get_thread
 from octoprint_mrbeam.util.log import json_serialisor
 
 import pkg_resources
@@ -106,7 +106,7 @@ class CameraPlugin(
         self.iobeam_thread._initWorker()
         # TODO Stage 3 - Remove, should only trigger via plugin hook.
         self._event_bus.subscribe(
-            IoBeamEvents.ONEBUTTON_PRESSED, self.capture_img_for_lens_calibration
+            IoBeamEvents.ONEBUTTON_PRESSED, get_thread()(self.capture_img_for_lens_calibration)
         )
         if util.factory_mode():
             # Invite to take a picture for the lens calibration
@@ -715,7 +715,7 @@ class CameraPlugin(
         else:
             self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_DONE)
 
-        
+
 __plugin_name__ = "Camera"
 __plugin_pythoncompat__ = ">=2.7,<4"
 
