@@ -408,7 +408,20 @@ class CameraPlugin(
                     "Wrong camera settings for the requested picture %s" % e, 506
                 )
             except MarkerError as e:
-                return flask.make_response("Didn't found all Markers %s" % e, 506)
+                self._logger.debug("MARKERERROR: %s", e)
+                return flask.make_response(
+                    flask.jsonify(
+                        dict_map(
+                            json_serialisor,
+                            {
+                                "message": "Didn't found all Markers %s" % e,
+                                "positions_found": e.positions_found,
+                            }
+                            # e
+                        )
+                    ),
+                    506,
+                )
             else:
                 if image:
                     return send_image(
@@ -629,7 +642,10 @@ class CameraPlugin(
                 )
             except Exception as e:
                 self._logger.debug("do corners error %s", e)
-                raise MarkerError("Not all pink cirlces found" % positions_pink_circles)
+                raise MarkerError(
+                    "Not all pink cirlces found",
+                    positions_pink_circles,
+                )
         else:
             positions_workspace_corners = None
         if do_lens:

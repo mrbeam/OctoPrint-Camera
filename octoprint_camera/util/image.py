@@ -54,4 +54,7 @@ class SettingsError(Exception):
 
 
 class MarkerError(Exception):
-    pass
+    def __init__(self, message, positions_found):
+        super(Exception, self).__init__(message)
+
+        self.positions_found = positions_found
