@@ -20,14 +20,15 @@
         <use id="click_SW" href="#cross" x="-100" y="-100"/>
     </g>
     <g id="cropped_view_corners" class="calibration_click_indicator"
-       transform="scale(1)"
+       transform="scale(1)" style="stroke-width: 4;"
        data-bind="attr: { transform: zMarkersTransform(), visibility: croppedMarkersVisibility() }">
-        <use href="#cross" stroke="blue"
-             data-bind="attr: { x: -crossSize(),                         y: -crossSize() }"/>
-        <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: -crossSize() }"/>
-        <use href="#cross" stroke="blue"
-             data-bind="attr: { x: -crossSize(),                         y: calImgHeight()-crossSize() }"/>
-        <use href="#cross" stroke="blue"
+        <use href="#cross" stroke="magenta"
+             data-bind="attr: { x: -crossSize(),              y: -crossSize() }"/>
+        <use href="#cross" stroke="magenta" 
+             data-bind="attr: { x: calImgWidth()-crossSize(), y: -crossSize() }"/>
+        <use href="#cross" stroke="magenta"
+             data-bind="attr: { x: -crossSize(),              y: calImgHeight()-crossSize() }"/>
+        <use href="#cross" stroke="magenta"
              data-bind="attr: { x: calImgWidth()-crossSize(), y: calImgHeight()-crossSize() }"/>
     </g>
 </svg>
@@ -70,7 +71,7 @@
     <div class="qa_list_and_next" data-bind="visible: camera.availablePicTypes.corners()">
         <h4>{{ _('Checklist') }}:</h4>
         <ul>
-            <li>{{ _('The 4 arrows are aligned with the blue crosses') }}</li>
+            <li>{{ _('The 4 arrows are aligned with the magenta crosses') }}</li>
         </ul>
         <div class="continue_btn btn-group">
             <!--  onclick="startCornerCalibration" -->
