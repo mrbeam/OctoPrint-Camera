@@ -39,7 +39,29 @@ $(function () {
                 }
             });
         };
+
+        self.viewBox = ko.computed(function () {
+            let size = self.camera.pictureSize.both();
+            return "0 0 " + size.join(" ");
+        });
+        self.rectTransform = ko.computed(function () {
+            // Like workArea.zObjectImgTransform(), but zooms
+            // out the markers instead of the image itself
+            let size = self.camera.pictureSize.both();
+            let offset = size.map(
+                (x) => x * self.camera.imgHeightScale() / size[0] * 500
+            );
+            return (
+                "scale(" +
+                ( size[0] / 500) / (1 + 2 * self.camera.imgHeightScale()) +
+                ") translate(" +
+                offset.join(" ") +
+                ")"
+            );
+        });
     }
+
+
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([

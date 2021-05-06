@@ -417,10 +417,9 @@ class CameraPlugin(
                                 "message": "Didn't found all Markers %s" % e,
                                 "positions_found": e.positions_found,
                             }
-                            # e
                         )
                     ),
-                    506,
+                    507,
                 )
             else:
                 if image:
@@ -629,36 +628,31 @@ class CameraPlugin(
             # Will return if the image is None
             return img_jpg, ts, positions_pink_circles
         
+        
+        else:
+            positions_workspace_corners = None
+        if do_lens:
+            img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
         if do_corners:
-            # settings_corners = plugin._settings.get(['corners'], {})
-            # positions_pink_circles = dict_merge(
-            #     settings_corners, positions_pink_circles
-            # )
             try:
                 simple_pos = {qd: v["pos"] for qd, v in positions_pink_circles.items()}
-                self._logger.warning(simple_pos)
-                positions_workspace_corners = corners.get_workspace_corners(
-                    simple_pos, settings_corners
-                )
             except Exception as e:
                 self._logger.debug("do corners error %s", e)
                 raise MarkerError(
                     "Not all pink cirlces found",
                     positions_pink_circles,
                 )
-        else:
-            positions_workspace_corners = None
-        if do_lens:
-            self._logger.warning("DISTORTING IMAGE %s", positions_workspace_corners)
-            img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
-            if do_corners:
-                positions_workspace_corners = dict(lens.undist_dict(
-                    positions_workspace_corners, settings_lens['mtx'], settings_lens['dist']
-                ))
-                self._logger.warning("LENS CORRECTED %s", positions_workspace_corners)
-        if do_corners and len(dict(positions_workspace_corners)) == 4:
-            self._logger.warning("CORNERS IMAGE %s", positions_workspace_corners)
-            img = corners.fit_img_to_corners(img, positions_workspace_corners)
+            if do_lens:
+                positions_workspace_corners = corners.get_workspace_corners(
+                    simple_pos, settings_corners, undistorted=True, mtx=settings_lens['mtx'], dist=settings_lens['dist']
+                )
+            else:
+                positions_workspace_corners = corners.get_workspace_corners(
+                    simple_pos, settings_corners, undistorted=False, 
+                )
+            if len(dict(positions_workspace_corners)) == 4:
+                self._logger.warning("CORNERS IMAGE %s", positions_workspace_corners)
+                img = corners.fit_img_to_corners(img, positions_workspace_corners)
         # Write the modified image to a jpg binary
         buff = util.image.imencode(img)
         return buff, ts, positions_pink_circles
