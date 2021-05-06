@@ -213,6 +213,12 @@ $(function () {
 
                 self.updateHeatmap(_d.pictures);
             }
+
+            if ("newImage" in data) {
+                console.log('new image corner calibration');
+                self._reloadImageLoop();
+                // Trigger reload if calibration not started
+            }
         };
 
         // self.getLensCalibrationImage = function(timestamp) {
@@ -474,20 +480,17 @@ $(function () {
         self.lensCalibrationToggleQA = function () {
             $("#lensCalibrationPhases").toggleClass("qa_active");
             if ($("#lensCalibrationPhases").hasClass("qa_active"))
-                self.refreshQAImg(GET_IMG.last);
+                self.camera.startReloadImageLoop("last", "lens",tab='lens tab active');
+                // self.refreshQAImg(GET_IMG.last);
         };
-
-        self.camera.startReloadImageLoop("last", "plain", "alignment init");
+        self._tabActive = ko.observable(false);
         self.calibration.activeTab.subscribe(function (activeTab) {
-                self._tabActive(activeTab === self.calibration.TABS.alignment);
+                self._tabActive(activeTab === self.calibration.TABS.lens);
             })
             // self._reloadImageLoop();
             self._tabActive.subscribe(function (active) {
-                if (active) {
-                    console.log('reload image loop alignment');
-                    self.camera.startReloadImageLoop("last", "plain",tab='alignment tab active');
-                } else {
-                    console.log('stop image loop alignment')
+                if (!active){
+                    console.log('stop image loop lens')
                     self.camera.stopReloadImageLoop();
                 }
             })
