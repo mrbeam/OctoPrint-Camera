@@ -24,12 +24,7 @@
 		</script>
     </head>
     <body style="padding-top:0;">
-		<div class="octoprint-container" id="test_jfsolution">
-			<div class="row-fluid">
-				<div class="span12" id="settings">
-					<div id="settings_plugin_mrbeam_camera" class="container" style="width:100%;">
-						<div class="scrollable" id="settings_dialog_content">
-							<div id="initial_camera_calibration" class="container" style="max-width:100%;">
+        <div id="initial_camera_calibration" class="container" style="max-width:100%;">
                                 <div id="calibration_tool_loading_overlay" style="color: #e25303; font-size: 1.5em; position: absolute; top: 40%; left: 50%">
                                     <div style="position: relative; left: -50%;">
                                         <i class="icon icon-spinner icon-spin" style="font-weight: bold;"></i>
@@ -59,7 +54,7 @@
                                         <li><a href="#tab_debug" data-toggle="tab" id="debug_tab_btn">{{ _('Debug') }}</a></li>
                                     </ul>
                                     <!-- Tab contents -->
-                                    <div class="scrollable tabbable">
+                                    <div class="tabbable">
                                         <div class="tab-content camera_calibration_tabs">
                                             <div class="tab-pane active" id="tab_camera_alignment">
                                                 {% include 'calibration/watterott/tab_camera_alignment.jinja2' %}
@@ -83,12 +78,6 @@
                                     </div>
                                 </div>
 							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		<!-- Plugin template files -->
 		{% if templatePlugins %}
 		{% for plugin_name in templatePlugins %}
