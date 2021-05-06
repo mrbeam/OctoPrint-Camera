@@ -1,0 +1,847 @@
+# German translations for Mr_Beam.
+# Copyright (C) 2019 The OctoPrint Project
+# This file is distributed under the same license as the Mr_Beam project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Mr_Beam 0.1.61\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2021-05-06 14:01+0200\n"
+"PO-Revision-Date: 2021-05-06 14:04+0200\n"
+"Last-Translator: Andy Werner <andy@mr-beam.org>\n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.3\n"
+
+#: static/js/camera.js:31
+msgid "Top left"
+msgstr "Oben links"
+
+#: static/js/camera.js:32
+msgid "Bottom left"
+msgstr "Unten links"
+
+#: static/js/camera.js:33
+msgid "Top right"
+msgstr "Oben rechts"
+
+#: static/js/camera.js:34
+msgid "Bottom right"
+msgstr "Unten rechts"
+
+#: static/js/camera.js:313
+msgid "Corner Calibration needed"
+msgstr "Eckenkalibrierung erforderlich"
+
+#: static/js/camera.js:314
+msgid ""
+"Please calibrate the camera under Settings -> Camera -> Corner Calibration."
+msgstr ""
+"Bitte kalibriere die Kamera unter Einstellungen -> Kamera -> "
+"Eckenkalibrierung."
+
+#: static/js/calibration/calibration.js:72
+#: static/js/calibration/corner_calibration.js:399
+msgid "Error"
+msgstr "Fehler"
+
+#: static/js/calibration/calibration.js:74
+#, python-format
+msgid ""
+"Marker engraving failed: <br>%(errmsg)s<br>Error:<br/>%(code)s %(status)s - "
+"%(errorThrown)s"
+msgstr ""
+"Gravur der Markierungen ist fehlgeschlagen.<br>%(errmsg)s<br>Fehler:<br/>"
+"%(code)s %(status)s - %(errorThrown)s"
+
+#: static/js/calibration/corner_calibration.js:351
+msgid "Couldn't send calibration data."
+msgstr "Es konnten keine Kalibrierdaten gesendet werden."
+
+#: static/js/calibration/corner_calibration.js:352
+#: static/js/calibration/lens_calibration.js:446
+#: static/js/calibration/lens_calibration.js:452
+#: static/js/calibration/lens_calibration.js:458
+msgid "Please check your connection to the device."
+msgstr "Bitte überprüfe deine Verbindung zu deinem Mr Beam."
+
+#: static/js/calibration/corner_calibration.js:364
+msgid "Camera Calibrated."
+msgstr "Kamera kalibriert."
+
+#: static/js/calibration/corner_calibration.js:365
+msgid "Camera calibration was successful."
+msgstr "Die Kamerakalibrierung war erfolgreich."
+
+#: static/js/calibration/corner_calibration.js:401
+#, python-format
+msgid ""
+"Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"
+msgstr ""
+"Kalibrierung fehlgeschlagen.<br><br>Fehler:<br/>%(code)s %(status)s - "
+"%(errorThrown)s"
+
+#: static/js/calibration/lens_calibration.js:256
+msgid "Calibration started"
+msgstr "Kalibrierung gestartet"
+
+#: static/js/calibration/lens_calibration.js:257
+msgid ""
+"It shouldn't take long. Your device shows a green light when it is done."
+msgstr ""
+"Es sollte nicht lange dauern. Mr Beam zeigt ein grünes Licht, wenn es fertig "
+"ist."
+
+#: static/js/calibration/lens_calibration.js:266
+msgid "Couldn't start the lens calibration."
+msgstr "Konnte die Linsenkalibrierung nicht starten."
+
+#: static/js/calibration/lens_calibration.js:267
+msgid ""
+"Is the machine on? Have you taken any pictures before starting the "
+"calibration?"
+msgstr ""
+"Ist dein Mr Beam eingeschaltet? Hast Du vor Beginn der Kalibrierung Bilder "
+"gemacht?"
+
+#: static/js/calibration/lens_calibration.js:295
+msgid "Couldn't stop the lens calibration."
+msgstr "Konnte die Linsenkalibrierung nicht stoppen."
+
+#: static/js/calibration/lens_calibration.js:296
+msgid ""
+"Please verify your connection to the device. Did you try canceling multiple "
+"times?"
+msgstr ""
+"Bitte überprüfe die Verbindung zu Deinem Mr Beam. Hast du evtl. Mehrfach "
+"versucht, die Kalibrierung abzubrechen?"
+
+#: static/js/calibration/lens_calibration.js:310
+msgid "Lens Calibration stopped."
+msgstr "Linsenkalibrierung gestoppt."
+
+#: static/js/calibration/lens_calibration.js:349
+msgid "Deleting picture..."
+msgstr "Bild wird gelöscht…"
+
+#: static/js/calibration/lens_calibration.js:350
+msgid "Please wait a second..."
+msgstr "Bitte warten Sie einige Sekunden…"
+
+#: static/js/calibration/lens_calibration.js:372
+msgid "Reverted to factory settings."
+msgstr "Auf Werkseinstellungen zurückgesetzt."
+
+#: static/js/calibration/lens_calibration.js:373
+msgid "Your previous calibration has been deleted."
+msgstr "Deine vorherige Kalibrierung wurde gelöscht."
+
+#: static/js/calibration/lens_calibration.js:382
+msgid "Failed to revert to factory settings."
+msgstr "Die Werkseinstellungen konnten nicht wiederhergestellt werden."
+
+#: static/js/calibration/lens_calibration.js:383
+msgid "Information :\n"
+msgstr "Informationen :\n"
+
+#: static/js/calibration/lens_calibration.js:445
+msgid "Failed to save the latest image."
+msgstr "Das letzte Bild konnte nicht gespeichert werden."
+
+#: static/js/calibration/lens_calibration.js:451
+msgid "Failed to delete the latest image."
+msgstr "Das letzte Bild konnte nicht gelöscht werden."
+
+#: static/js/calibration/lens_calibration.js:457
+msgid "Failed to refresh the list of images."
+msgstr "Die Liste der Bilder konnte nicht aktualisiert werden."
+
+#: static/js/calibration/lens_calibration.js:465
+msgid "...and I have no clue why. Sorry."
+msgstr "...und ich habe keine Ahnung, warum. Sorry."
+
+#: static/js/calibration/watterott/label_printer.js:31
+msgid "Printed: "
+msgstr "Gedruckt: "
+
+#: static/js/calibration/watterott/label_printer.js:40
+msgid "Print Error"
+msgstr "Druckfehler"
+
+#: static/js/settings/camera_settings.js:84
+msgid "The lid is open"
+msgstr "Der Deckel ist geöffnet"
+
+#: static/js/settings/camera_settings.js:85
+msgid "The lid is closed: Please open the lid to start the camera"
+msgstr ""
+"Der Deckel ist geschlossen: Bitte öffne den Deckel, um die Kamera zu starten"
+
+#: static/js/settings/camera_settings.js:92
+msgid ""
+"Mr Beam is not homed: Please go to the working area and do a Homing Cycle"
+msgstr ""
+"Mr Beam ist nicht ge-homed: Bitte gehe in den Arbeitsbereich und machen Sie "
+"einen Homing Cycle"
+
+#: static/js/settings/camera_settings.js:96
+msgid ""
+"Mr Beam is currently performing a laser job. The camera does not work during "
+"a laser job"
+msgstr ""
+"Mr Beam ist gerade mit einem Laserjob beschäftigt. Die Kamera funktioniert "
+"nicht während eines Laserjobs."
+
+#: static/js/settings/camera_settings.js:100
+msgid "Mr Beam is in state Operational"
+msgstr "Mr Beam ist im Status Operational"
+
+#: static/js/settings/camera_settings.js:102
+msgid ""
+"Mr Beam is not in state Operational: The camera does not work during a laser "
+"job"
+msgstr ""
+"Mr Beam ist nicht im Status Operational: Die Kamera funktioniert nicht "
+"während eines Laserjobs"
+
+#: static/js/settings/camera_settings.js:120
+msgid "No markers found since camera did not launch"
+msgstr "Keine Markierungen gefunden, da Kamera nicht gestartet wurde"
+
+#: static/js/settings/camera_settings.js:122
+msgid "All 4 pink corner markers are recognized"
+msgstr "Alle 4 pinken Markierungskreise wurden erkannt"
+
+#: static/js/settings/camera_settings.js:125
+msgid "Not all pink corner markers are recognized. Missing markers: "
+msgstr ""
+"Nicht alle pinken Markierungskreise wurden erkannt. Fehlende Markierungen: "
+
+#: static/js/settings/camera_settings.js:178
+msgid "Error while selecting the marker detection mode"
+msgstr "Fehler bei der Auswahl des Markierungserkennungsmodus"
+
+#: static/js/settings/camera_settings.js:182
+msgid "Unable to select the marker detection mode at the moment."
+msgstr "Der Markierungserkennungsmodus kann derzeit nicht ausgewählt werden."
+
+#: static/js/settings/camera_settings.js:239
+msgid "Failed to update the Lens Calibration Status."
+msgstr "DerLinsenkalibrierungs-Status konnte nicht aktualisiert werden."
+
+#: static/js/settings/camera_settings.js:242
+msgid "There is nothing to worry about, but here is some extra information :\n"
+msgstr ""
+"Es gibt keinen Grund zur Sorge, aber hier sind einige zusätzliche "
+"Informationen:\n"
+
+#: templates/camera_settings.jinja2:4
+msgid "Camera"
+msgstr "Kamera"
+
+#: templates/camera_settings.jinja2:9
+msgid "Status"
+msgstr "Status"
+
+#: templates/camera_settings.jinja2:12
+msgid ""
+"The camera is not able to take new pictures. Please check the following:"
+msgstr ""
+"Die Kamera kann keine neuen Bilder aufnehmen. Bitte überprüfe die folgenden "
+"Punkte:"
+
+#: templates/camera_settings.jinja2:27 templates/camera_settings.jinja2:30
+#, python-format
+msgid "More about markers %(opening_tag)shere%(closing_tag)s."
+msgstr "Mehr über die Markierungen %(opening_tag)shier%(closing_tag)s."
+
+#: templates/camera_settings.jinja2:66
+msgid "Processed Camera Picture"
+msgstr "Verarbeitetes Kamerabild"
+
+#: templates/camera_settings.jinja2:67
+msgid "Raw Camera Picture"
+msgstr "Rohes Kamerabild"
+
+#: templates/camera_settings.jinja2:70
+msgid "as you see it in the working area of Mr Beam software"
+msgstr "wie Du es im Arbeitsbereich der Mr Beam-Software siehst"
+
+#: templates/camera_settings.jinja2:72
+msgid ""
+"actual camera picture, before it is adjusted in the software by fixing the "
+"perspective, angle and colour"
+msgstr ""
+"tatsächliches Kamerabild, bevor Perspektive, Winkel und Farbe durch die "
+"Software korrigiert wurden."
+
+#: templates/camera_settings.jinja2:80 templates/camera_settings.jinja2:87
+msgid "Do you have problems with the camera?"
+msgstr "Hast Du Probleme mit der Kamera?"
+
+#: templates/camera_settings.jinja2:81 templates/camera_settings.jinja2:88
+#, python-format
+msgid ""
+"Please check out our %(opening_tag)stroubleshooting guide%(closing_tag)s."
+msgstr ""
+"Finde Lösungen in unserem %(opening_tag)sTroubleshooting-Leitfaden"
+"%(closing_tag)s."
+
+#: templates/camera_settings.jinja2:95
+msgid ""
+"You can use the download button on the images to save your camera picture "
+"and provide it to the support team, if necessary."
+msgstr ""
+"Du kannst den Download-Button auf den Bildern verwenden, um das Kamerabild "
+"zu speichern und ggf. dem Support-Team zur Verfügung zu stellen."
+
+#: templates/camera_settings.jinja2:111
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: templates/camera_settings.jinja2:112
+msgid "Marker detection"
+msgstr "Markierungs-Erkennung"
+
+#: templates/camera_settings.jinja2:114
+#, python-format
+msgid ""
+"Select one of the two marker detection modes: %(strong_open)sreliable"
+"%(strong_close)s to always get an image or %(strong_open)saccurate"
+"%(strong_close)s to only get precise images."
+msgstr ""
+"Wähle einen der beiden Markierungs-Erkennungsmodi aus: "
+"%(strong_open)szuverlässig%(strong_close)s, um immer ein Bild zu erhalten, "
+"oder %(strong_open)sakkurat%(strong_close)s, um nur präzise Bilder zu "
+"erhalten."
+
+#: templates/camera_settings.jinja2:119
+msgid ""
+"You can change the marker detection mode depending the desired behavior of "
+"the camera."
+msgstr ""
+"Du kannst den Markierungs-Erkennungsmodus je nach dem gewünschten Verhalten "
+"der Kamera ändern."
+
+#: templates/camera_settings.jinja2:121
+msgid "Reliable:"
+msgstr "Zuverlässig:"
+
+#: templates/camera_settings.jinja2:122
+msgid ""
+"The system remembers the markers's position from the last time it found them."
+msgstr ""
+"Das System merkt sich die Position der Markierungen vom letzten Mal, als es "
+"sie gefunden hat."
+
+#: templates/camera_settings.jinja2:123
+msgid "This might lead to lower precision."
+msgstr "Dies kann zu einer geringeren Präzision führen."
+
+#: templates/camera_settings.jinja2:125
+msgid "Accurate:"
+msgstr "Akkurat:"
+
+#: templates/camera_settings.jinja2:126
+msgid ""
+"This option lets you choose if you only want to see pictures where all of "
+"the markers were detected."
+msgstr ""
+"Mit dieser Option kannst Du wählen, ob Du nur Bilder sehen möchtest, auf "
+"denen alle Markierungen erkannt wurden."
+
+#: templates/camera_settings.jinja2:127
+msgid ""
+"All the pink markers need to be visible and detected when you open the lid. "
+"After being detected, you might cover them."
+msgstr ""
+"Alle pinken Markierungen müssen beim Öffnen des Deckels sichtbar und "
+"erkennbar sein. Wenn sie einmal erkannt wurden, kannst du sie auch verdecken."
+
+#: templates/camera_settings.jinja2:133
+msgid "Reliable"
+msgstr "Zuverlässig"
+
+#: templates/camera_settings.jinja2:136
+msgid "Accurate"
+msgstr "Akkurat"
+
+#: templates/camera_settings.jinja2:142
+msgid "Camera calibration"
+msgstr "Kamerakalibrierung"
+
+#: templates/camera_settings.jinja2:144
+#, python-format
+msgid ""
+"Your Mr Beam's camera is factory calibrated by default, so there is "
+"%(open_strong)snormally no need to calibrate the camera%(close_strong)s."
+msgstr ""
+"Die Kamera Deines Mr Beams ist standardmäßig schon ab Werk kalibriert ist, "
+"so dass im Normalfall %(open_strong)skeine Kamerakalibrierung durchgeführt "
+"werden muss.%(close_strong)s"
+
+#: templates/camera_settings.jinja2:149
+#, python-format
+msgid ""
+"A new calibration of the camera is %(open_strong)sonly necessary if"
+"%(close_strong)s:"
+msgstr ""
+"Eine Neu-Kalibrierung der Kamera ist %(open_strong)snur notwendig, wenn:"
+"%(close_strong)s"
+
+#: templates/camera_settings.jinja2:155
+msgid ""
+"One of the pink markings has been changed. (For example, if the mark was "
+"peeled off and glued in again.)"
+msgstr ""
+"eine der pinken Markierungen verändert wurde. (z.B. wenn die Markierung "
+"abgelöst und erneut eingeklebt wurde.)"
+
+#: templates/camera_settings.jinja2:158
+#, python-format
+msgid ""
+"You notice a %(open_strong)sdeviation larger than 5mm%(close_strong)s "
+"between the processed camera picture (as you see it in the software working "
+"area) and the laser result."
+msgstr ""
+"Du eine %(open_strong)sgrößere Abweichung als 5mm%(close_strong)s der Design-"
+"Position zwischen der Bildschirmposition auf dem angepassten "
+"(Schwarzweißbild) und dem Laser-Ergebnis feststellst."
+
+#: templates/camera_settings.jinja2:165 templates/camera_settings.jinja2:169
+#, python-format
+msgid ""
+"For more information, please have a look at our article on "
+"%(opening_tag)scamera calibration%(closing_tag)s."
+msgstr ""
+"Für weitere Informationen empfehlen wir unseren Artikel zur "
+"%(opening_tag)sKamerakalibrierung%(closing_tag)s."
+
+#: templates/calibration/user/view_corner_calibration.jinja2:7
+#: templates/calibration/watterott/calibration_tool.jinja2:46
+#: templates/camera_settings.jinja2:177
+msgid "Corner Calibration"
+msgstr "Eckenkalibrierung"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:10
+#: templates/camera_settings.jinja2:179
+msgid ""
+"The corner calibration uses the pink markers to calibrate the camera. Use "
+"this in case one of the markers has been changed or if there is a large "
+"deviation between the screen position and the laser result."
+msgstr ""
+"Die Eckenkalibrierung benötigt die pinken Markierungen zur Kalibrierung der "
+"Kamera. Verwende diese Option, wenn eine der Markierungen geändert wurde "
+"oder wenn es eine größere Abweichung zwischen der Bildschirmposition und dem "
+"Laserergebnis gibt."
+
+#: templates/camera_settings.jinja2:182 templates/camera_settings.jinja2:194
+msgid "Start"
+msgstr "Start"
+
+#: templates/calibration/user/view_lens_calibration.jinja2:7
+#: templates/calibration/watterott/calibration_tool.jinja2:40
+#: templates/camera_settings.jinja2:186
+msgid "Lens Calibration"
+msgstr "Linsenkalibrierung"
+
+#: templates/camera_settings.jinja2:188
+msgid ""
+"The lens calibration is made to remove the fish-eye effect from the picture. "
+"Only do this if you think that your camera precision is bad, specially in "
+"the center."
+msgstr ""
+"Die Linsenkalibrierung wird durchgeführt, um einen Fischaugen-Effekt aus dem "
+"Bild zu entfernen. Wir empfehlen eine Linsenkalibrierung nur vorzunehmen, "
+"wenn die Präzision der Kamera vorallem in der Mitte nicht gut ist."
+
+#: templates/camera_settings.jinja2:190
+msgid "You need to make a corner calibration first"
+msgstr "Bitte mache zuerst eine Eckkalibrierung."
+
+#: templates/camera_sidebar.jinja2:7
+#, python-format
+msgid ""
+"Please %(opening_tag)scontact the Mr Beam Support team%(closing_tag)s to get "
+"help with this error."
+msgstr ""
+"Bitte %(opening_tag)s kontaktieren Sie das Mr Beam Support Team"
+"%(closing_tag)s, um Hilfe bei diesem Fehler zu erhalten."
+
+#: templates/camera_sidebar.jinja2:13
+msgid "Close"
+msgstr "Schließen"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:11
+#: templates/calibration/user/view_lens_calibration.jinja2:22
+msgid "Steps"
+msgstr "Schritte"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:13
+msgid ""
+"Put some pieces of flat material like cardboard in each corner of your Mr "
+"Beam work area:"
+msgstr ""
+"Lege einige Stücke flaches Material wie z.B. Karton in jede Ecke des Mr Beam "
+"Arbeitsbereichs:"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:17
+msgid ""
+"Engrave the calibrations markers on your material by clicking on this button:"
+msgstr ""
+"Klicke auf diese Schaltfläche um die Kalibrierungsmarkierungen auf das "
+"Material zu gravieren."
+
+#: templates/calibration/user/view_corner_calibration.jinja2:20
+msgid "Engrave Calibration Markers"
+msgstr "Kalibriermarkierungen gravieren"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:23
+msgid "Please perform a homing cycle first"
+msgstr "Bitte führe zuerst einen Homing-Zyklus durch"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:26
+msgid ""
+"Wait until the engraving is finished and Mr Beam Status Lights are green. "
+"Open the safety lid again and be carefult NOT to touch the engraved "
+"material. The camera will now take a picture of the engraving."
+msgstr ""
+"Warte, bis die Gravur beendet ist und die Mr Beam Status Lights grün "
+"leuchten. Öffne den Sicherheitsdeckel wieder OHNE dabei das gravierte "
+"Material zu berühren. Die Kamera wird nun ein Bild der Gravur aufnehmen."
+
+#: templates/calibration/user/view_corner_calibration.jinja2:27
+msgid ""
+"Start the calibration by clicking on the button, and then follow these steps:"
+msgstr ""
+"Um die Kalibrierung zu starten, klicke auf diese Schaltfläche und befolge "
+"die diese Schritte:"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:29
+msgid "Click on the arrow head of the marker in the magnified picture."
+msgstr "Klicke auf die Pfeilspitze des Markers im vergrößerten Bild."
+
+#: templates/calibration/user/view_corner_calibration.jinja2:30
+msgid ""
+"Click on \"next\" to continue with the other markers as the picture changes."
+msgstr "Klicke auf \"weiter\", um mit den anderen Markierungen fortzufahren."
+
+#: templates/calibration/user/view_corner_calibration.jinja2:31
+msgid ""
+"Once all arrowheads are marked the calibration is finished and can be saved."
+msgstr ""
+"Sobald alle Pfeilspitzen markiert sind, ist die Kalibrierung abgeschlossen "
+"und kann gespeichert werden."
+
+#: templates/calibration/user/view_corner_calibration.jinja2:34
+#: templates/calibration/user/view_lens_calibration.jinja2:75
+msgid "Start Calibration"
+msgstr "Kalibrierung starten"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:73
+msgid "refresh"
+msgstr "aktualisiere"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:88
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:54
+msgid "detecting"
+msgstr "Erkennung"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:90
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:56
+msgid "Download this image"
+msgstr "Dieses Bild herunterladen"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:116
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:123
+msgid "Previous"
+msgstr "Zurück"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:119
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:125
+msgid "Next"
+msgstr "Weiter"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:122
+#: templates/calibration/user/view_lens_calibration.jinja2:115
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:130
+msgid "Save Calibration"
+msgstr "Kalibrierung speichern"
+
+#: templates/calibration/user/view_corner_calibration.jinja2:125
+#: templates/calibration/user/view_lens_calibration.jinja2:118
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:128
+msgid "Cancel"
+msgstr "Abbruch"
+
+#: templates/calibration/user/view_lens_calibration.jinja2:10
+msgid ""
+"The lens calibration removes the fish-eye effect of the camera. Use this if "
+"you are dissatisfied with the precision of the camera and a new corner "
+"calibration does not make it better."
+msgstr ""
+"Die Linsenkalibrierung entfernt einen Fischaugen-Effekt der Kamera. Verwende "
+"dies, wenn Du mit der Präzision der Kamera unzufrieden bist und eine neue "
+"Eckenkalibrierung sie nicht besser macht."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:11
+#: templates/calibration/user/view_lens_calibration.jinja2:14
+#, python-format
+msgid ""
+"To evaluate if you need a new calibration, and to test the quality of your "
+"current lens calibration please follow the instructions shown in our "
+"Knowledge Base article %(opening_tag)sTest your camera calibration"
+"%(closing_tag)s."
+msgstr ""
+"Um zu beurteilen, ob eine Linsenkalibrierung durchgeführt werden sollte oder "
+"um die Qualität der aktuellen Linsenkalibrierung zu testen, folge bitte den "
+"Anweisungen in unserem Knowledge Base-Artikel "
+"%(opening_tag)sLinsenkalibrierung%(closing_tag)s."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:18
+msgid ""
+"If you do a new lens calibration and later want to go back to the default "
+"calibration, you can reset the lens calibration to factory settings here:"
+msgstr ""
+"Wenn Du eine eigene Linsenkalibrierung durchführst und später zur "
+"Werkseinstellung zurückkehren möchten, kannst Du die Linsenkalibrierung hier "
+"auf die Werkseinstellungen zurücksetzen:"
+
+#: templates/calibration/user/view_lens_calibration.jinja2:19
+msgid "Reset lens calibration"
+msgstr "Linsenkalibrierung zurücksetzen"
+
+#: templates/calibration/user/view_lens_calibration.jinja2:24
+#, python-format
+msgid ""
+"Download and print %(opening_tag)sthis chessboard%(closing_tag)s. If you "
+"print it on a regular sheet of paper, then please make sure to keep it flat "
+"against another surface, sticking it to a flat piece of wood or a thin foam "
+"board."
+msgstr ""
+"Lade %(opening_tag)sdiese Schachbrett-Grafik%(closing_tag)s herunter und "
+"drucke sie aus. Wenn du das Schachbrett auf ein normales Blatt Papier "
+"druckst, solltest du das Blatt auf einen Karton, Holz oder eine "
+"Schaumstoffplatte kleben, damit es sich nicht vorwölben kann."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:28
+msgid ""
+"Place it somewhere inside the working area of your Mr Beam, aligned "
+"horizontally."
+msgstr ""
+"Platziere es irgendwo innerhalb des Arbeitsbereichs Deines Mr Beam, "
+"horizontal ausgerichtet."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:32
+msgid ""
+"Start the calibration by clicking on the button at the bottom of this page."
+msgstr ""
+"Starte die Kalibrierung, indem Sie auf die Schaltfläche unten auf dieser "
+"Seite klicken."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:34
+msgid ""
+"Keep the lid open and press the button on your Mr Beam shortly to take a "
+"picture of the chessboard: the Status Lights will flash in blue."
+msgstr ""
+"Lass den Deckel offen und drücke kurz auf den Button an Deinem Mr Beam, um "
+"ein Foto vom Schachbrett zu machen: die Status Lights blinken blau."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:35
+msgid "Wait for the blue flashing to stop."
+msgstr "Warte, bis das blaue Blinken aufhört."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:36
+msgid "Move the chessboard to a new position and take another picture."
+msgstr ""
+"Bewege das Schachbrett an eine andere Stelle des Arbeitsbereiches und mache "
+"ein weiteres Bild."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:37
+msgid ""
+"Meanwhile, you can check if the previous pictures have a green check on "
+"them. If they show a red cross or takes too long, delete it and take a new "
+"picture. 3 minutes should be more than enough for the system to detect the "
+"chessboard."
+msgstr ""
+"In der Zwischenzeit prüfe, ob auf den vorherigen Bildern ein grüner Haken "
+"angezeigt wird. Wenn lange kein grüner Haken erscheint oder ein rotes Kreuz "
+"angezeigt wird, solltest du das Bild löschen und ein neues Bild aufnehmen. "
+"Es sollte nicht länger als 3 Minuten dauern, bis ein grüner Haken erscheint."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:38
+msgid ""
+"Proceed by taking 9 to 20 pictures, trying to cover up most of the working "
+"area. Successfully covered areas will appear green on the working area icon."
+msgstr ""
+"Insgesamt solltest du 9 bis 20 Bilder machen. Bitte achte darauf, den "
+"größten Teil des Arbeitsbereichs abzudecken. Erfolgreich abgedeckte Bereiche "
+"werden auf dem Arbeitsbereichs-Symbol grün angezeigt."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:41
+msgid ""
+"While the software is processing a picture, you can already proceed with "
+"taking all the pictures you need - as long as you wait for the blue flash to "
+"stop between each shot."
+msgstr ""
+"Während die Software ein Bild verarbeitet, kannst Du bereits weitere Bilder "
+"aufnehmen - aber warte immer ab, bis das blaue Blinken aufgehört hat."
+
+#: templates/calibration/user/view_lens_calibration.jinja2:42
+#: templates/calibration/user/view_lens_calibration.jinja2:45
+#, python-format
+msgid ""
+"If you need a more detailed step-by-step instruction, have a look at our "
+"%(opening_tag)sKnowledge Base article%(closing_tag)s."
+msgstr ""
+"Eine detailliertere Schritt-für-Schritt-Anleitung findest du in "
+"%(opening_tag)sdiesem Knowledge Base-Artikel%(closing_tag)s"
+
+# as in laser parameters
+#: templates/calibration/watterott/calibration_tool.jinja2:38
+msgid "Camera Alignment"
+msgstr "Kameraausrichtung"
+
+#: templates/calibration/watterott/calibration_tool.jinja2:51
+msgid "Quality Check"
+msgstr "Qualitäts-Check"
+
+#: templates/calibration/watterott/calibration_tool.jinja2:52
+msgid "Labels"
+msgstr "Labels"
+
+#: templates/calibration/watterott/calibration_tool.jinja2:53
+msgid "Debug"
+msgstr "Debug"
+
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:39
+msgid "Wait for a calibrated camera image"
+msgstr "Warten auf ein kalibriertes Kamerabild"
+
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:41
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:4
+msgid "Is the lens calibration finished?"
+msgstr "Ist die Linsenkalibrierung abgeschlossen?"
+
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:42
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:6
+msgid "Is the corner calibration finished?"
+msgstr "Ist die Eckenkalibrierung abgeschlossen?"
+
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:45
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:56
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:28
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:42
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:85
+#: templates/calibration/watterott/tab_lens_calibration.jinja2:102
+msgid "Yes"
+msgstr "Ja"
+
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:50
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:34
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:72
+#: templates/calibration/watterott/tab_lens_calibration.jinja2:88
+msgid "Checklist"
+msgstr "Checkliste"
+
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:52
+msgid "The engraved rectangle is inside the green outline"
+msgstr "Das grüne Rechteck befindet sich auf dem gravierten Rechteck"
+
+#: templates/calibration/watterott/tab_calibration_qa.jinja2:53
+msgid ""
+"engraved rectangle egdes are straight and parallel to the green rectangle "
+"edges"
+msgstr ""
+"Die gravierten Rechteckkanten sind gerade und parallel zu den grünen "
+"Rechteckkanten"
+
+# as in laser parameters
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:1
+msgid "Camera alignment"
+msgstr "Kameraausrichtung"
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:9
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:38
+msgid "Refresh picture"
+msgstr "Bild aktualisieren"
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:22
+msgid "Wait for a camera image"
+msgstr "Warten auf ein Kamerabild"
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:24
+msgid "Is the lid open?"
+msgstr "Ist der Deckel offen?"
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:25
+msgid "Red camera light visible?"
+msgstr "Rotes Kameralicht sichtbar?"
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:36
+msgid "4 markers are visible."
+msgstr "4 Markierungen sind sichtbar."
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:37
+msgid "Full working area visible."
+msgstr "Arbeitsbereich ist vollständig sichtbar."
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:38
+msgid "Some space below the workinng area visible."
+msgstr "Etwas Platz unterhalb des Arbeitsbereichs ist sichtbar."
+
+#: templates/calibration/watterott/tab_camera_alignment.jinja2:39
+msgid "Laserhead is not covering a marker."
+msgstr "Der Laserkopf verdeckt keine Markierung."
+
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:64
+msgid "Start Corner Calibration"
+msgstr "Eckenkalibrierung starten"
+
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:69
+msgid "Loading image..."
+msgstr "Bild laden..."
+
+#: templates/calibration/watterott/tab_corner_calibration.jinja2:74
+msgid "The 4 arrows are aligned with the magenta crosses"
+msgstr "Die 4 Pfeile sind mit den magenta Kreuzen ausgerichtet"
+
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:2
+msgid "Calibration not finished"
+msgstr "Kalibrierung nicht abgeschlossen"
+
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:13
+msgid "Done"
+msgstr "Erledigt"
+
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:17
+msgid "Print Labels"
+msgstr "Label drucken"
+
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:21
+msgid "Device Label"
+msgstr "Geräte-Label"
+
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:26
+msgid "Box Label"
+msgstr "Schachtel-Label"
+
+#: templates/calibration/watterott/tab_done_print_labels.jinja2:30
+msgid "EAN Labels"
+msgstr "EAN Labels"
+
+#: templates/calibration/watterott/tab_lens_calibration.jinja2:43
+msgid "Check result"
+msgstr "Ergebnis prüfen"
+
+#: templates/calibration/watterott/tab_lens_calibration.jinja2:90
+msgid "4 markers are within the green rectangle"
+msgstr "4 Markierungen sind innerhalb des grünen Rechtecks"
+
+#: templates/calibration/watterott/tab_lens_calibration.jinja2:91
+msgid "No black pixels are in the green rectangle"
+msgstr "Keine schwarzen Pixel befinden sich im grünen Rechteck"
