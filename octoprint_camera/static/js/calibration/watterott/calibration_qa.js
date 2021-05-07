@@ -51,9 +51,12 @@ $(function () {
             let offset = size.map(
                 (x) => x * self.camera.imgHeightScale() / size[0] * 500
             );
+            let scale_ratio = (1 + 2 * self.camera.imgHeightScale())
             return (
                 "scale(" +
-                ( size[0] / 500) / (1 + 2 * self.camera.imgHeightScale()) +
+                ( size[0] / 500) / scale_ratio + 
+                " " +
+                ( size[1] / 390) / scale_ratio + 
                 ") translate(" +
                 offset.join(" ") +
                 ")"
