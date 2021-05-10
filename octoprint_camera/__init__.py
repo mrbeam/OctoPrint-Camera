@@ -705,6 +705,7 @@ class CameraPlugin(
                 stateChangeCallback=self.send_lens_calibration_state,
                 factory=True,
                 runCalibrationAsap=util.factory_mode(),
+                event_bus=self._event_bus
             )
             # FIXME - Right now the npz files get loaded funny
             #         and some values aren't json pickable etc...
