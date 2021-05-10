@@ -36,12 +36,8 @@ def find_pink_circles(img, debug=False, **settings):
                 )
     return ret
 
-
-def get_workspace_corners(positions_pink_circles, pic_settings):
-    return add_deltas(
-        positions_pink_circles, pic_settings, False, from_factory=util.factory_mode()
-    )
-
+def get_workspace_corners(positions_pink_circles, pic_settings, undistorted, **kw):
+    return add_deltas(positions_pink_circles, pic_settings, undistorted, from_factory=util.factory_mode(), **kw)
 
 def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
     """

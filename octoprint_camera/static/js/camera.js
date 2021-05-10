@@ -76,6 +76,12 @@ $(function () {
             lens: ko.observable(false),
             both: ko.observable(false),
         };
+        self.pictureSize = {
+            plain: ko.observable([null,null]),
+            corner: ko.observable([null,null]),
+            lens: ko.observable([null,null]),
+            both: ko.observable([null,null]),
+        };
         self.pic_timestamp = ko.observable("");
         // We only refresh the picture if the timestamp has changed from the current one.
         self.pic_timestamp.subscribe(self.refreshPicture)
@@ -167,6 +173,11 @@ $(function () {
                                 self.markersFound[m](data.positions_found[m]);
                             });
                         }
+                        let img = new Image();
+                        img.onload = function(){
+                            self.pictureSize[pic_type]([img.width, img.height]);
+                        };
+                        img.src = imgData;
                     }
                 };
 
@@ -185,7 +196,11 @@ $(function () {
 
         self.startReloadImageLoop = function (which="last", pic_type="plain", tab="undefined") {
             self.stopReloadImageLoop();
-            self._reloadImageInterval = setInterval(function(){console.log('getImage', which, pic_type, tab);self.getImage(which, pic_type);}, 3000);//reloads image every 3 seconds
+            //reloads image every 3 seconds
+            self._reloadImageInterval = setInterval(function(){
+                console.log('getImage', which, pic_type, tab);
+                self.getImage(which, pic_type);
+            }, 3000);
         }
         self.stopReloadImageLoop = function () {
             clearInterval(self._reloadImageInterval);
