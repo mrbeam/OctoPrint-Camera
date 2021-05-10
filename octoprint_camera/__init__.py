@@ -525,7 +525,6 @@ class CameraPlugin(
             json_data = request.get_json()
         except BadRequest:
             return make_response("Malformed JSON body in request", 400)
-        self._logger.warning("JSON %s", json_data)
         if not all(k in json_data.keys() for k in ["newCorners", "newMarkers"]):
             # TODO correct error message
             return make_response("No profile included in request", 400)
@@ -582,11 +581,8 @@ class CameraPlugin(
     # @restricted_access_or_calibration_tool_mode #TODO activate
     @logExceptions
     def deleteCalibrationImage(self):
-        self._logger.warning("DELETING PICTURE")
         _json = request.get_json()
-        self._logger.warning(_json)
         file_path = _json.get("path", None)
-        self._logger.warning(file_path)
         self.lens_calibration_thread.remove(file_path)
         return NO_CONTENT
 
@@ -687,7 +683,6 @@ class CameraPlugin(
                     simple_pos, settings_corners, undistorted=False,
                 )
             if len(dict(positions_workspace_corners)) == 4:
-                self._logger.warning("CORNERS IMAGE %s", positions_workspace_corners)
                 img = corners.fit_img_to_corners(img, positions_workspace_corners)
         # Write the modified image to a jpg binary
         buff = util.image.imencode(img)

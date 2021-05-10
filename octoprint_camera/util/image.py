@@ -19,7 +19,6 @@ def imdecode(stream, flags=cv2.IMREAD_COLOR):
 def imencode(cv2_img, encoding=".jpg", flags=(int(cv2.IMWRITE_JPEG_QUALITY), 90)):
     """Encode a cv2/numpy image into an io.BytesIO buffer"""
     retval, np_buff = cv2.imencode(encoding, cv2_img, flags)
-    logging.warning("np_buff %s %s", np_buff.shape, np_buff.dtype)
     buff = io.BytesIO()
     # np_buff.tobytes() returns a string-like object in py2, bytes in py3
     buff.write(np_buff.tobytes())
