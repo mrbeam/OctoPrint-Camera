@@ -656,11 +656,14 @@ class CameraPlugin(
             # Will return if the image is None
             return img_jpg, ts, positions_pink_circles
 
-
-        else:
-            positions_workspace_corners = None
         if do_lens:
-            img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
+            mtx = settings_lens['mtx']
+            dist = settings_lens['dist']
+            img, dest_mtx = lens.undistort(img, mtx, dist)
+        else:
+            mtx = None
+            dist = None
+            dest_mtx = None
         if do_corners:
             # settings_corners = plugin._settings.get(['corners'], {})
             # positions_pink_circles = dict_merge(
@@ -674,10 +677,9 @@ class CameraPlugin(
                     "Not all pink cirlces found",
                     positions_pink_circles,
                 )
-            if do_lens:
-                positions_workspace_corners = corners.get_workspace_corners(
-                    simple_pos, settings_corners, undistorted=True, mtx=settings_lens['mtx'], dist=settings_lens['dist']
-                )
+            positions_workspace_corners = corners.get_workspace_corners(
+                simple_pos, settings_corners, undistorted=do_lens, mtx=mtx, dist=dist, new_mtx=dest_mtx
+            )
             else:
                 positions_workspace_corners = corners.get_workspace_corners(
                     simple_pos, settings_corners, undistorted=False,
