@@ -680,12 +680,8 @@ class CameraPlugin(
             positions_workspace_corners = corners.get_workspace_corners(
                 simple_pos, settings_corners, undistorted=do_lens, mtx=mtx, dist=dist, new_mtx=dest_mtx
             )
-            else:
-                positions_workspace_corners = corners.get_workspace_corners(
-                    simple_pos, settings_corners, undistorted=False,
-                )
             if len(dict(positions_workspace_corners)) == 4:
-                img = corners.fit_img_to_corners(img, positions_workspace_corners)
+                img = corners.fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True)
         # Write the modified image to a jpg binary
         buff = util.image.imencode(img)
         return buff, ts, positions_pink_circles
