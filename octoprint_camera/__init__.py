@@ -30,7 +30,8 @@ from octoprint_mrbeam.camera.definitions import (
     LENS_CALIBRATION,
     MIN_BOARDS_DETECTED,
 )
-from octoprint_mrbeam.camera.undistort import _getCamParams
+import octoprint_mrbeam.camera
+from octoprint_mrbeam.camera.undistort import _getCamParams, _debug_drawCorners, _debug_drawMarkers
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -261,6 +262,23 @@ class CameraPlugin(
         )
 
     ##~~ BlueprintPlugin mixin
+
+    @octoprint.plugin.BlueprintPlugin.route("/shutdown", methods=["GET"])
+    @logExceptions
+    def force_shutdown(self):
+        """
+        This is only required because the lens calibration processes can 
+        lock up the other threads, preventing a normal shutdown
+        """
+        import os
+        from octoprint.events import Events
+        # Fire shutdown event ourselves because OctoPrint will not be able to.
+        # It will change the LED lights
+        self._event_bus.fire(Events.SHUTDOWN)
+        # First ask to shutdown as a background process
+        os.system("sudo shutdown now &")
+        # Cyanide pill because of how the lens calibration prcesses hang
+        os.system("killall -9 /home/pi/oprint/bin/python2")
 
     # disable default api key check for all blueprint routes.
     # use @restricted_access, @firstrun_only_access to check permissions
@@ -608,7 +626,10 @@ class CameraPlugin(
         Also returns a set of workspace coordinates and whether the pink circles were all found
         """
         from functools import reduce  # Not necessary in PY2, but compatible
-
+        def save_debug_img(img, name):
+            return octoprint_mrbeam.camera.save_debug_img(
+                img, name + ".jpg", folder=path.join("/tmp")
+            )
         err_txt = "Unrecognised Picture {} : {}, should be one of {}"
         if pic_type not in PIC_TYPES:
             raise ValueError(err_txt.format("Type", pic_type, PIC_TYPES))
