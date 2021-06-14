@@ -241,6 +241,7 @@ class CameraPlugin(
         # TODO Stage 1 - Camera Calibration UI
         return dict(
             js=[
+                "js/calibrationmodeMessage.js",
                 "js/camera.js",
                 "js/settings/camera_settings.js",
                 "js/calibration/calibration.js",
@@ -249,7 +250,6 @@ class CameraPlugin(
                 "js/calibration/watterott/camera_alignment.js",
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
-                "js/calibrationmodeMessage.js",
             ],
             css=[
                 "css/calibration_qa.css",
