@@ -46,6 +46,32 @@ $(function () {
                 "POST",
             );
         };
+
+        self.shutdown = function(d, ev) {
+            successCallback = function() {
+                new PNotify({
+                    title: gettext("Device is turning off"),
+                    text: gettext("The lights on the device will turn off in a few seconds"),
+                    type: "info",
+                    hide: false,
+                });
+            };
+            failCallback = function() {
+                new PNotify({
+                    title: gettext("Turning off device"),
+                    text: gettext("Is the device still connected?"),
+                    type: "error",
+                    hide: true,
+                });
+            };
+            self.calibration.simpleApiCommand(
+                "shutdown",
+                {},
+                successCallback,
+                failCallback,
+                "GET",
+            );
+        }
     }
 
     // view model class, parameters for constructor, container to bind to

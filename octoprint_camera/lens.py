@@ -69,13 +69,11 @@ class CalibrationState(lens.CalibrationState):
         lens.CalibrationState.add(self, path, *a, **kw)
         octoprint_mrbeam.util.makedirs(SYMLINK_IMG_DIR)
         symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
-        self._logger.warning("Symlink %s PATH %s", symlink_path, path)
         if not os.path.islink(symlink_path):
             os.symlink(path, symlink_path)
 
     def remove(self, path):
         lens.CalibrationState.remove(self, path)
         symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
-        self._logger.warning("Symlink %s PATH %s", symlink_path, path)
         if os.path.islink(symlink_path):
             os.remove(symlink_path)
