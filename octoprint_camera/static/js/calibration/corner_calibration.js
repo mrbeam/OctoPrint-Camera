@@ -93,7 +93,7 @@ $(function () {
 
         self.calSvgViewBox = ko.computed(function () {
             var zoom = self.calSvgScale();
-            var w = self.calImgWidth() / zoom;
+            var w = self.zMarkersTransform() / zoom;
             var h = self.calImgHeight() / zoom;
             var offX =
                 Math.min(
@@ -233,8 +233,10 @@ $(function () {
             if (!self.cornerCalibrationActive()) {
                 self.camera.loadAvaiableCorrection();
                 if (self.camera.availablePicTypes.corners()) {
+                    console.log('get image corner - corner');
                     self.camera.getImage(GET_IMG.last, GET_IMG.pic_corner);
                 } else {
+                    console.log('get image corner - plain')
                     self.camera.getImage(GET_IMG.last, GET_IMG.pic_plain);
                 }
                 self.dbNWImgUrl(

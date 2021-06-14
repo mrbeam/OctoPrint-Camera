@@ -7,6 +7,8 @@
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
 $(function () {
+    //scale(1.0392920962199313) translate(-7.72302405498282 -9.731958762886599) #realy good in rectangle
+    // scale(1.0452920962199313) translate(-8.72302405498282 -9.731958762886599) //good for arrow tips
     function CalibrationQAViewModel(parameters) {
         let self = this;
         window.mrbeam.viewModels["cameraAlignmentViewModel"] = self;
@@ -25,8 +27,39 @@ $(function () {
                 self.qa_image_loaded(false);
             }
         });
-        self.croppedImgWidth = 500;
+        self.croppedImgWidth = "500";
         self.croppedImgHeight = 390;
+
+        self.maxObjectHeight = ko.observable(38); // in mm
+        self.objectheightparam = ko.observable(582)
+        self.defaultMargin = ko.computed(function(){return (self.maxObjectHeight() / self.objectheightparam())});
+        self.objectZ = ko.observable(0); // in mm
+        self.cornerMargin = ko.computed(function(){return (self.defaultMargin() / 2)});
+        self.imgHeightScale = ko.computed(function () {
+            return (
+                self.cornerMargin() *
+                (1 - self.objectZ() / self.maxObjectHeight())
+            );
+        });
+        self.workingAreaWidthMM = ko.observable(500);
+        self.workingAreaHeightMM = ko.observable(390);
+        self.imgTranslate = ko.computed(function () {
+            // Used for the translate transformation of the picture on the work area
+            return [-self.workingAreaWidthMM(), -self.workingAreaHeightMM()]
+                .map((x) => x * self.imgHeightScale())
+                .join(" ");
+        });
+        self.zObjectImgTransform = ko.computed(function () {
+            console.log('zobjectimg trans', self.camera.imgHeightScale(), self.camera.imgTranslate(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), 'imgheightscale params(',self.cornerMargin() *
+                (1 - self.objectZ() / self.maxObjectHeight()), ';', self.cornerMargin(), self.objectZ(), self.maxObjectHeight(), ')', self.defaultMargin());
+            return (
+                "scale(" +
+                (1 + 2 * self.imgHeightScale()) +
+                ") translate(" +
+                self.imgTranslate() +
+                ")"
+            );
+        });
 
         self.onStartupComplete = function () {
             // self._reloadImageLoop();

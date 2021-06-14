@@ -136,7 +136,7 @@ $(function () {
                     self.availablePicTypes[m](data.available_corrections.includes(m));
                 });
             };
-
+            // self.availablePicTypes['corners'](true);
             let error_callback = function (resp) {
                 console.log("available_corrections request error", resp);
             };
@@ -419,6 +419,8 @@ $(function () {
                 .join(" ");
         });
         self.zObjectImgTransform = ko.computed(function () {
+            console.log('zobjectimg trans', self.imgHeightScale(), self.imgTranslate(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), 'imgheightscale params(',self.cornerMargin() *
+                (1 - self.objectZ() / self.maxObjectHeight), ';', self.cornerMargin(), self.objectZ(), self.maxObjectHeight, ')', self.defaultMargin);
             return (
                 "scale(" +
                 (1 + 2 * self.imgHeightScale()) +

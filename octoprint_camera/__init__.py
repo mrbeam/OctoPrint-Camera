@@ -16,6 +16,7 @@ import socket
 import sys
 import time
 
+from flask_swagger_ui import get_swaggerui_blueprint
 from werkzeug.exceptions import BadRequest
 
 PY3 = sys.version_info >= (3,)
@@ -48,7 +49,7 @@ from .camera import CameraThread
 # from .image import LAST, NEXT, WHICH, PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH, PIC_TYPES
 from .iobeam import IoBeamEvents
 from .leds import LedEventListener
-from .util import logme, logExceptions
+from .util import logExceptions
 from .util.image import (
     corner_settings_valid,
     lens_settings_valid,
@@ -92,6 +93,7 @@ class CameraPlugin(
         self.led_client = None
 
         from octoprint.server import debug
+
         self.debug = debug
 
     def initialize(self):
@@ -159,8 +161,12 @@ class CameraPlugin(
             #     user=dict(),
             # ),
             lens_datafile=path.join(self.get_plugin_data_folder(), "lens.npz"),
-            lens_legacy_datafile=path.join("/home/pi/.octoprint/cam/", LENS_CALIBRATION["factory"]),
-            corners_legacy_datafile=path.join("/home/pi/.octoprint/cam/", "pic_settings.yaml"),
+            lens_legacy_datafile=path.join(
+                "/home/pi/.octoprint/cam/", LENS_CALIBRATION["factory"]
+            ),
+            corners_legacy_datafile=path.join(
+                "/home/pi/.octoprint/cam/", "pic_settings.yaml"
+            ),
             corners=dict(
                 factory=dict(
                     arrows_px={},
@@ -233,9 +239,9 @@ class CameraPlugin(
 
     ##~~ TemplatePlugin mixin
 
-    def get_template_configs(self):
-        # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
-        return [dict(type="settings", custom_bindings=False)]
+    # def get_template_configs(self):
+    #     # TODO Stage 2 - Takes over the Camera settings from the MrBPlugin.
+    # return [dict(type="settings", custom_bindings=False)]
 
     def get_assets(self):
         # TODO Stage 1 - Camera Calibration UI
@@ -275,8 +281,8 @@ class CameraPlugin(
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
         from octoprint_mrbeam.util.device_info import DeviceInfo
 
-        device_info = DeviceInfo()
-        beamos_version, beamos_date = device_info.get_beamos_version()
+        # device_info = DeviceInfo()
+        # beamos_version, beamos_date = device_info.get_beamos_version()
         render_kwargs = dict(
             debug=debug,
             version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
@@ -286,10 +292,10 @@ class CameraPlugin(
             locales=dict(),
             supportedExtensions=[],
             # beamOS version - Not the plugin version
-            beamosVersionNumber=beamos_version,
-            beamosBuildDate=beamos_date,
+            # beamosVersionNumber=beamos_version,
+            # beamosBuildDate=beamos_date,
             hostname=socket.gethostname(),
-            serial=device_info.get_serial(),
+            # serial=device_info.get_serial(),
             # beta_label=self.get_beta_label(),
             e="null",
             gcodeThreshold=0,  # legacy - OctoPrint render bug
@@ -660,11 +666,10 @@ class CameraPlugin(
             # Will return if the image is None
             return img_jpg, ts, positions_pink_circles
 
-
         else:
             positions_workspace_corners = None
         if do_lens:
-            img, _ = lens.undistort(img, settings_lens['mtx'], settings_lens['dist'])
+            img, _ = lens.undistort(img, settings_lens["mtx"], settings_lens["dist"])
         if do_corners:
             # settings_corners = plugin._settings.get(['corners'], {})
             # positions_pink_circles = dict_merge(
@@ -680,17 +685,24 @@ class CameraPlugin(
                 )
             if do_lens:
                 positions_workspace_corners = corners.get_workspace_corners(
-                    simple_pos, settings_corners, undistorted=True, mtx=settings_lens['mtx'], dist=settings_lens['dist']
+                    simple_pos,
+                    settings_corners,
+                    undistorted=True,
+                    mtx=settings_lens["mtx"],
+                    dist=settings_lens["dist"],
                 )
             else:
                 positions_workspace_corners = corners.get_workspace_corners(
-                    simple_pos, settings_corners, undistorted=False,
+                    simple_pos,
+                    settings_corners,
+                    undistorted=False,
                 )
             if len(dict(positions_workspace_corners)) == 4:
                 self._logger.warning("CORNERS IMAGE %s", positions_workspace_corners)
                 img = corners.fit_img_to_corners(img, positions_workspace_corners)
         # Write the modified image to a jpg binary
         buff = util.image.imencode(img)
+        self._logger.warning("IMG size %s", img.shape)
         return buff, ts, positions_pink_circles
 
     def start_lens_calibration_daemon(self):

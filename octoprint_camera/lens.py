@@ -35,11 +35,11 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
             output_calib,
             stateChangeCallback=stateChangeCallback,
             rawImgLock=rawImgLock,
-            state=CalibrationState(
-                changeCallback=stateChangeCallback,
-                npzPath=output_calib,
-                rawImgLock=rawImgLock,
-            ),
+            # state=CalibrationState(
+            #     changeCallback=stateChangeCallback,
+            #     npzPath=output_calib,
+            #     rawImgLock=rawImgLock,
+            # ),
             **kw
         )
 
