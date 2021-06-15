@@ -119,7 +119,7 @@ class CameraPlugin(
         if util.factory_mode():
             # Invite to take a picture for the lens calibration
             self._event_bus.fire(MrBeamEvents.LENS_CALIB_IDLE)
-            self.led_client.set_inside_brightness(1)
+            self.led_client.set_inside_brightness(30)
 
     ##~~ ShutdownPlugin mixin
 
