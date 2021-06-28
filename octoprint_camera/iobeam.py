@@ -34,3 +34,5 @@ class IoBeamHandler(iobeam_handler.IoBeamHandler):
                 "config": {"send_initial_data": True, "update_interval": True},
             }
         }
+
+	test 
