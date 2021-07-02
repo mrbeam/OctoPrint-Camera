@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import os
 import octoprint_mrbeam
+from octoprint_mrbeam import mrb_logger
 from octoprint_mrbeam.camera.lens import undistort, undist_dict
 from octoprint_mrbeam.camera import lens, save_debug_img
 from octoprint_mrbeam.camera.definitions import CB_ROWS, CB_COLS, STATE_PENDING_CAMERA
@@ -10,6 +11,8 @@ from .util.flask import file_to_b64
 
 BOARD_COLS = 9
 BOARD_ROWS = 6
+
+_logger = mrb_logger("octoprint.plugins.camera.lens")
 
 
 def capture_img_for_lens_calibration(
@@ -63,19 +66,19 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
         return recorded_images
 
 
-class CalibrationState(lens.CalibrationState):
-    # Add / Remove symlink to uploads/cam/debug folder
-    def add(self, path, *a, **kw):
-        lens.CalibrationState.add(self, path, *a, **kw)
-        octoprint_mrbeam.util.makedirs(SYMLINK_IMG_DIR)
-        symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
-        self._logger.warning("Symlink %s PATH %s", symlink_path, path)
-        if not os.path.islink(symlink_path):
-            os.symlink(path, symlink_path)
-
-    def remove(self, path):
-        lens.CalibrationState.remove(self, path)
-        symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
-        self._logger.warning("Symlink %s PATH %s", symlink_path, path)
-        if os.path.islink(symlink_path):
-            os.remove(symlink_path)
+# class CalibrationState(lens.CalibrationState):
+#     # Add / Remove symlink to uploads/cam/debug folder
+#     def add(self, path, *a, **kw):
+#         lens.CalibrationState.add(self, path, *a, **kw)
+#         octoprint_mrbeam.util.makedirs(SYMLINK_IMG_DIR)
+#         symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
+#         _logger.warning("Symlink %s PATH %s", symlink_path, path)
+#         if not os.path.islink(symlink_path):
+#             os.symlink(path, symlink_path)
+#
+#     def remove(self, path):
+#         lens.CalibrationState.remove(self, path)
+#         symlink_path = os.path.join(SYMLINK_IMG_DIR, os.path.basename(path))
+#         _logger.warning("Symlink %s PATH %s", symlink_path, path)
+#         if os.path.islink(symlink_path):
+#             os.remove(symlink_path)

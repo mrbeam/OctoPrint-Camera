@@ -2,27 +2,160 @@ import logging
 import time
 from multiprocessing import TimeoutError
 from os.path import dirname, realpath, join
-
 import cv2
 import numpy as np
 import pytest
-import yaml
+
+from octoprint_mrbeam import mrb_logger
 from octoprint_mrbeam.camera import lens
 from octoprint_mrbeam.camera.lens import handleBoardPicture
 from octoprint_mrbeam.camera.undistort import prepareImage, _getColoredMarkerPositions
-from os import pardir
+
+from octoprint_mrbeam.util.img import differed_imwrite
 
 from octoprint_camera.lens import BOARD_ROWS, BOARD_COLS, BoardDetectorDaemon
 
 path = dirname(realpath(__file__))
-CAM_DIR = join(
+RSC_PATH = join(
     path,
     "rsc",
 )
 LOGGER = logging.getLogger(__name__)
+_logger = mrb_logger("octoprint.plugins.camera.test")
+
+
+def inspectState(data):
+    """Inspect the state each time it changes"""
+    if isinstance(data, dict):
+        # yaml dumps create a LOT of output
+        # _logger.debug(" - Calibration State Updated\n%s", yaml.dump(data))
+        pass
+    else:
+        _logger.error(
+            "Data returned by state should be dict. Instead data : %s, %s",
+            type(data),
+            data,
+        )
+        assert isinstance(data, dict)
+
+
+def mse(imageA, imageB):
+    # the 'Mean Squared Error' between the two images is the
+    # sum of the squared difference between the two images;
+    # NOTE: the two images must have the same dimension
+    err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
+    err /= float(imageA.shape[0] * imageA.shape[1])
+
+    # return the MSE, the lower the error, the more "similar"
+    # the two images are
+    return err
+
+
+BOARDS = pytest.mark.datafiles(
+    join(RSC_PATH, "boards", "board_detection_good_001.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_002.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_003.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_004.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_005.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_006.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_007.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_008.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_008_2.jpg"),
+)
+
+
+@BOARDS
+def test_lens_calibration(datafiles):
+    calibration_file = "test_lens_calibration_correction.npz"
+    test_lens_calibration_calibrated_image_path = join(
+        RSC_PATH, "test_lens_calibration_calibrated_image.jpg"
+    )
+    test_lens_calibration_image_path = join(RSC_PATH, "test_lens_calibration_image.jpg")
+    output_calibrated_image_path = str(datafiles / "output_calibrated_image.jpg")
+
+    out_file = str(datafiles / calibration_file)
+    b = BoardDetectorDaemon(
+        out_file, runCalibrationAsap=False, stateChangeCallback=inspectState
+    )
+
+    try:
+        b.start()
+        logging.debug("files %s", datafiles.listdir())
+        for path in datafiles.listdir():
+            b.add(str(path))
+            logging.debug("path %s", path)
+            if len(b) >= lens.MIN_BOARDS_DETECTED:
+                b.scaleProcessors(4)
+
+        # Start detecting the chessboard in pending pictures.
+        assert b.state.lensCalibration["state"] == lens.STATE_PENDING
+
+        while not b.idle:  # wait while processing the boarddetection
+            time.sleep(0.1)
+            # logging.debug(
+            #     "idle state %s proc %s pending %s",
+            #     b.state.lensCalibration["state"],
+            #     len(b.runningProcs),
+            #     b.state.getPending(),
+            # )
+            # assert (
+            #     len(b.runningProcs) > 1
+            # ), "Something went wrong there should be a running process"
+
+        if (
+            b.detectedBoards >= lens.MIN_BOARDS_DETECTED
+        ):  # continue with generation of the calibrationfile if all 9 boards are detected
+            b.startCalibrationWhenIdle = True  # Do manually run the calibration
+            while (
+                b.state.lensCalibration["state"] != lens.STATE_SUCCESS
+            ):  # wait till the calibration finishes
+                time.sleep(0.1)
+
+            # generate calibratet image
+            settings_lens_test = np.load(out_file)
+            test_lens_calibration_image = cv2.imread(test_lens_calibration_image_path)
+
+            test_lens_calibration_calibrated_image = cv2.imread(
+                test_lens_calibration_calibrated_image_path
+            )
+            img_test, _ = lens.undistort(
+                test_lens_calibration_image,
+                settings_lens_test["mtx"],
+                settings_lens_test["dist"],
+            )
+            differed_imwrite(output_calibrated_image_path, img_test)
+            output_calibrated_image = cv2.imread(output_calibrated_image_path)
+
+            # generate a image to show difference
+            difference = cv2.subtract(
+                output_calibrated_image,
+                test_lens_calibration_calibrated_image,
+            )
+            differed_imwrite(str(datafiles / "difference.jpg"), difference)
+
+            # calculate the diffenrence between images
+            m = mse(
+                output_calibrated_image,
+                test_lens_calibration_calibrated_image,
+            )
+            assert m * 1000 <= 1  # should be smaller as 0.001
+
+    except Exception as e:
+        logging.error(e)
+        b.stop()
+        b.join(1.0)
+        raise
+
+    b.stop()
+
+    try:
+        b.join(1.0)
+    except TimeoutError:
+        logging.error("Termination of the calibration Daemon should have been sooner")
+        raise
+
 
 # TODO take image with dummy camera or picamera if run on device
-
 # def test_capture():
 #     plugin = CameraPlugin()
 #     path = dirname(realpath(__file__))
@@ -38,7 +171,7 @@ LOGGER = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "image, calib_file, out_compare",
     [
-        ("lens_calibraton_test_image.jpg", "lens_calib_bad.npz", "out_bad.jpg"),
+        ("test_lens_calibration_image.jpg", "lens_calib_bad.npz", "out_bad.jpg"),
     ],
 )
 def test_undistorted_bad(image, calib_file, out_compare):
@@ -53,7 +186,7 @@ def test_undistorted_bad(image, calib_file, out_compare):
     "image, calib_file, out_compare",
     [
         (
-            "lens_calibraton_test_image.jpg",
+            "test_lens_calibration_image.jpg",
             "lens_correction_2048x1536.npz",
             "out_good.jpg",
         ),
@@ -88,17 +221,17 @@ def undistort_image_with_calibfile(image, calib_file, out_compare):
         undistorted=True,
         debug_out=True,
     )
-    logging.info(res)
+    _logger.info(res)
 
     out_img = cv2.imread(
         join(rsc_path, "out.jpg"),
     )
 
-    logging.warning(np.sum(out_img == 0))
+    _logger.warning(np.sum(out_img == 0))
 
     for i, _type in enumerate([dict, dict, list, type(None), dict, dict]):
         if not isinstance(res[i], _type):
-            logging.error("%s should be of type %s" % (res[i], _type))
+            _logger.error("%s should be of type %s" % (res[i], _type))
 
     return (
         np.sum(out_img == 0),
@@ -106,257 +239,31 @@ def undistort_image_with_calibfile(image, calib_file, out_compare):
     )  # returns the amount of black pixels and if the image is lens_corrected
 
 
-# returns if a board with the size of BOARD_ROWS and BOARD_COLS is detected in the given image 'boardimage'
-def board_detection(boardimage):
-    # TODO change to use handle board picture, has to work with temp images so the don't get changed
-    # boardimage = join(path, "rsc", "boards", boardimage)
-    # img = cv2.imread(boardimage)
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # success, found_pattern = lens.findBoard(gray, (BOARD_ROWS, BOARD_COLS))
-    # return success
-    # boardimage
-    # logging.debug(
-    return handleBoardPicture(boardimage, 1, (BOARD_ROWS, BOARD_COLS), q_out=None)
-    # )
-
-
-@pytest.mark.datafiles(
-    join(path, "rsc", "boards", "board_detection_good_001.jpg"),
-    # "board_detection_good_002.jpg",
-    # "board_detection_good_003.jpg",
-    # "board_detection_good_004.jpg",
-    # "board_detection_good_005.jpg",
-    # "board_detection_good_006.jpg",
-    # "board_detection_good_007.jpg",
-    # "board_detection_good_008.jpg",
-)
-def test_board_detection_should_find(datafiles):
-    assert (
-        not board_detection(
-            join(str(datafiles), "board_detection_good_001.jpg")
-        )  # TODO change that it works for the others as well
-        is None
-    ), "Board should be detected"
-
-
-@pytest.mark.parametrize(
-    "boardimage",
-    [
-        "board_detection_bad_001.jpg",  # false
-        "board_detection_bad_002.jpg",  # false
-        "board_detection_bad_003.jpg",  # false
-        "board_detection_small_001.jpg",
-        "board_detection_small_008.jpg",
-    ],
-)
-def test_board_detection_should_not_find(boardimage):
-    assert not board_detection(boardimage), "Board should not be detected"
-
-
-@pytest.mark.parametrize(
-    "boardimage",
-    [
-        "board_detection_good_001.jpg",
-        "board_detection_good_002.jpg",
-        "board_detection_good_003.jpg",
-        "board_detection_good_004.jpg",
-        "board_detection_good_005.jpg",
-        "board_detection_good_006.jpg",
-        "board_detection_good_007.jpg",
-        "board_detection_good_008.jpg",
-        # TODO 9th file
-    ],
-)
-def inspectState(data):
-    """Inspect the state each time it changes"""
-    if isinstance(data, dict):
-        # yaml dumps create a LOT of output
-        # logging.debug(" - Calibration State Updated\n%s", yaml.dump(data))
-        pass
-    else:
-        logging.error(
-            "Data returned by state should be dict. Instead data : %s, %s",
-            type(data),
-            data,
-        )
-        assert isinstance(data, dict)
-
-
-# todo input 9 images with correct board, generate lens correction file, check if file is not producing black pixels
-# BOARDS = [
-#     join(CAM_DIR, "boards", "board_detection_good_001.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_002.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_003.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_004.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_005.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_006.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_007.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_008.jpg"),
-#     join(CAM_DIR, "boards", "board_detection_good_008_2.jpg"),  # TODO add 9th image
-#     # join(CAM_DIR, "boards", "board_detection_good_008_2.jpg"),  # TODO add 9th image
-#     # join(CAM_DIR, "boards", "board_detection_bad_001.jpg"),  # TODO add 9th image
-# ]
-images = [
-    "board_detection_good_001.jpg",
-    "board_detection_good_002.jpg",
-    "board_detection_good_003.jpg",
-    "board_detection_good_004.jpg",
-    "board_detection_good_005.jpg",
-    "board_detection_good_006.jpg",
-    "board_detection_good_007.jpg",
-    "board_detection_good_008.jpg",
-    "board_detection_good_008_2.jpg",
-]
-BOARDS = pytest.mark.datafiles(
-    join(CAM_DIR, "boards", "board_detection_good_001.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_002.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_003.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_004.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_005.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_006.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_007.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_008.jpg"),
-    join(CAM_DIR, "boards", "board_detection_good_008_2.jpg"),
-)
-
-
-@BOARDS
-def test_lens_calibration(datafiles):
-    out_file = join(CAM_DIR, "out2.npz")  # str(datafiles / "out.npz")
-
-    # add file put in que if enough detected you can save the calibration
-    print(out_file)
-    LOGGER.debug("test")
-    # b = BoardDetectorDaemon(
-    #     out_file, runCalibrationAsap=True, stateChangeCallback=inspectState
-    # )
-
-    lens_calibration_thread = BoardDetectorDaemon(
-        out_file,
-        stateChangeCallback=inspectState,
-        factory=True,
-        runCalibrationAsap=True,
-    )
-    # FIXME - Right now the npz files get loaded funny
-    #         and some values aren't json pickable etc...
-    # lens_calibration_thread.state.rm_from_origin("factory")
-    # lens_calibration_thread.load_dir(join(CAM_DIR, "boards"))
-    logging.debug("sleep thread idle %s", lens_calibration_thread.idle)
-    # lens_calibration_thread.start()
-    # Board Detector doesn't start automatically
-    assert (
-        not lens_calibration_thread.is_alive()
-    ), "Board Detector doesn't start automatically"
-    try:
-        # _images = [img for img in BOARDS]
-        # logging.debug(_images)
-        # for path in _images:
-        #     lens_calibration_thread.add(path)
-        #     logging.debug("add %s", path)
-        #     logging.debug(
-        #         "sleep thread idle %s boards:%s",
-        #         lens_calibration_thread.idle,
-        #         lens_calibration_thread.detectedBoards,
-        #     )
-        _images = [str(datafiles / img) for img in images]
-        for path in _images:
-            logging.debug("add %s", path)
-            lens_calibration_thread.add(path)
-        logging.debug(_images)
-        assert (
-            not lens_calibration_thread.is_alive()
-        ), "Board Detector doesn't start when adding pictures to it"
-        lens_calibration_thread.start()
-        assert lens_calibration_thread.is_alive(), "Board Detector should now run"
-        # assert False
-        # Start detecting the chessboard in pending pictures.
-        logging.debug(
-            "boards detected p:%s %s",
-            lens_calibration_thread,
-            lens_calibration_thread.detectedBoards,
-        )
-        if len(lens_calibration_thread) >= 8:
-            # self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
-            logging.debug("slace processors")
-            lens_calibration_thread.scaleProcessors(4)
-        while not lens_calibration_thread.idle:
-            # print("sleep lens_calib_thread")
-            logging.debug(
-                "sleep thread %s p:%s boards:%s",
-                lens_calibration_thread.idle,
-                len(lens_calibration_thread),
-                lens_calibration_thread.detectedBoards,
-            )
-            time.sleep(1)
-        # assert False
-        if lens_calibration_thread.detectedBoards >= lens.MIN_BOARDS_DETECTED:
-            # Do not automatically run the calibration
-            assert (
-                lens_calibration_thread.state.lensCalibration["state"]
-                == lens.STATE_PENDING
-            )
-            lens_calibration_thread.startCalibrationWhenIdle = True
-            while (
-                lens_calibration_thread.startCalibrationWhenIdle
-                or not lens_calibration_thread.idle
-            ):
-                time.sleep(0.1)
-
-            assert (
-                lens_calibration_thread.state.lensCalibration["state"]
-                == lens.STATE_SUCCESS
-            )
-
-        # Hacky - when adding the chessboard, instantly check if the state is pending
-        lens_calibration_thread.add(_images[-1])
-        assert (
-            lens_calibration_thread.state.lensCalibration["state"] == lens.STATE_PENDING
-        )
-    except Exception as e:
-        logging.error(e)
-        lens_calibration_thread.stop()
-        lens_calibration_thread.join(1.0)
-        raise
-
-    lens_calibration_thread.stop()
-
-    try:
-        lens_calibration_thread.join(1.0)
-    except TimeoutError:
-        logging.error("Termination of the calibration Daemon should have been sooner")
-        raise
-    except RuntimeError:
-        logging.error(
-            "Runtimeerror Termination of the calibration Daemon should have been sooner"
-        )
-        # raise
-
-
-CAM_DIR = join(path, "rsc")
+RSC_PATH = join(path, "rsc")
 # file: path to img file     MARKER_POS:False for markers which should not be detected
 MARKER_FILES = [
     {
-        "file": join(CAM_DIR, "markers", "corner_detection_missing_SE.jpg"),
+        "file": join(RSC_PATH, "markers", "corner_detection_missing_SE.jpg"),
         "SE": False,
     },
     {
-        "file": join(CAM_DIR, "markers", "corner_detection_missing_SW.jpg"),
+        "file": join(RSC_PATH, "markers", "corner_detection_missing_SW.jpg"),
         "SW": False,
     },
     {
-        "file": join(CAM_DIR, "markers", "corner_detection_missing_NW.jpg"),
+        "file": join(RSC_PATH, "markers", "corner_detection_missing_NW.jpg"),
         "NW": False,
     },
     {
-        "file": join(CAM_DIR, "markers", "corner_detection_missing_NE.jpg"),
+        "file": join(RSC_PATH, "markers", "corner_detection_missing_NE.jpg"),
         "NE": False,
     },
     {
-        "file": join(CAM_DIR, "markers", "corner_detection_missing_SE_partly.jpg"),
+        "file": join(RSC_PATH, "markers", "corner_detection_missing_SE_partly.jpg"),
         "SE": False,
     },
     {
-        "file": join(CAM_DIR, "markers", "corner_detection_missing_SE_partly2.jpg"),
+        "file": join(RSC_PATH, "markers", "corner_detection_missing_SE_partly2.jpg"),
     },
 ]
 
@@ -366,12 +273,52 @@ def test_marker_detection():
 
         positions = _getColoredMarkerPositions(
             cv2.imread(file["file"]),
-            join(CAM_DIR, "debug/test.jpg"),
+            join(RSC_PATH, "debug/test.jpg"),
         )
 
-        logging.info(positions)
+        _logger.info(positions)
         for key, value in positions.items():
             if key in file:
                 assert value is None, "Marker found but should not be detected"
             else:
                 assert not value is None, "Marker should be detected at given position"
+
+
+# returns if a board with the size of BOARD_ROWS and BOARD_COLS is detected in the given image 'boardimage'
+def board_detection(boardimage):
+    return handleBoardPicture(boardimage, 1, (BOARD_ROWS, BOARD_COLS), q_out=None)
+
+
+@pytest.mark.datafiles(
+    join(RSC_PATH, "boards", "board_detection_good_001.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_002.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_003.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_004.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_005.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_006.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_007.jpg"),
+    join(RSC_PATH, "boards", "board_detection_good_008.jpg"),
+)
+@pytest.mark.skip(
+    "skipping board detection positiv case, will be done in test_lens_calibration"
+)
+def test_board_detection_should_find(datafiles):
+    assert (
+        not board_detection(join(str(datafiles), "board_detection_good_001.jpg"))
+        is None
+    ), "Board should be detected"
+
+
+@pytest.mark.parametrize(
+    "boardimage",
+    [
+        # join(CAM_DIR, "boards", "board_detection_bad_001.jpg"),  # skip it takes to long
+        # join(CAM_DIR, "boards", "board_detection_bad_002.jpg"),  # skip it takes to long
+        # join(CAM_DIR, "boards", "board_detection_bad_003.jpg"),  # skip it takes to long
+        # join(CAM_DIR, "boards", "board_detection_small_001.jpg"), #skip it takes to long
+        join(RSC_PATH, "boards", "board_detection_small_008.jpg"),
+    ],
+)
+# @pytest.mark.skip("skip, it takes to long")
+def test_board_detection_should_not_find(boardimage):
+    assert not board_detection(boardimage), "Board should not be detected"
