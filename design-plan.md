@@ -58,6 +58,7 @@ The plugin can take on the full role of the camera
 
 - Can run alongside the MrBeamPlugin
 - MrBeamPlugin dictates when the camera plugin __can__ run
+- settingsPage for the user with the existing UI
   > It does not __explicitely__ tell the camera to run, rather green lights the time when it may run e.g. The camera plugin can tell by itself if the user is connected
 - Optimisation:
     - Movement detection
@@ -227,6 +228,10 @@ deletes image for the lens calibration of the given `path`
       if set true the leds of the mrbeam will blink on success
 
 blink<boolean> - blinks leds on success
+
+`[GET] /lens_calibration_capture`
+
+captures images for the lens calibration same as a onebutton press
 
 > TODO Phase 2
 > `[GET] /available`

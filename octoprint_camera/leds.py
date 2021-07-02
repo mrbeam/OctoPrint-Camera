@@ -23,10 +23,8 @@ class LedEventListener(led_events.LedEventListener):
         self._connections_states = []
         # Addition : immediatly subscribe to events
         self._initSubscriptions()
-        self._logger.warning("INIT LEDS subcriptions : %s", self._subscriptions)
 
     def eventCallback(self, event, payload=None):
-        self._logger.warning("EVENT %s", event)
         GenericEventListener.eventCallback(self, event, payload)
 
         if not event in self._subscriptions:

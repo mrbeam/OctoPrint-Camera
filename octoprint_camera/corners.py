@@ -29,6 +29,8 @@ def find_pink_circles(img, debug=False, **settings):
             img_name = "" + qd + ".jpg"
             sym_path = LEGACY_CAM_DEBUG_DIR + img_name
             target = "/tmp/" + img_name
+            if os.path.isfile(sym_path):
+                os.remove(sym_path)
             if not os.path.islink(sym_path):
                 os.symlink(
                     target,
@@ -36,16 +38,8 @@ def find_pink_circles(img, debug=False, **settings):
                 )
     return ret
 
-
-def get_workspace_corners(positions_pink_circles, pic_settings, undistorted, **kw):
-    return add_deltas(
-        positions_pink_circles,
-        pic_settings,
-        undistorted,
-        from_factory=util.factory_mode(),
-        **kw
-    )
-
+# def get_workspace_corners(positions_pink_circles, pic_settings, undistorted, **kw):
+#     return add_deltas(positions_pink_circles, pic_settings, undistorted, from_factory=util.factory_mode(), **kw)
 
 def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
     """
@@ -67,3 +61,24 @@ def save_corner_calibration(path, *a, **kw):
 
 def get_corner_calibration(pic_settings):
     return corners.get_corner_calibration(pic_settings)
+
+def get_workspace_corners(
+    markers,
+    pic_settings,
+    undistorted,
+    mtx=None,
+    dist=None,
+    new_mtx=None,
+    ):
+    from octoprint_mrbeam.camera.corners import get_deltas
+    import logging
+    from_factory = util.factory_mode()
+    # _logger.warning(markers)
+    deltas = get_deltas(pic_settings, undistorted, mtx, dist, new_mtx, from_factory=from_factory)
+    if deltas is None:
+        return None
+    # try getting raw deltas first
+    logging.warning("DELTAS %s", deltas)
+    if undistorted:
+        markers = lens.undist_dict(markers, mtx, dist, new_mtx)
+    return dict({qd: markers[qd] + deltas[qd] for qd in QD_KEYS})

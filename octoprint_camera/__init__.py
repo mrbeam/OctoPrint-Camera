@@ -30,7 +30,8 @@ from octoprint_mrbeam.camera.definitions import (
     LENS_CALIBRATION,
     MIN_BOARDS_DETECTED,
 )
-from octoprint_mrbeam.camera.undistort import _getCamParams
+import octoprint_mrbeam.camera
+from octoprint_mrbeam.camera.undistort import _getCamParams, _debug_drawCorners, _debug_drawMarkers
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -48,7 +49,7 @@ from .camera import CameraThread
 # from .image import LAST, NEXT, WHICH, PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH, PIC_TYPES
 from .iobeam import IoBeamEvents
 from .leds import LedEventListener
-from .util import logExceptions
+from .util import logme, logExceptions
 from .util.image import (
     corner_settings_valid,
     lens_settings_valid,
@@ -92,7 +93,6 @@ class CameraPlugin(
         self.led_client = None
 
         from octoprint.server import debug
-
         self.debug = debug
 
     def initialize(self):
@@ -119,7 +119,7 @@ class CameraPlugin(
         if util.factory_mode():
             # Invite to take a picture for the lens calibration
             self._event_bus.fire(MrBeamEvents.LENS_CALIB_IDLE)
-            self.led_client.set_inside_brightness(1)
+            self.led_client.set_inside_brightness(60)
 
     ##~~ ShutdownPlugin mixin
 
@@ -246,6 +246,7 @@ class CameraPlugin(
         # TODO Stage 1 - Camera Calibration UI
         return dict(
             js=[
+                "js/calibrationmodeMessage.js",
                 "js/camera.js",
                 "js/settings/camera_settings.js",
                 "js/calibration/calibration.js",
@@ -254,7 +255,6 @@ class CameraPlugin(
                 "js/calibration/watterott/camera_alignment.js",
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
-                "js/calibrationmodeMessage.js",
             ],
             css=[
                 "css/calibration_qa.css",
@@ -266,6 +266,23 @@ class CameraPlugin(
         )
 
     ##~~ BlueprintPlugin mixin
+
+    @octoprint.plugin.BlueprintPlugin.route("/shutdown", methods=["GET"])
+    @logExceptions
+    def force_shutdown(self):
+        """
+        This is only required because the lens calibration processes can
+        lock up the other threads, preventing a normal shutdown
+        """
+        import os
+        from octoprint.events import Events
+        # Fire shutdown event ourselves because OctoPrint will not be able to.
+        # It will change the LED lights
+        self._event_bus.fire(Events.SHUTDOWN)
+        # First ask to shutdown as a background process
+        os.system("sudo shutdown now &")
+        # Cyanide pill because of how the lens calibration prcesses hang
+        os.system("killall -9 /home/pi/oprint/bin/python2")
 
     # disable default api key check for all blueprint routes.
     # use @restricted_access, @firstrun_only_access to check permissions
@@ -530,7 +547,6 @@ class CameraPlugin(
             json_data = request.get_json()
         except BadRequest:
             return make_response("Malformed JSON body in request", 400)
-        self._logger.warning("JSON %s", json_data)
         if not all(k in json_data.keys() for k in ["newCorners", "newMarkers"]):
             # TODO correct error message
             return make_response("No profile included in request", 400)
@@ -587,11 +603,8 @@ class CameraPlugin(
     # @restricted_access_or_calibration_tool_mode #TODO activate
     @logExceptions
     def deleteCalibrationImage(self):
-        self._logger.warning("DELETING PICTURE")
         _json = request.get_json()
-        self._logger.warning(_json)
         file_path = _json.get("path", None)
-        self._logger.warning(file_path)
         self.lens_calibration_thread.remove(file_path)
         return NO_CONTENT
 
@@ -617,7 +630,10 @@ class CameraPlugin(
         Also returns a set of workspace coordinates and whether the pink circles were all found
         """
         from functools import reduce  # Not necessary in PY2, but compatible
-
+        def save_debug_img(img, name):
+            return octoprint_mrbeam.camera.save_debug_img(
+                img, name + ".jpg", folder=path.join("/tmp")
+            )
         err_txt = "Unrecognised Picture {} : {}, should be one of {}"
         if pic_type not in PIC_TYPES:
             raise ValueError(err_txt.format("Type", pic_type, PIC_TYPES))
@@ -665,10 +681,14 @@ class CameraPlugin(
             # Will return if the image is None
             return img_jpg, ts, positions_pink_circles
 
-        else:
-            positions_workspace_corners = None
         if do_lens:
-            img, _ = lens.undistort(img, settings_lens["mtx"], settings_lens["dist"])
+            mtx = settings_lens['mtx']
+            dist = settings_lens['dist']
+            img, dest_mtx = lens.undistort(img, mtx, dist)
+        else:
+            mtx = None
+            dist = None
+            dest_mtx = None
         if do_corners:
             # settings_corners = plugin._settings.get(['corners'], {})
             # positions_pink_circles = dict_merge(
@@ -682,26 +702,13 @@ class CameraPlugin(
                     "Not all pink cirlces found",
                     positions_pink_circles,
                 )
-            if do_lens:
-                positions_workspace_corners = corners.get_workspace_corners(
-                    simple_pos,
-                    settings_corners,
-                    undistorted=True,
-                    mtx=settings_lens["mtx"],
-                    dist=settings_lens["dist"],
-                )
-            else:
-                positions_workspace_corners = corners.get_workspace_corners(
-                    simple_pos,
-                    settings_corners,
-                    undistorted=False,
-                )
+            positions_workspace_corners = corners.get_workspace_corners(
+                simple_pos, settings_corners, undistorted=do_lens, mtx=mtx, dist=dist, new_mtx=dest_mtx
+            )
             if len(dict(positions_workspace_corners)) == 4:
-                self._logger.warning("CORNERS IMAGE %s", positions_workspace_corners)
-                img = corners.fit_img_to_corners(img, positions_workspace_corners)
+                img = corners.fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True)
         # Write the modified image to a jpg binary
         buff = util.image.imencode(img)
-        self._logger.warning("IMG size %s", img.shape)
         return buff, ts, positions_pink_circles
 
     def start_lens_calibration_daemon(self):
@@ -716,6 +723,7 @@ class CameraPlugin(
                 stateChangeCallback=self.send_lens_calibration_state,
                 factory=True,
                 runCalibrationAsap=util.factory_mode(),
+                event_bus=self._event_bus
             )
             # FIXME - Right now the npz files get loaded funny
             #         and some values aren't json pickable etc...

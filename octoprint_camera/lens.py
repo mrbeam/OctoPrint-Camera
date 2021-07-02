@@ -2,9 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import os
-
 import octoprint_mrbeam
-from octoprint_mrbeam import mrb_logger
 from octoprint_mrbeam.camera import lens
 from octoprint_mrbeam.camera.definitions import STATE_PENDING_CAMERA
 
@@ -12,8 +10,6 @@ from .util.flask import file_to_b64
 
 BOARD_COLS = 9
 BOARD_ROWS = 6
-
-_logger = mrb_logger("octoprint.plugins.camera.lens")
 
 
 def capture_img_for_lens_calibration(
@@ -41,7 +37,6 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
         debugPath=None,
         **kw
     ):
-        _logger.error("debugpath %s", debugPath)
         lens.BoardDetectorDaemon.__init__(
             self,
             output_calib,
@@ -78,7 +73,6 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
 
 class CalibrationState(lens.CalibrationState):
     def __init__(self, debugPath=SYMLINK_IMG_DIR, **kw):
-        _logger.error("debugpath %s", debugPath)
         self.debugPath = debugPath
         lens.CalibrationState.__init__(self, **kw)
 
@@ -87,13 +81,11 @@ class CalibrationState(lens.CalibrationState):
         lens.CalibrationState.add(self, path, *a, **kw)
         octoprint_mrbeam.util.makedirs(self.debugPath)
         symlink_path = os.path.join(self.debugPath, os.path.basename(path))
-        _logger.warning("Symlink %s PATH %s", symlink_path, path)
         if not os.path.islink(symlink_path):
             os.symlink(path, symlink_path)
 
     def remove(self, path):
         lens.CalibrationState.remove(self, path)
         symlink_path = os.path.join(self.debugPath, os.path.basename(path))
-        _logger.warning("Symlink %s PATH %s", symlink_path, path)
         if os.path.islink(symlink_path):
             os.remove(symlink_path)

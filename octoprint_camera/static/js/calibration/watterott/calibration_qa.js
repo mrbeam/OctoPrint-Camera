@@ -11,7 +11,7 @@ $(function () {
     // scale(1.0452920962199313) translate(-8.72302405498282 -9.731958762886599) //good for arrow tips
     function CalibrationQAViewModel(parameters) {
         let self = this;
-        window.mrbeam.viewModels["cameraAlignmentViewModel"] = self;
+        window.mrbeam.viewModels["cameraQAViewModel"] = self;
         self.calibration = parameters[0];
         self.camera = parameters[1];
         self.cornerCalibration = parameters[2];//size 500 390
