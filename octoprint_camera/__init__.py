@@ -16,7 +16,6 @@ import socket
 import sys
 import time
 
-from flask_swagger_ui import get_swaggerui_blueprint
 from werkzeug.exceptions import BadRequest
 
 PY3 = sys.version_info >= (3,)
@@ -281,8 +280,8 @@ class CameraPlugin(
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
         from octoprint_mrbeam.util.device_info import DeviceInfo
 
-        # device_info = DeviceInfo()
-        # beamos_version, beamos_date = device_info.get_beamos_version()
+        device_info = DeviceInfo()
+        beamos_version, beamos_date = device_info.get_beamos_version()
         render_kwargs = dict(
             debug=debug,
             version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
@@ -292,10 +291,10 @@ class CameraPlugin(
             locales=dict(),
             supportedExtensions=[],
             # beamOS version - Not the plugin version
-            # beamosVersionNumber=beamos_version,
-            # beamosBuildDate=beamos_date,
+            beamosVersionNumber=beamos_version,
+            beamosBuildDate=beamos_date,
             hostname=socket.gethostname(),
-            # serial=device_info.get_serial(),
+            serial=device_info.get_serial(),
             # beta_label=self.get_beta_label(),
             e="null",
             gcodeThreshold=0,  # legacy - OctoPrint render bug

@@ -15,9 +15,9 @@ from octoprint_mrbeam.util.img import differed_imwrite
 
 from octoprint_camera.lens import BOARD_ROWS, BOARD_COLS, BoardDetectorDaemon
 
-path = dirname(realpath(__file__))
+PROJECTPATH = dirname(realpath(__file__))
 RSC_PATH = join(
-    path,
+    PROJECTPATH,
     "rsc",
 )
 LOGGER = logging.getLogger(__name__)
@@ -75,7 +75,10 @@ def test_lens_calibration(datafiles):
 
     out_file = str(datafiles / calibration_file)
     b = BoardDetectorDaemon(
-        out_file, runCalibrationAsap=False, stateChangeCallback=inspectState
+        out_file,
+        runCalibrationAsap=False,
+        stateChangeCallback=inspectState,
+        debugPath=join(PROJECTPATH, "debug"),
     )
 
     try:
@@ -204,18 +207,14 @@ def test_undistorted_good(image, calib_file, out_compare):
 # returns the amount of black pixels in a image and if it is lens_corrected of the given 'image' with the calibration file 'calib_file'
 # todo compare out_compare with calibrated image
 def undistort_image_with_calibfile(image, calib_file, out_compare):
-    rsc_path = join(
-        path,
-        "rsc",
-    )
-    in_img = cv2.imread(join(rsc_path, image))
-    calib_file = join(rsc_path, calib_file)
+    in_img = cv2.imread(join(RSC_PATH, image))
+    calib_file = join(RSC_PATH, calib_file)
 
     __cam = np.load(calib_file)
     res = prepareImage(
         in_img,
-        join(rsc_path, "out.jpg"),
-        join(rsc_path, "pic_settings.yaml"),
+        join(RSC_PATH, "out.jpg"),
+        join(RSC_PATH, "pic_settings.yaml"),
         cam_matrix=__cam["mtx"],
         cam_dist=__cam["dist"],
         undistorted=True,
@@ -224,7 +223,7 @@ def undistort_image_with_calibfile(image, calib_file, out_compare):
     _logger.info(res)
 
     out_img = cv2.imread(
-        join(rsc_path, "out.jpg"),
+        join(RSC_PATH, "out.jpg"),
     )
 
     _logger.warning(np.sum(out_img == 0))
@@ -239,7 +238,6 @@ def undistort_image_with_calibfile(image, calib_file, out_compare):
     )  # returns the amount of black pixels and if the image is lens_corrected
 
 
-RSC_PATH = join(path, "rsc")
 # file: path to img file     MARKER_POS:False for markers which should not be detected
 MARKER_FILES = [
     {
