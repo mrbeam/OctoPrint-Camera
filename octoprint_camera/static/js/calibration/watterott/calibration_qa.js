@@ -7,8 +7,6 @@
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
 $(function () {
-    //scale(1.0392920962199313) translate(-7.72302405498282 -9.731958762886599) #realy good in rectangle
-    // scale(1.0452920962199313) translate(-8.72302405498282 -9.731958762886599) //good for arrow tips
     function CalibrationQAViewModel(parameters) {
         let self = this;
         window.mrbeam.viewModels["cameraQAViewModel"] = self;

@@ -93,7 +93,7 @@ $(function () {
 
         self.calSvgViewBox = ko.computed(function () {
             var zoom = self.calSvgScale();
-            var w = self.zMarkersTransform() / zoom;
+            var w = self.calImgWidth() / zoom;
             var h = self.calImgHeight() / zoom;
             var offX =
                 Math.min(
