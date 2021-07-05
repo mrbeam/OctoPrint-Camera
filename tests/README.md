@@ -1,5 +1,7 @@
 ##prepare the test
 clone repository `git@github.com:mrbeam/test_rsc.git`, this contains the files needed for the test
+clone it into the tests folder or create a symlink to this path  
+the files should be available from the project folder ` tests/test_rsc/camera_plugin/...`
 
 ##run the test
 `pytest tests/test_camera.py` will run the camera tests

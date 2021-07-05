@@ -144,7 +144,6 @@ $(function () {
         // };
 
         self._getImgUrl = function (type, applyCrossVisibility) {
-            console.log('newimgurl cornercalib');
             self.camera.getImage('next', type);
             return self.camera.rawUrl();
             if (type !== undefined) {
@@ -217,7 +216,6 @@ $(function () {
         self.onStartupComplete = function () {
             self.tabActive.subscribe(function (active) {
                 if (active) {
-                    console.log('corner get image');
                     self._startReloadImageLoop();
                 } else {
                     self._stopReloadImageLoop();
@@ -233,10 +231,8 @@ $(function () {
             if (!self.cornerCalibrationActive()) {
                 self.camera.loadAvaiableCorrection();
                 if (self.camera.availablePicTypes.corners()) {
-                    console.log('get image corner - corner');
                     self.camera.getImage(GET_IMG.last, GET_IMG.pic_corner);
                 } else {
-                    console.log('get image corner - plain')
                     self.camera.getImage(GET_IMG.last, GET_IMG.pic_plain);
                 }
                 self.dbNWImgUrl(
@@ -282,7 +278,6 @@ $(function () {
                 return;
             }
             if ("newImage" in data) {
-                console.log('new image corner calibration');
                 self._reloadImageLoop();
                 // Trigger reload if calibration not started
             }
@@ -325,7 +320,6 @@ $(function () {
                 newMarkers: self.markersFoundPositionCopy,
                 newCorners: self.currentResults(),
             };
-            console.log("Sending data:", data);
             self.calibration.simpleApiCommand(
                 "save_corner_calibration",
                 JSON.stringify(data),
@@ -373,7 +367,6 @@ $(function () {
 
         self.engraveMarkers = function () {
             let success_callback = function (data) {
-                console.log("generated_markers_svg", data);
                 let fileObj = {
                     date: Math.floor(Date.now() / 1000),
                     name: "CalibrationMarkers.svg",

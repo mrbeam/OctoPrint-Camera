@@ -38,8 +38,10 @@ def find_pink_circles(img, debug=False, **settings):
                 )
     return ret
 
+
 # def get_workspace_corners(positions_pink_circles, pic_settings, undistorted, **kw):
 #     return add_deltas(positions_pink_circles, pic_settings, undistorted, from_factory=util.factory_mode(), **kw)
+
 
 def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
     """
@@ -62,6 +64,7 @@ def save_corner_calibration(path, *a, **kw):
 def get_corner_calibration(pic_settings):
     return corners.get_corner_calibration(pic_settings)
 
+
 def get_workspace_corners(
     markers,
     pic_settings,
@@ -69,12 +72,15 @@ def get_workspace_corners(
     mtx=None,
     dist=None,
     new_mtx=None,
-    ):
+):
     from octoprint_mrbeam.camera.corners import get_deltas
     import logging
+
     from_factory = util.factory_mode()
     # _logger.warning(markers)
-    deltas = get_deltas(pic_settings, undistorted, mtx, dist, new_mtx, from_factory=from_factory)
+    deltas = get_deltas(
+        pic_settings, undistorted, mtx, dist, new_mtx, from_factory=from_factory
+    )
     if deltas is None:
         return None
     # try getting raw deltas first

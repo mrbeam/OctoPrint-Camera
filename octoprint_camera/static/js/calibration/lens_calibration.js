@@ -215,7 +215,6 @@ $(function () {
             }
 
             if ("newImage" in data) {
-                console.log('new image corner calibration');
                 self._reloadImageLoop();
                 // Trigger reload if calibration not started
             }
@@ -490,7 +489,6 @@ $(function () {
             // self._reloadImageLoop();
             self._tabActive.subscribe(function (active) {
                 if (!active){
-                    console.log('stop image loop lens')
                     self.camera.stopReloadImageLoop();
                 }
             })

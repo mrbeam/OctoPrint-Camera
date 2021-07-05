@@ -16,10 +16,7 @@ from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_camera.lens import BOARD_ROWS, BOARD_COLS, BoardDetectorDaemon
 
 PROJECTPATH = dirname(realpath(__file__))
-RSC_PATH = join(
-    PROJECTPATH,
-    "rsc",
-)
+RSC_PATH = join(PROJECTPATH, "test_rsc", "camera_plugin")
 LOGGER = logging.getLogger(__name__)
 _logger = mrb_logger("octoprint.plugins.camera.test")
 

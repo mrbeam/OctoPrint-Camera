@@ -67,8 +67,6 @@ class CameraThread(object):
             self._logger.warning("Camera not initalised, cannot return an image")
             return None
 
-    #
-
     def get_next_img(self):
         # Disgusting hack: Fix race condition with a sleep because I am myself deprived of some
         import time

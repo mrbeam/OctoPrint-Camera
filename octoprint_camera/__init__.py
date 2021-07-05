@@ -31,7 +31,11 @@ from octoprint_mrbeam.camera.definitions import (
     MIN_BOARDS_DETECTED,
 )
 import octoprint_mrbeam.camera
-from octoprint_mrbeam.camera.undistort import _getCamParams, _debug_drawCorners, _debug_drawMarkers
+from octoprint_mrbeam.camera.undistort import (
+    _getCamParams,
+    _debug_drawCorners,
+    _debug_drawMarkers,
+)
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -49,7 +53,7 @@ from .camera import CameraThread
 # from .image import LAST, NEXT, WHICH, PIC_PLAIN, PIC_CORNER, PIC_LENS, PIC_BOTH, PIC_TYPES
 from .iobeam import IoBeamEvents
 from .leds import LedEventListener
-from .util import logme, logExceptions
+from .util import logExceptions
 from .util.image import (
     corner_settings_valid,
     lens_settings_valid,
@@ -93,6 +97,7 @@ class CameraPlugin(
         self.led_client = None
 
         from octoprint.server import debug
+
         self.debug = debug
 
     def initialize(self):
@@ -276,6 +281,7 @@ class CameraPlugin(
         """
         import os
         from octoprint.events import Events
+
         # Fire shutdown event ourselves because OctoPrint will not be able to.
         # It will change the LED lights
         self._event_bus.fire(Events.SHUTDOWN)
@@ -630,10 +636,12 @@ class CameraPlugin(
         Also returns a set of workspace coordinates and whether the pink circles were all found
         """
         from functools import reduce  # Not necessary in PY2, but compatible
+
         def save_debug_img(img, name):
             return octoprint_mrbeam.camera.save_debug_img(
                 img, name + ".jpg", folder=path.join("/tmp")
             )
+
         err_txt = "Unrecognised Picture {} : {}, should be one of {}"
         if pic_type not in PIC_TYPES:
             raise ValueError(err_txt.format("Type", pic_type, PIC_TYPES))
@@ -682,8 +690,8 @@ class CameraPlugin(
             return img_jpg, ts, positions_pink_circles
 
         if do_lens:
-            mtx = settings_lens['mtx']
-            dist = settings_lens['dist']
+            mtx = settings_lens["mtx"]
+            dist = settings_lens["dist"]
             img, dest_mtx = lens.undistort(img, mtx, dist)
         else:
             mtx = None
@@ -703,10 +711,17 @@ class CameraPlugin(
                     positions_pink_circles,
                 )
             positions_workspace_corners = corners.get_workspace_corners(
-                simple_pos, settings_corners, undistorted=do_lens, mtx=mtx, dist=dist, new_mtx=dest_mtx
+                simple_pos,
+                settings_corners,
+                undistorted=do_lens,
+                mtx=mtx,
+                dist=dist,
+                new_mtx=dest_mtx,
             )
             if len(dict(positions_workspace_corners)) == 4:
-                img = corners.fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True)
+                img = corners.fit_img_to_corners(
+                    img, positions_workspace_corners, zoomed_out=True
+                )
         # Write the modified image to a jpg binary
         buff = util.image.imencode(img)
         return buff, ts, positions_pink_circles
@@ -723,7 +738,7 @@ class CameraPlugin(
                 stateChangeCallback=self.send_lens_calibration_state,
                 factory=True,
                 runCalibrationAsap=util.factory_mode(),
-                event_bus=self._event_bus
+                event_bus=self._event_bus,
             )
             # FIXME - Right now the npz files get loaded funny
             #         and some values aren't json pickable etc...
