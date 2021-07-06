@@ -32,7 +32,6 @@ $(function () {
             // self._reloadImageLoop();
             self.tabActive.subscribe(function (active) {
                 if (active) {
-                    console.log('qa tab get image');
                     self.camera.startReloadImageLoop("last", "both", "qa");
                 } else {
                     self.camera.stopReloadImageLoop();

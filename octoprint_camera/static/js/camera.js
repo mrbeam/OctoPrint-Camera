@@ -136,7 +136,6 @@ $(function () {
                     self.availablePicTypes[m](data.available_corrections.includes(m));
                 });
             };
-
             let error_callback = function (resp) {
                 console.log("available_corrections request error", resp);
             };
@@ -198,7 +197,6 @@ $(function () {
             self.stopReloadImageLoop();
             //reloads image every 3 seconds
             self._reloadImageInterval = setInterval(function(){
-                console.log('getImage', which, pic_type, tab);
                 self.getImage(which, pic_type);
             }, 3000);
         }
@@ -287,7 +285,6 @@ $(function () {
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             console.log('plugin message', plugin, data);
             if ("newImage" in data) {
-                console.log('new image get');
                 self.pic_timestamp(data.timestamp)
             }
 

@@ -47,7 +47,6 @@ $(function () {
             $("#calibration_tool_content").show();
             $("#calibration_tool_loading_overlay").hide();
             $('a[data-toggle="tab"]').on('shown', function (e) {
-                console.log("Tab activated", e.target.id, e.relatedTarget.id);
                 // e.target // activated tab
                 // e.relatedTarget // previous tab
                 self.activeTab(e.target.id);
