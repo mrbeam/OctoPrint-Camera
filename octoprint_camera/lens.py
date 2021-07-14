@@ -34,7 +34,7 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
         output_calib,
         stateChangeCallback=None,
         rawImgLock=None,
-        debugPath=None,
+        debugPath=SYMLINK_IMG_DIR,
         **kw
     ):
         lens.BoardDetectorDaemon.__init__(
