@@ -5,6 +5,12 @@ import os
 import octoprint_mrbeam
 from octoprint_mrbeam.camera import lens
 from octoprint_mrbeam.camera.definitions import STATE_PENDING_CAMERA
+# Plese keep these imports
+# They provide this module with the relevant lens distortion functions.
+# When the code itself is migrated into this module, then we only need
+# to remove this import - and all the other modules in OctoPrint-Camera
+# are already pointing to octoprint_camera.lens.undistort/undistort_dict.
+from octoprint_mrbeam.camera.lens import undistort, undist_dict
 
 from .util.flask import file_to_b64
 
