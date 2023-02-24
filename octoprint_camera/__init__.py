@@ -679,7 +679,7 @@ class CameraPlugin(
         if img is None:
             return None, -1, {}
         # Hack again : Ask the camera to adjust brightness -> Do auto inside the capture()
-        self.camera_thread._cam.compensate_shutter_speed(img)
+        self.camera_thread._cam.compensate_shutter_speed()
         settings = {}
         positions_pink_circles = corners.find_pink_circles(
             img, debug=util.factory_mode(), **settings
