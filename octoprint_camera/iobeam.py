@@ -1,5 +1,5 @@
 # coding=utf-8
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 from octoprint_mrbeam.iobeam import iobeam_handler
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 

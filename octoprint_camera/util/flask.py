@@ -1,16 +1,16 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 import base64
 import time
 
-import flask
+from . import flask
 import sys
 
 from octoprint_mrbeam.util.log import json_serialisor
 from octoprint_mrbeam.util import dict_map
 
 PY3 = sys.version_info >= (3,)
-_basestring = str if PY3 else basestring
+_basestring = str if PY3 else str
 
 
 def file_to_b64(item):

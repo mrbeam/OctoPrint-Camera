@@ -51,7 +51,7 @@ def lens_settings_valid(settings):
     from typing import Mapping
 
     return isinstance(settings, Mapping) and all(
-        k in settings.keys() for k in ("mtx", "dist")
+        k in list(settings.keys()) for k in ("mtx", "dist")
     )
 
 

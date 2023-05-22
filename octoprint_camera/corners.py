@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 
 """
 Set of functions to transform a picture to conform with real world coordinates.

@@ -1,5 +1,5 @@
 # coding=utf-8
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 
 import base64
 import cv2
@@ -554,7 +554,7 @@ class CameraPlugin(
             json_data = request.get_json()
         except BadRequest:
             return make_response("Malformed JSON body in request", 400)
-        if not all(k in json_data.keys() for k in ["newCorners", "newMarkers"]):
+        if not all(k in list(json_data.keys()) for k in ["newCorners", "newMarkers"]):
             # TODO correct error message
             return make_response("No profile included in request", 400)
         corners.save_corner_calibration(
@@ -704,7 +704,7 @@ class CameraPlugin(
             #     settings_corners, positions_pink_circles
             # )
             try:
-                simple_pos = {qd: v["pos"] for qd, v in positions_pink_circles.items()}
+                simple_pos = {qd: v["pos"] for qd, v in list(positions_pink_circles.items())}
             except Exception as e:
                 self._logger.debug("do corners error %s", e)
                 raise MarkerError(
