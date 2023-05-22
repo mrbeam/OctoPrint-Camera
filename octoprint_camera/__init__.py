@@ -115,7 +115,7 @@ class CameraPlugin(
         # TODO Stage 2 - Only start the lens calibration daemon when required
         self.start_lens_calibration_daemon()
         # TODO Stage 3 - Separate into an iobeam plugin
-        self.iobeam_thread = iobeam.IoBeamHandler(self)
+        self.iobeam_thread = iobeam.IoBeamHandler(self, None)
         self.iobeam_thread._initWorker()
         # TODO Stage 3 - Remove, should only trigger via plugin hook.
         self._event_bus.subscribe(
