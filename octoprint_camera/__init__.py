@@ -43,9 +43,9 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import dict_map, get_thread
 from octoprint_mrbeam.util.log import json_serialisor
 
-import pkg_resources
+from . import _version
 
-__version__ = pkg_resources.require("octoprint_camera")
+__version__ = _version.get_versions()["version"]
 
 from . import corners, lens, util, iobeam
 from .camera import CameraThread
@@ -83,6 +83,7 @@ class CameraPlugin(
     octoprint.plugin.BlueprintPlugin,
 ):
     def __init__(self):
+        self._plugin_version = __version__
         self.camera_thread = None
         self.lens_calibration_thread = None
         self.iobeam_thread = None
