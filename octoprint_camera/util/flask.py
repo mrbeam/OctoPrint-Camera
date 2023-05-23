@@ -3,18 +3,15 @@
 import base64
 import time
 
-from . import flask
+import flask
 import sys
 
 from octoprint_mrbeam.util.log import json_serialisor
 from octoprint_mrbeam.util import dict_map
 
-PY3 = sys.version_info >= (3,)
-_basestring = str if PY3 else str
-
 
 def file_to_b64(item):
-    if isinstance(item, _basestring):
+    if isinstance(item, str):
         with open(
             item,
             "rb",
@@ -22,7 +19,7 @@ def file_to_b64(item):
             buf = base64.b64encode(fh.read())
     else:
         buf = base64.b64encode(item.read())
-    return buf
+    return buf.decode("utf-8")
 
 
 def send_file_b64(item, **kw):

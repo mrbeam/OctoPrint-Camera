@@ -31,7 +31,7 @@ class LedEventListener(led_events.LedEventListener):
             return
 
         for command, commandType, debug in self._subscriptions[event]:
-            self._execute_command(command, commandType, debug, event, payload)
+            self._execute_command(command, commandType)
 
     def log_listening_state(self, command=None):
         pass
