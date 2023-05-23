@@ -261,6 +261,7 @@ class CameraPlugin(
                 "js/calibration/watterott/camera_alignment.js",
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
+                "js/calibration/watterott/debug.js",
             ],
             css=[
                 "css/calibration_qa.css",
@@ -306,6 +307,7 @@ class CameraPlugin(
 
         device_info = DeviceInfo()
         beamos_version, beamos_date = device_info.get_beamos_version()
+        model_id = device_info.get_model()
         render_kwargs = dict(
             version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
             templates=dict(tab=[]),
@@ -322,10 +324,7 @@ class CameraPlugin(
             beamosBuildDate=beamos_date,
             hostname=socket.gethostname(),
             serial=device_info.get_serial(),
-            # beta_label=self.get_beta_label(),
-            e="null",
-            gcodeThreshold=0,  # legacy - OctoPrint render bug
-            gcodeMobileThreshold=0,  # legacy - OctoPrint render bug
+            model=model_id,
             get_img=json.dumps(
                 dict(
                     last=LAST,
