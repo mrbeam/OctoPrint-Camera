@@ -16,12 +16,57 @@
 {#        <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">#}
 
         {% include 'stylesheets.jinja2' %}
-        {% include 'initscript.jinja2' %}
         {% include 'mrbeam_initscript.jinja2' %}
 
         <script type="text/javascript">
 			INITIAL_CALIBRATION = true;
+
+
+            {#COPY OF OCTOPRINT INITSCRIPT AS IT FAILS BEACAUSE OF THE FILE FILTERS#}
+            var BASEURL = "{{ url_for('index') }}";
+            var API_BASEURL = BASEURL + "api/";
+            var PLUGIN_BASEURL = BASEURL + "plugin/";
+
+            var CONFIG_DEBUG = {%  if debug -%} true; {% else %} false; {%- endif %}
+            var CONFIG_LOADINGANIMATION = {% if enableLoadingAnimation -%} true; {% else %} false; {%- endif %}
+
+            var CONFIG_GCODEFILESPERPAGE = 5000;
+            var CONFIG_TIMELAPSEFILESPERPAGE = 10;
+            var CONFIG_LOGFILESPERPAGE = 10;
+            var CONFIG_USERSPERPAGE = 10;
+            var CONFIG_GROUPSPERPAGE = 10;
+            var CONFIG_WEBCAM_STREAM = "{{ webcamStream|e }}"; // deprecated, only left for compatibility reasons
+            var CONFIG_ACCESS_CONTROL = true; // deprecated, only left for compatibility reasons
+            var CONFIG_ACCESS_CONTROL_ACTIVE = {% if accessControlActive -%} true; {% else %} false; {%- endif %}
+            var CONFIG_SD_SUPPORT = {% if enableSdSupport -%} true; {% else %} false; {%- endif %}
+            var CONFIG_FIRST_RUN = {%  if firstRun -%} true; {% else %} false; {%- endif %}
+            var CONFIG_TEMPERATURE_GRAPH = {%  if enableTemperatureGraph -%} true; {% else %} false; {%- endif %}
+            var CONFIG_WIZARD = {% if wizard -%} true; {% else %} false; {%- endif %}
+
+            var SOCKJS_URI = "{{ url_for('index') }}" + "sockjs";
+            var SOCKJS_DEBUG = CONFIG_DEBUG;
+            var SOCKJS_CONNECT_TIMEOUT = "{{ sockJsConnectTimeout }}";
+            // sockjs should define CLOSE_NORMAL for us, but they don't (from ws spec)
+            var SOCKJS_CLOSE_NORMAL = 1000;
+
+            var UI_API_KEY = ""; // deprecated, only left for compatibility reasons
+            var VERSION = "{{ version.number|e }}";
+            var DISPLAY_VERSION = "{{ version.display|e }}";
+            var BRANCH = "{{ version.branch|e }}";
+            var PYTHON_VERSION = "{{ python_version|e }}";
+            var LOCALE = "{{ g.locale|e }}";
+            var AVAILABLE_LOCALES = {{ locales|tojson }};
+            var SUPPORTED_FILETYPES = "";
+            var SUPPORTED_EXTENSIONS = "";
+            {##}
+            var PERMISSIONS = {{ permissions|tojson }};
+            var ONLINE = {% if online -%}true{% else %}false{%- endif %};
+
+            var OCTOPRINT_VIEWMODELS = [];
+            var ADDITIONAL_VIEWMODELS = [];
+            var OCTOPRINT_ADDITIONAL_BINDINGS = [];
 		</script>
+    <link rel="mask-icon-theme" href="{{ url_for('static', filename='img/mask-theme.svg') }}" color="#56BE37">
     </head>
     <body style="padding-top:0;">
         <div id="initial_camera_calibration" class="container" style="max-width:100%;">

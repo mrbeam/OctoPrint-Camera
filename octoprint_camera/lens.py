@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 
 import os
 import octoprint_mrbeam
 from octoprint_mrbeam.camera import lens
 from octoprint_mrbeam.camera.definitions import STATE_PENDING_CAMERA
+
 # Plese keep these imports
 # They provide this module with the relevant lens distortion functions.
 # When the code itself is migrated into this module, then we only need

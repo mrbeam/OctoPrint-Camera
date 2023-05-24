@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 
 """
 Set of functions to transform a picture to conform with real world coordinates.
 """
+import logging
 import os
 from octoprint_mrbeam.camera import corners, lens
 from octoprint_mrbeam.camera.definitions import QD_KEYS
@@ -54,10 +55,21 @@ def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
     return warpImgByCorners(img, positions_workspace_corners, zoomed_out)
 
 
+def to_int_list(l):
+    for key, value in l.items():
+        l[key] = [int(item) for item in value]
+    return l
+
+
 def save_corner_calibration(path, *a, **kw):
     # Save the pink circle positions to provide
     # history for the new user
-
+    kw["newMarkers"] = to_int_list(
+        kw.get("newMarkers", {"NE": [], "NW": [], "SE": [], "SW": []})
+    )
+    kw["newCorners"] = to_int_list(
+        kw.get("newCorners", {"NE": [], "NW": [], "SE": [], "SW": []})
+    )
     return corners.save_corner_calibration(path, *a, **kw)
 
 

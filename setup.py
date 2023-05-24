@@ -1,4 +1,5 @@
 # coding=utf-8
+import versioneer
 
 ########################################################################################################################
 ### Do not forget to adjust the following variables to your own plugin.
@@ -14,7 +15,7 @@ plugin_package = "octoprint_camera"
 plugin_name = "OctoPrint-Camera"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.1.1"
+plugin_version = versioneer.get_version()
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -79,6 +80,7 @@ setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
     package=plugin_package,
     name=plugin_name,
     version=plugin_version,
+    cmdclass=versioneer.get_cmdclass(),
     description=plugin_description,
     author=plugin_author,
     mail=plugin_author_email,

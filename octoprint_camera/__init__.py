@@ -1,5 +1,5 @@
 # coding=utf-8
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 
 import base64
 import cv2
@@ -43,9 +43,9 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import dict_map, get_thread
 from octoprint_mrbeam.util.log import json_serialisor
 
-import pkg_resources
+from . import _version
 
-__version__ = pkg_resources.require("octoprint_camera")
+__version__ = _version.get_versions()["version"]
 
 from . import corners, lens, util, iobeam
 from .camera import CameraThread
@@ -83,6 +83,7 @@ class CameraPlugin(
     octoprint.plugin.BlueprintPlugin,
 ):
     def __init__(self):
+        self._plugin_version = __version__
         self.camera_thread = None
         self.lens_calibration_thread = None
         self.iobeam_thread = None
@@ -114,7 +115,7 @@ class CameraPlugin(
         # TODO Stage 2 - Only start the lens calibration daemon when required
         self.start_lens_calibration_daemon()
         # TODO Stage 3 - Separate into an iobeam plugin
-        self.iobeam_thread = iobeam.IoBeamHandler(self)
+        self.iobeam_thread = iobeam.IoBeamHandler(self, None)
         self.iobeam_thread._initWorker()
         # TODO Stage 3 - Remove, should only trigger via plugin hook.
         self._event_bus.subscribe(
@@ -260,6 +261,7 @@ class CameraPlugin(
                 "js/calibration/watterott/camera_alignment.js",
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
+                "js/calibration/watterott/debug.js",
             ],
             css=[
                 "css/calibration_qa.css",
@@ -300,28 +302,29 @@ class CameraPlugin(
     @logExceptions
     def calibration_wrapper(self):
         from flask import render_template
-        from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
+        from octoprint.server import debug, VERSION, DISPLAY_VERSION, BRANCH
         from octoprint_mrbeam.util.device_info import DeviceInfo
 
         device_info = DeviceInfo()
         beamos_version, beamos_date = device_info.get_beamos_version()
+        model_id = device_info.get_model()
         render_kwargs = dict(
-            debug=debug,
             version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
-            uiApiKey=UI_API_KEY,
             templates=dict(tab=[]),
             pluginNames=dict(),
             locales=dict(),
             supportedExtensions=[],
+            e="null",
+            gcodeThreshold=0,  # legacy - OctoPrint render bug
+            gcodeMobileThreshold=0,  # legacy - OctoPrint render bug
+            permissions=dict(),
+            # mrbeam values
             # beamOS version - Not the plugin version
             beamosVersionNumber=beamos_version,
             beamosBuildDate=beamos_date,
             hostname=socket.gethostname(),
             serial=device_info.get_serial(),
-            # beta_label=self.get_beta_label(),
-            e="null",
-            gcodeThreshold=0,  # legacy - OctoPrint render bug
-            gcodeMobileThreshold=0,  # legacy - OctoPrint render bug
+            model=model_id,
             get_img=json.dumps(
                 dict(
                     last=LAST,
@@ -618,7 +621,7 @@ class CameraPlugin(
     # @calibration_tool_mode_only
     def printLabel(self):
         res = labelPrinter(self, use_dummy_values=IS_X86).print_label(request)
-        self._logger.info("print label %s", res.response)
+        self._logger.info("print label %s", res)
         return make_response(jsonify(res), 200 if res["success"] else 502)
 
     ##~~ Camera Plugin
@@ -651,11 +654,13 @@ class CameraPlugin(
         do_lens = pic_type in (PIC_LENS, PIC_BOTH)
 
         if which == LAST:
-            img_jpg = self.camera_thread.get_latest_img()
+            img_jpg = (
+                self.camera_thread.get_latest_img() if self.camera_thread else None
+            )
         elif which == NEXT:
-            img_jpg = self.camera_thread.get_next_img()
+            img_jpg = self.camera_thread.get_next_img() if self.camera_thread else None
         else:
-            raise Exception("We shouldn't be here, huhoo..")
+            raise Exception("Invalid get_picture command")
         if not img_jpg:
             return None, -1, {}
         ts = self.camera_thread.latest_img_timestamp
@@ -679,7 +684,7 @@ class CameraPlugin(
         if img is None:
             return None, -1, {}
         # Hack again : Ask the camera to adjust brightness -> Do auto inside the capture()
-        self.camera_thread._cam.compensate_shutter_speed()
+        self.camera_thread._cam.compensate_shutter_speed(img)
         settings = {}
         positions_pink_circles = corners.find_pink_circles(
             img, debug=util.factory_mode(), **settings
@@ -703,7 +708,9 @@ class CameraPlugin(
             #     settings_corners, positions_pink_circles
             # )
             try:
-                simple_pos = {qd: v["pos"] for qd, v in positions_pink_circles.items()}
+                simple_pos = {
+                    qd: v["pos"] for qd, v in positions_pink_circles.items()
+                }
             except Exception as e:
                 self._logger.debug("do corners error %s", e)
                 raise MarkerError(
