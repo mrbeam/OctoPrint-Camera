@@ -272,7 +272,7 @@ def test_marker_detection():
         )
 
         _logger.info(positions)
-        for key, value in list(positions.items()):
+        for key, value in positions.items():
             if key in file:
                 assert value is None, "Marker found but should not be detected"
             else:

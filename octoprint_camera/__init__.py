@@ -556,7 +556,7 @@ class CameraPlugin(
             json_data = request.get_json()
         except BadRequest:
             return make_response("Malformed JSON body in request", 400)
-        if not all(k in list(json_data.keys()) for k in ["newCorners", "newMarkers"]):
+        if not all(k in json_data.keys() for k in ["newCorners", "newMarkers"]):
             # TODO correct error message
             return make_response("No profile included in request", 400)
         corners.save_corner_calibration(
@@ -660,7 +660,7 @@ class CameraPlugin(
         elif which == NEXT:
             img_jpg = self.camera_thread.get_next_img() if self.camera_thread else None
         else:
-            raise Exception("We shouldn't be here, huhoo..")
+            raise Exception("Invalid get_picture command")
         if not img_jpg:
             return None, -1, {}
         ts = self.camera_thread.latest_img_timestamp
@@ -709,7 +709,7 @@ class CameraPlugin(
             # )
             try:
                 simple_pos = {
-                    qd: v["pos"] for qd, v in list(positions_pink_circles.items())
+                    qd: v["pos"] for qd, v in positions_pink_circles.items()
                 }
             except Exception as e:
                 self._logger.debug("do corners error %s", e)
