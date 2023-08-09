@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 
-"""
-Set of functions to transform a picture to conform with real world coordinates.
-"""
+"""Set of functions to transform a picture to conform with real world
+coordinates."""
 import logging
 import os
 from octoprint_mrbeam.camera import corners, lens
@@ -45,8 +44,8 @@ def find_pink_circles(img, debug=False, **settings):
 
 
 def fit_img_to_corners(img, positions_workspace_corners, zoomed_out=True):
-    """
-    Warps the region delimited by the corners in order to straighten it.
+    """Warps the region delimited by the corners in order to straighten it.
+
     :param image: takes an opencv (numpy) image
     :param corners: as qd-dict {'NW': [x, y], ... }
     :param zoomed_out: wether to zoom out the pic to account for object height

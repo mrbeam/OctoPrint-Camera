@@ -4,7 +4,7 @@
 import base64
 import cv2
 import flask
-from flask import jsonify, request, make_response
+from flask import jsonify, request, make_response, send_file
 import io
 import json
 import platform
@@ -42,10 +42,13 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 # from octoprint_mrbeam.support import check_support_mode
 from octoprint_mrbeam.util import dict_map, get_thread
 from octoprint_mrbeam.util.log import json_serialisor
+from octoprint.filemanager.destinations import FileDestinations
+from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
 from . import _version
 
 __version__ = _version.get_versions()["version"]
+
 
 from . import corners, lens, util, iobeam
 from .camera import CameraThread
@@ -104,6 +107,15 @@ class CameraPlugin(
     def initialize(self):
         self.led_client = LedEventListener(self)
 
+    def _delete_user(self):
+        self._logger.info("remove calibration user")
+        if len(self._user_manager.get_all_users()) == 1:
+            exec_cmd("sudo rm /home/pi/.octoprint/users.yaml")
+        elif len(self._user_manager.get_all_users()) > 1:
+            self._user_manager.remove_user(
+                "calibration@mr-beam.org",
+            )
+
     ##~~ StartupPlugin mixin
 
     def on_after_startup(self, *a, **kw):
@@ -130,9 +142,12 @@ class CameraPlugin(
     ##~~ ShutdownPlugin mixin
 
     def on_shutdown(self, *a, **kw):
+        _delete_user()
+        self._logger.info("stop camera thread %s", self.camera_thread)
         if self.camera_thread:
             self.camera_thread.stop()
-        self._logger.debug("Camera thread joined")
+        if self.lens_calibration_thread:
+            self.lens_calibration_thread.stopAsap()
 
     ##~~ SettingsPlugin mixin
 
@@ -277,20 +292,26 @@ class CameraPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/shutdown", methods=["GET"])
     @logExceptions
     def force_shutdown(self):
-        """
-        This is only required because the lens calibration processes can
-        lock up the other threads, preventing a normal shutdown
-        """
+        """This is only required because the lens calibration processes can
+        lock up the other threads, preventing a normal shutdown."""
         import os
         from octoprint.events import Events
 
+        self._delete_user()
         # Fire shutdown event ourselves because OctoPrint will not be able to.
         # It will change the LED lights
         self._event_bus.fire(Events.SHUTDOWN)
+
+        if self.camera_thread:
+            self.camera_thread.stop()
+        self.lens_calibration_thread.stopAsap()
+        if self.lens_calibration_thread.is_alive():
+            self.lens_calibration_thread.join()
         # First ask to shutdown as a background process
         os.system("sudo shutdown now &")
         # Cyanide pill because of how the lens calibration prcesses hang
         os.system("killall -9 /home/pi/oprint/bin/python2")
+        return make_response({}, 200)
 
     # disable default api key check for all blueprint routes.
     # use @restricted_access, @firstrun_only_access to check permissions
@@ -304,10 +325,12 @@ class CameraPlugin(
         from flask import render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, BRANCH
         from octoprint_mrbeam.util.device_info import DeviceInfo
+        from octoprint.server import connectivityChecker
 
         device_info = DeviceInfo()
         beamos_version, beamos_date = device_info.get_beamos_version()
         model_id = device_info.get_model()
+
         render_kwargs = dict(
             version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
             templates=dict(tab=[]),
@@ -624,6 +647,20 @@ class CameraPlugin(
         self._logger.info("print label %s", res)
         return make_response(jsonify(res), 200 if res["success"] else 502)
 
+    @octoprint.plugin.BlueprintPlugin.route("/image/<string:filename>", methods=["GET"])
+    # @calibration_tool_mode_only
+    def show_image(self, filename: str):
+        self._logger.info("show_image %s", filename)
+        file_path = path.join("cam", "debug", filename)
+        if self._file_manager.file_exists(FileDestinations.LOCAL, file_path):
+
+            image_path = self._file_manager.path_on_disk(
+                FileDestinations.LOCAL, file_path
+            )
+            return send_file(image_path, mimetype="image/jpeg")
+        else:
+            return make_response("File not found", 404)
+
     ##~~ Camera Plugin
 
     def get_picture(
@@ -633,7 +670,8 @@ class CameraPlugin(
         settings_corners=dict(),
         settings_lens=dict(),
     ):
-        """Returns a jpg     picture which can be corrected for
+        """Returns a jpg     picture which can be corrected for.
+
         - lens distortion,
         - Real world coordinates
         Also returns a set of workspace coordinates and whether the pink circles were all found
@@ -684,7 +722,7 @@ class CameraPlugin(
         if img is None:
             return None, -1, {}
         # Hack again : Ask the camera to adjust brightness -> Do auto inside the capture()
-        self.camera_thread._cam.compensate_shutter_speed(img)
+        self.camera_thread._cam.compensate_shutter_speed()
         settings = {}
         positions_pink_circles = corners.find_pink_circles(
             img, debug=util.factory_mode(), **settings
@@ -708,9 +746,7 @@ class CameraPlugin(
             #     settings_corners, positions_pink_circles
             # )
             try:
-                simple_pos = {
-                    qd: v["pos"] for qd, v in positions_pink_circles.items()
-                }
+                simple_pos = {qd: v["pos"] for qd, v in positions_pink_circles.items()}
             except Exception as e:
                 self._logger.debug("do corners error %s", e)
                 raise MarkerError(
@@ -734,7 +770,7 @@ class CameraPlugin(
         return buff, ts, positions_pink_circles
 
     def start_lens_calibration_daemon(self):
-        """Start the Lens Calibration"""
+        """Start the Lens Calibration."""
         from .lens import BoardDetectorDaemon
 
         if self.lens_calibration_thread:
@@ -785,6 +821,27 @@ class CameraPlugin(
         else:
             self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_DONE)
 
+    @octoprint.plugin.BlueprintPlugin.route("/calibration_login", methods=["POST"])
+    def calibration_login(self):
+        from octoprint.access import ADMIN_GROUP, USER_GROUP
+
+        # if user file is present or the first run flag is not set return Forbidden
+        if not self._settings.global_get(["server", "firstRun"]):
+            self._logger.debug("acl_wizard_api() Forbidden")
+            return make_response("Forbidden", 403)
+
+        # configure access control
+        self._logger.debug("acl_wizard_api() creating admin user")
+        self._user_manager.add_user(
+            "calibration@mr-beam.org",
+            "a",
+            True,
+            [],
+            [USER_GROUP, ADMIN_GROUP],
+            overwrite=True,
+        )
+        return NO_CONTENT
+
 
 __plugin_name__ = "Camera"
 __plugin_pythoncompat__ = ">=2.7,<4"
@@ -821,6 +878,9 @@ def __plugin_load__():
                     settings=["serial", "webcam", "terminalfilters"],
                 ),
             )
+        ),
+        server=dict(
+            firstRun=True,
         ),
     )
     global __plugin_hooks__

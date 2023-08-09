@@ -66,7 +66,7 @@ class BoardDetectorDaemon(lens.BoardDetectorDaemon):
         index=None,
         **kw
     ):
-        """prototype board detection with 1 extra row + 3 extra columns"""
+        """prototype board detection with 1 extra row + 3 extra columns."""
         return lens.BoardDetectorDaemon.add(
             self, image, chessboardSize=chessboardSize, state=state, index=index, **kw
         )

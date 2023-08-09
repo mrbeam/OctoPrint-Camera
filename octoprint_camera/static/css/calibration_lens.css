@@ -1,7 +1,7 @@
 #heatmap_container {
-    /* User calibration case */
-    max-width: 100%;
-    height: auto;
+  /* User calibration case */
+  max-width: 100%;
+  height: auto;
 }
 
 #segment_group rect {
@@ -15,10 +15,10 @@
 }
 
 #initial_camera_calibration #heatmap_container {
-    /* Factory calibration case */
-    width: calc(95% - 10rem - 110px);
-    max-width: 25rem;
-    display: inline-block;
+  /* Factory calibration case */
+  width: calc(95% - 10rem - 110px);
+  max-width: 25rem;
+  display: inline-block;
 }
 
 #initial_camera_calibration .tab-pane {
@@ -26,19 +26,18 @@
   margin: auto;
 }
 #initial_camera_calibration #tab_lens_calibration.tab-pane {
-    position: center;
-    width:100%;
+  position: center;
+  width: 100%;
 }
-
 
 #lensCalibrationPhases.qa_active #lensCalibrationPictureTaking,
 #lensCalibrationPhases #lensCalibrationQA {
-    display: none;
+  display: none;
 }
 
 #lensCalibrationPhases.qa_active #lensCalibrationQA,
 #lensCalibrationPhases #lensCalibrationPictureTaking {
-    display: block;
+  display: block;
 }
 
 #lensCalibrationPictureTaking {
@@ -46,57 +45,57 @@
 }
 
 #lens_calibration_take_pic {
-    color: #fff;
-    border-radius: 50%;
-    width: 5em;
-    height: 5em;
-    display: inline-block;
-    margin-top: -75px;
-    margin-left: -5px;
-    position: relative;
-    z-index: 1;
+  color: #fff;
+  border-radius: 50%;
+  width: 5em;
+  height: 5em;
+  display: inline-block;
+  margin-top: -75px;
+  margin-left: -5px;
+  position: relative;
+  z-index: 1;
 }
 
 #lens_calibration_toggle_qa_btn {
-    position: absolute;
-    bottom: 40px;
-    right: 0;
+  position: absolute;
+  bottom: 40px;
+  right: 0;
 }
 
 #lens_calibration_take_pic {
-    color: #fff;
-    border-radius: 50%;
-    width: 5em;
-    height: 5em;
-    display: inline-block;
-    margin-top: -75px;
-    margin-left: -5px;
-    position: relative;
-    z-index: 1;
+  color: #fff;
+  border-radius: 50%;
+  width: 5em;
+  height: 5em;
+  display: inline-block;
+  margin-top: -75px;
+  margin-left: -5px;
+  position: relative;
+  z-index: 1;
 }
 
 #lens_calibration_toggle_qa_btn {
-    position: absolute;
-    bottom: 40px;
-    right: 0;
+  position: absolute;
+  bottom: 40px;
+  right: 0;
 }
 
 #recalculate_lens_calibration_btn {
-    height: 5em;
-    margin-bottom: 20px;
-    display: inline-block;
-    right: 0;
-    bottom: 0;
-    z-index: 0;
-    position: absolute;
+  height: 5em;
+  margin-bottom: 20px;
+  display: inline-block;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  position: absolute;
 }
 
 #lens_calibration_steps_and_heatmap {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
 }
 
 #lens_calibration_steps_and_heatmap div {
-    margin: 0 4% 0 0;
-    position: relative;
+  margin: 0 4% 0 0;
+  position: relative;
 }

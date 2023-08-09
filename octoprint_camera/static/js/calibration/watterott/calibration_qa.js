@@ -12,10 +12,12 @@ $(function () {
         window.mrbeam.viewModels["cameraQAViewModel"] = self;
         self.calibration = parameters[0];
         self.camera = parameters[1];
-        self.cornerCalibration = parameters[2];//size 500 390
+        self.cornerCalibration = parameters[2]; //size 500 390
         self.camera.loadPicture();
         self.tabActive = ko.computed(function () {
-            return self.calibration.activeTab() === self.calibration.TABS.quality;
+            return (
+                self.calibration.activeTab() === self.calibration.TABS.quality
+            );
         });
         self.qa_image_loaded = ko.observable(false);
         self.camera.croppedUrl.subscribe(function (newValue) {
@@ -49,22 +51,20 @@ $(function () {
             // out the markers instead of the image itself
             let size = self.camera.pictureSize.both();
             let offset = size.map(
-                (x) => - x * self.camera.imgHeightScale() // * size[0] / 500
+                (x) => -x * self.camera.imgHeightScale() // * size[0] / 500
             );
-            let scale_ratio = (1 + 2 * self.camera.imgHeightScale())
+            let scale_ratio = 1 + 2 * self.camera.imgHeightScale();
             return (
                 "scale(" +
-                1 / ( size[0] / 500) * scale_ratio + 
+                (1 / (size[0] / 500)) * scale_ratio +
                 " " +
-                1 / ( size[1] / 390) * scale_ratio + 
+                (1 / (size[1] / 390)) * scale_ratio +
                 ") translate(" +
                 offset.join(" ") +
                 ")"
             );
         });
     }
-
-
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([

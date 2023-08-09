@@ -12,7 +12,5 @@ $(function () {
         // "MRBEAM_SW_TIER: " + MRBEAM_SW_TIER,
         // "MRBEAM_ENV: " + MRBEAM_ENV,
     ];
-    $("#settings_mrbeam_debug_state").html(
-        msg.join("\n")
-    );
+    $("#settings_mrbeam_debug_state").html(msg.join("\n"));
 });

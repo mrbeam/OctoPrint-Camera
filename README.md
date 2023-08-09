@@ -41,7 +41,7 @@ factory_raw_calibMarkers:
   SE: [SEx, SEy]
   SW: [SWx, SWy]
 
-## Position of the corners (arrow tips), as found during the calibration 
+## Position of the corners (arrow tips), as found during the calibration
 # [User]
 raw_cornersFromImage:
   NE: [NEx, NEy]
@@ -58,7 +58,7 @@ factory_raw_cornersFromImage:
 # Hostname - allows to sanity check in case of bad backup
 hostname_KEY: MrBeam-DB78
 # version of the OctoPrint-MrBeam plugin
-version: 0.1.16 
+version: 0.1.16
 
 ### LEGACY ###
 # Only created from legacy factory mode and older user corner calibration #
@@ -76,7 +76,7 @@ cornersFromImage:
   SE: [SEx, SEy]
   SW: [SWx, SWy]
 
-### UNUSED ### 
+### UNUSED ###
 # Could be used - but is not because it's a bad idea
 
 # Position of the pink circles on the lens corrected image [User]
@@ -129,7 +129,7 @@ calibMarkers:
   NW: [NWx, NWy]
   SE: [SEx, SEy]
   SW: [SWx, SWy]
-# Last used shutter speed for brightness adjustment;  
+# Last used shutter speed for brightness adjustment;
 shutter_speed: 133018
 # MrBeamPlugin version (makes it easier for migrations)
 version: 0.9.4.0

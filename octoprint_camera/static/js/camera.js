@@ -34,9 +34,8 @@ $(function () {
             SE: gettext("Bottom right"),
         };
 
-
         // TODO : plainPicture = {data: <base 64 src>, timestamp: <timestamp>}
-        self.rawUrl = ko.observable(""); 
+        self.rawUrl = ko.observable("");
         ///downloads/files/local/cam/debug/raw.jpg// TODO get from settings
         // TODO : bestPicture = {data: <base 64 src>, timestamp: <timestamp>}
         self.croppedUrl = ko.observable("");
@@ -54,9 +53,14 @@ $(function () {
             SE: ko.observable(),
             NE: ko.observable(),
         };
-        self.allMarkersFound = ko.computed(function(){
-            return self.markersFound['NW']() && self.markersFound['SW']() && self.markersFound['SE']() && self.markersFound['NE']();
-        })
+        self.allMarkersFound = ko.computed(function () {
+            return (
+                self.markersFound["NW"]() &&
+                self.markersFound["SW"]() &&
+                self.markersFound["SE"]() &&
+                self.markersFound["NE"]()
+            );
+        });
         self.maxObjectHeight = 38; // in mm
         self.defaultMargin = self.maxObjectHeight / 582;
         self.objectZ = ko.observable(0); // in mm
@@ -77,14 +81,14 @@ $(function () {
             both: ko.observable(false),
         };
         self.pictureSize = {
-            plain: ko.observable([null,null]),
-            corner: ko.observable([null,null]),
-            lens: ko.observable([null,null]),
-            both: ko.observable([null,null]),
+            plain: ko.observable([null, null]),
+            corner: ko.observable([null, null]),
+            lens: ko.observable([null, null]),
+            both: ko.observable([null, null]),
         };
         self.pic_timestamp = ko.observable("");
         // We only refresh the picture if the timestamp has changed from the current one.
-        self.pic_timestamp.subscribe(self.refreshPicture)
+        self.pic_timestamp.subscribe(self.refreshPicture);
 
         self.needsCornerCalibration = ko.computed(function () {
             return !self.availablePicTypes.corners();
@@ -131,41 +135,45 @@ $(function () {
         };
         self.loadAvaiableCorrection = function () {
             let success_callback = function (data) {
-                console.log('corrections', data.available_corrections);
+                console.log("corrections", data.available_corrections);
                 PIC_TYPES.forEach(function (m) {
-                    self.availablePicTypes[m](data.available_corrections.includes(m));
+                    self.availablePicTypes[m](
+                        data.available_corrections.includes(m)
+                    );
                 });
             };
             let error_callback = function (resp) {
                 console.log("available_corrections request error", resp);
             };
-            self.simpleApiCommand("available_corrections", {}, success_callback, error_callback, "GET");
-        }
+            self.simpleApiCommand(
+                "available_corrections",
+                {},
+                success_callback,
+                error_callback,
+                "GET"
+            );
+        };
         self.loadPicture = function () {
             self.getImage(GET_IMG.last, GET_IMG.pic_both);
-        }
+        };
         self.loadPictureRaw = function () {
             self.getImage(GET_IMG.last, GET_IMG.pic_plain);
-        }
+        };
         self.getImage = function (which, pic_type) {
             if (!self.imageLoading()) {
                 self.imageLoading(true);
-                if (which == null)
-                    which = GET_IMG.last
-                if (pic_type == null)
-                    pic_type = GET_IMG.pic_plain
+                if (which == null) which = GET_IMG.last;
+                if (pic_type == null) pic_type = GET_IMG.pic_plain;
                 let success_callback = function (data) {
                     self.imageLoading(false);
-                    if(data.image) {
-                        let imgData = 'data:image/jpg;base64,' + data.image
-                        if (pic_type == GET_IMG.pic_plain)
-                            self.rawUrl(imgData);
+                    if (data.image) {
+                        let imgData = "data:image/jpg;base64," + data.image;
+                        if (pic_type == GET_IMG.pic_plain) self.rawUrl(imgData);
                         else if (pic_type == GET_IMG.pic_corner)
                             self.cornerUrl(imgData);
                         else if (pic_type == GET_IMG.pic_lens)
                             self.lensUrl(imgData);
-                        else
-                            self.croppedUrl(imgData);
+                        else self.croppedUrl(imgData);
                         self.timestamp = data.timestamp;
                         if (data.positions_found) {
                             MARKERS.forEach(function (m) {
@@ -173,7 +181,7 @@ $(function () {
                             });
                         }
                         let img = new Image();
-                        img.onload = function(){
+                        img.onload = function () {
                             self.pictureSize[pic_type]([img.width, img.height]);
                         };
                         img.src = imgData;
@@ -184,25 +192,35 @@ $(function () {
                     self.imageLoading(false);
                     console.log("image request error", resp);
                 };
-                self.simpleApiCommand("image", {
-                    which: which,
-                    pic_type: pic_type
-                }, success_callback, error_callback, "GET");
+                self.simpleApiCommand(
+                    "image",
+                    {
+                        which: which,
+                        pic_type: pic_type,
+                    },
+                    success_callback,
+                    error_callback,
+                    "GET"
+                );
             } else {
-                console.log('image already loading, waiting for response');
+                console.log("image already loading, waiting for response");
             }
-        }
+        };
 
-        self.startReloadImageLoop = function (which="last", pic_type="plain", tab="undefined") {
+        self.startReloadImageLoop = function (
+            which = "last",
+            pic_type = "plain",
+            tab = "undefined"
+        ) {
             self.stopReloadImageLoop();
             //reloads image every 3 seconds
-            self._reloadImageInterval = setInterval(function(){
+            self._reloadImageInterval = setInterval(function () {
                 self.getImage(which, pic_type);
             }, 3000);
-        }
+        };
         self.stopReloadImageLoop = function () {
             clearInterval(self._reloadImageInterval);
-        }
+        };
 
         // event listener callbacks //
         // Called after all view models have been bound, with the list of all view models as the single parameter.
@@ -211,7 +229,6 @@ $(function () {
                 // TODO : get value from backend / websocket
                 return true;
             });
-            self.webCamImageElem = $("#beamcam_image_svg");
             self.cameraMarkerElem = $("#camera_markers");
 
             //TODO Maybe needed for user calibration
@@ -219,10 +236,6 @@ $(function () {
             //     // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
             //     self.webCamImageElem.attr("filter", "");
             // }
-
-            self.webCamImageElem.load(function () {
-                self.countImagesLoaded(self.countImagesLoaded() + 1);
-            });
 
             // trigger initial loading of the image
             self.getImage(GET_IMG.last, GET_IMG.pic_plain);
@@ -277,15 +290,15 @@ $(function () {
                     self.cameraMarkerElem.attr({
                         style: "filter: url(#grayscale_filter)",
                     });
-                } else self.cameraMarkerElem.attr({style: ""});
+                } else self.cameraMarkerElem.attr({ style: "" });
             }
             return ret;
         });
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
-            console.log('plugin message', plugin, data);
+            console.log("plugin message", plugin, data);
             if ("newImage" in data) {
-                self.pic_timestamp(data.timestamp)
+                self.pic_timestamp(data.timestamp);
             }
 
             if ("beam_cam_new_image" in data) {
@@ -318,9 +331,11 @@ $(function () {
         };
 
         self._needCalibration = function (val) {
-            if ((val === undefined || val) &&
+            if (
+                (val === undefined || val) &&
                 !self.needsCornerCalibration() &&
-                !window.mrbeam.isFactoryMode()) {
+                !window.mrbeam.isFactoryMode()
+            ) {
                 new PNotify({
                     title: gettext("Corner Calibration needed"),
                     text: gettext(
@@ -441,11 +456,7 @@ $(function () {
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([
         CameraViewModel,
-        [
-            "settingsViewModel",
-            "loginStateViewModel",
-            "printerStateViewModel",
-        ],
+        ["settingsViewModel", "loginStateViewModel", "printerStateViewModel"],
         [], // nothing to bind.
     ]);
 });

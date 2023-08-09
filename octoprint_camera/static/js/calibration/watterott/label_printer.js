@@ -13,10 +13,12 @@ $(function () {
         self.calibration = parameters[0];
         self.lensCalibration = parameters[1];
 
-        self.qaDone = ko.computed(function() {
-                return self.calibration.camera.availablePicTypes.corners() && self.lensCalibration.lensCalibrationComplete()
-            }
-        );
+        self.qaDone = ko.computed(function () {
+            return (
+                self.calibration.camera.availablePicTypes.corners() &&
+                self.lensCalibration.lensCalibrationComplete()
+            );
+        });
 
         self.printLabel = function (labelType, event) {
             let button = $(event.target);
@@ -24,7 +26,11 @@ $(function () {
             button.prop("disabled", true);
             self.calibration.simpleApiCommand(
                 "print_label",
-                JSON.stringify({ command: 'print_label', labelType: labelType, blink: true }),
+                JSON.stringify({
+                    command: "print_label",
+                    labelType: labelType,
+                    blink: true,
+                }),
                 function () {
                     button.prop("disabled", false);
                     new PNotify({
@@ -43,20 +49,22 @@ $(function () {
                         hide: false,
                     });
                 },
-                "POST",
+                "POST"
             );
         };
 
-        self.shutdown = function(d, ev) {
-            successCallback = function() {
+        self.shutdown = function (d, ev) {
+            successCallback = function () {
                 new PNotify({
                     title: gettext("Device is turning off"),
-                    text: gettext("The lights on the device will turn off in a few seconds"),
+                    text: gettext(
+                        "The lights on the device will turn off in a few seconds"
+                    ),
                     type: "info",
                     hide: false,
                 });
             };
-            failCallback = function() {
+            failCallback = function () {
                 new PNotify({
                     title: gettext("Turning off device"),
                     text: gettext("Is the device still connected?"),
@@ -69,9 +77,9 @@ $(function () {
                 {},
                 successCallback,
                 failCallback,
-                "GET",
+                "GET"
             );
-        }
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

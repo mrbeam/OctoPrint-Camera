@@ -5,7 +5,7 @@ $(function () {
         var self = this;
         self.onStartup = function () {
             showDialog("#calibrationModeModal", function (dialog) {
-                calibrationModeMessage.modal('hide');
+                calibrationModeMessage.modal("hide");
             });
         };
     }
@@ -25,7 +25,7 @@ $(function () {
             return;
         }
         calibrationModeMessage = $(dialogId);
-        if(calibrationModeMessage) {
+        if (calibrationModeMessage) {
             var cancelButton = $("button.btn-confirm", calibrationModeMessage);
 
             cancelButton.unbind("click");
@@ -33,18 +33,20 @@ $(function () {
                 confirmFunction(calibrationModeMessage);
             });
 
-            calibrationModeMessage.modal({
-                //minHeight: function() { return Math.max($.fn.modal.defaults.maxHeight() - 80, 250); }
-                keyboard: false,
-                clickClose: false,
-                showClose: false,
-                backdrop: "static"
-            }).css({
-                width: 'auto',
-                'margin-left': function () {
-                    return -($(this).width() / 2);
-                }
-            });
+            calibrationModeMessage
+                .modal({
+                    //minHeight: function() { return Math.max($.fn.modal.defaults.maxHeight() - 80, 250); }
+                    keyboard: false,
+                    clickClose: false,
+                    showClose: false,
+                    backdrop: "static",
+                })
+                .css({
+                    width: "auto",
+                    "margin-left": function () {
+                        return -($(this).width() / 2);
+                    },
+                });
         }
     }
 });

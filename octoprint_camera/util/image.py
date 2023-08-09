@@ -9,7 +9,7 @@ from octoprint_mrbeam.camera.definitions import SUCCESS_WRITE_RETVAL
 
 
 def imdecode(stream, flags=cv2.IMREAD_COLOR):
-    """Tries to convert an io.BytesIO buffer into an cv2/numpy image"""
+    """Tries to convert an io.BytesIO buffer into an cv2/numpy image."""
     streamval = stream.getvalue()
     if not streamval:
         return
@@ -17,7 +17,7 @@ def imdecode(stream, flags=cv2.IMREAD_COLOR):
 
 
 def imencode(cv2_img, encoding=".jpg", flags=(int(cv2.IMWRITE_JPEG_QUALITY), 90)):
-    """Encode a cv2/numpy image into an io.BytesIO buffer"""
+    """Encode a cv2/numpy image into an io.BytesIO buffer."""
     retval, np_buff = cv2.imencode(encoding, cv2_img, flags)
     buff = io.BytesIO()
     # np_buff.tobytes() returns a string-like object in py2, bytes in py3
@@ -27,10 +27,8 @@ def imencode(cv2_img, encoding=".jpg", flags=(int(cv2.IMWRITE_JPEG_QUALITY), 90)
 
 
 def imwrite(buff, cv2_img, *a, **kw):
-    """
-    Write a cv2/numpy image to an io.BytesIO buffer or a filepath (str)
-    returns True if successful
-    """
+    """Write a cv2/numpy image to an io.BytesIO buffer or a filepath (str)
+    returns True if successful."""
     return cv2.imwrite(buff, cv2_img, *a, **kw) == SUCCESS_WRITE_RETVAL
 
 

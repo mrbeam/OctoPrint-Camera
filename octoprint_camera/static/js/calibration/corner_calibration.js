@@ -20,7 +20,9 @@ $(function () {
         self.camera = parameters[1];
         // self.analytics = parameters[4]; //TODO disabled for watterott//todo enable analytic
         self.tabActive = ko.computed(function () {
-            return self.calibration.activeTab() === self.calibration.TABS.corner;
+            return (
+                self.calibration.activeTab() === self.calibration.TABS.corner
+            );
         });
         self.interval = null;
         self.cornerCalibrationActive = ko.observable(false);
@@ -47,13 +49,13 @@ $(function () {
 
         self.crossSize = ko.observable(50);
 
-        self.calImgSize = ko.computed(function() {
+        self.calImgSize = ko.computed(function () {
             if (self._cornerCalImgUrl()) {
                 let img = new Image();
-                img.onload = function(){
+                img.onload = function () {
                     self.calImgWidth(img.width);
                     self.calImgHeight(img.height);
-                }
+                };
                 img.src = self._cornerCalImgUrl();
             }
         });
@@ -65,9 +67,9 @@ $(function () {
         self.calSvgDy = ko.observable(0);
         self.calSvgScale = ko.observable(1);
 
-        self.calibrationMarkers = ko.computed(function() {
+        self.calibrationMarkers = ko.computed(function () {
             return [
-                {name: "start", desc: "click to start", focus: [0, 0, 1]},
+                { name: "start", desc: "click to start", focus: [0, 0, 1] },
                 {
                     name: "NW",
                     desc: self.camera.MARKER_DESCRIPTIONS["NW"],
@@ -144,7 +146,7 @@ $(function () {
         // };
 
         self._getImgUrl = function (type, applyCrossVisibility) {
-            self.camera.getImage('next', type);
+            self.camera.getImage("next", type);
             return self.camera.rawUrl();
             if (type !== undefined) {
                 self.applySetting(type, applyCrossVisibility);
@@ -161,8 +163,8 @@ $(function () {
             return self.staticURL; // precaution
         };
 
-        self.cornerCalImgUrl = ko.computed(function(){
-            if (!self.cornerCalibrationActive()){
+        self.cornerCalImgUrl = ko.computed(function () {
+            if (!self.cornerCalibrationActive()) {
                 if (self.camera.availablePicTypes.corners()) {
                     self._cornerCalImgUrl(self.camera.cornerUrl());
                     self.correctedMarkersVisibility("hidden");
@@ -176,7 +178,7 @@ $(function () {
             return self._cornerCalImgUrl();
         });
 
-        self.cornerCalibrationActive.subscribe(function(isActive){
+        self.cornerCalibrationActive.subscribe(function (isActive) {
             // Change the plain picture when the calibration is started,
             // Only triggers once per state change.
             if (isActive) {
@@ -184,7 +186,7 @@ $(function () {
                 self.correctedMarkersVisibility("visible");
                 self.croppedMarkersVisibility("hidden");
             }
-        })
+        });
 
         self.cornerCalibrationComplete = ko.computed(function () {
             if (Object.keys(self.currentResults()).length !== 4) return false;
@@ -224,7 +226,6 @@ $(function () {
             self._reloadImageLoop();
         };
 
-
         self._reloadImageLoop = function () {
             // Make sure that the latest plain and/or corner corrected pictures
             // are available to display.
@@ -236,33 +237,33 @@ $(function () {
                     self.camera.getImage(GET_IMG.last, GET_IMG.pic_plain);
                 }
                 self.dbNWImgUrl(
-                    "/downloads/files/local/cam/debug/NW.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
+                    "/plugin/camera/image/NW.jpg" +
+                        "?ts=" +
+                        new Date().getTime()
                 );
                 self.dbNEImgUrl(
-                    "/downloads/files/local/cam/debug/NE.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
+                    "/plugin/camera/image/NE.jpg" +
+                        "?ts=" +
+                        new Date().getTime()
                 );
                 self.dbSWImgUrl(
-                    "/downloads/files/local/cam/debug/SW.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
+                    "/plugin/camera/image/SW.jpg" +
+                        "?ts=" +
+                        new Date().getTime()
                 );
                 self.dbSEImgUrl(
-                    "/downloads/files/local/cam/debug/SE.jpg" +
-                    "?ts=" +
-                    new Date().getTime()
+                    "/plugin/camera/image/SE.jpg" +
+                        "?ts=" +
+                        new Date().getTime()
                 );
             }
-        }
+        };
         self._startReloadImageLoop = function () {
-            self.interval = setInterval(self._reloadImageLoop, 3000);//reloads image every 3 seconds
-        }
+            self.interval = setInterval(self._reloadImageLoop, 3000); //reloads image every 3 seconds
+        };
         self._stopReloadImageLoop = function () {
             clearInterval(self.interval);
-        }
+        };
 
         self.onSettingsHidden = function () {
             if (self.cornerCalibrationActive()) {
@@ -288,22 +289,23 @@ $(function () {
             self.cornerCalibrationActive(true);
             self._stopReloadImageLoop();
             // self.markersFoundPositionCopy = self.markersFoundPosition();
-            markers = {}
+            let markers = {};
             MARKERS.forEach(function (m) {
                 if (self.camera.markersFound[m]() == null) {
-                    console.log("Not all Markers found, are the pink circles obstructed?");
+                    console.log(
+                        "Not all Markers found, are the pink circles obstructed?"
+                    );
                 }
-                markers[m] = self.camera.markersFound[m]()['pos'];
-            })
+                markers[m] = self.camera.markersFound[m]()["pos"];
+            });
             self.markersFoundPositionCopy = markers;
             self.nextMarker();
             self.correctedMarkersVisibility(true);
-
         };
 
         self.loadNewPicture = function () {
             self._reloadImageLoop();
-        }
+        };
 
         self.abortCornerCalibration = function () {
             // self.analytics.send_fontend_event("corner_calibration_abort", {});//todo enable analytic
@@ -327,7 +329,7 @@ $(function () {
                 self._saveMarkersError,
                 "POST"
             );
-            self.camera.loadAvaiableCorrection() //todo find a better place
+            self.camera.loadAvaiableCorrection();
             self.resetView();
         };
 
@@ -477,7 +479,8 @@ $(function () {
         };
 
         self._getClickPos = function (ev) {
-            var bbox = ev.target.parentElement.parentElement.getBoundingClientRect();
+            const bbox =
+                ev.target.parentElement.parentElement.getBoundingClientRect();
             var clickpos = {
                 xScreenPx: ev.clientX - bbox.left,
                 yScreenPx: ev.clientY - bbox.top,

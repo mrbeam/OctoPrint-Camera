@@ -1,0 +1,17 @@
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - alpha
+      - beta
+      - stable
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  build:
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
+    secrets: inherit
+    with:
+      source_dir: octoprint_camera
+      exclude_from_coverage: octoprint_camera/static/**/*,octoprint_camera/_version.py

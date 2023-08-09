@@ -16,14 +16,14 @@ $(function () {
         self.calibration = parameters[0];
         self.camera = parameters[1];
         // self.analytics = parameters[2]; //TODO disabled for watterott
-        // TODO Pahse 2 - Determine whether the lens calibration is active from backend 
+        // TODO Pahse 2 - Determine whether the lens calibration is active from backend
         self.lensCalibrationActive = ko.observable(true);
         self.lensCalibrationNpzFileTs = ko.observable(null);
         self.rawPicSelection = ko.observableArray([]);
         self.images = {};
-        self.updateCounter = ko.observable(0)
-        self.basename = function(str, sep) {
-            if (sep === undefined){
+        self.updateCounter = ko.observable(0);
+        self.basename = function (str, sep) {
+            if (sep === undefined) {
                 sep = "/";
             }
             return str.substr(str.lastIndexOf(sep) + 1);
@@ -31,7 +31,7 @@ $(function () {
         /*  Apply the info to our list of images
             The imgInfo could also contain the b64 encoded images
         */
-        self.images_update = function(imgInfo) {
+        self.images_update = function (imgInfo) {
             // imgInfo = {
             // '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
             //      state: "processing",
@@ -51,33 +51,42 @@ $(function () {
                 // Check if the image had already been saved previously
                 if (self.images[path]) {
                     // only update the image if there is data
-                    if (value.image){
+                    if (value.image) {
                         if (self.images[path].image)
                             self.images[path].image(value.image);
                         else
-                            self.images[path].image = ko.observable(value.image);
+                            self.images[path].image = ko.observable(
+                                value.image
+                            );
                     }
                     // update all other observables
                     for (const [key, val] of Object.entries(value)) {
                         if (key != "image") {
                             if (self.images[path][key] instanceof ko.observable)
-                                self.images[path][key](val)
-                            else
-                                self.images[path][key] = ko.observable(val)
+                                self.images[path][key](val);
+                            else self.images[path][key] = ko.observable(val);
                         }
                     }
                 } else {
-                    self.images[path] = {}
+                    self.images[path] = {};
                     // initialise our image with observables
                     for (const [key, val] of Object.entries(value)) {
                         self.images[path][key] = ko.observable(val);
                     }
-                    if (! self.images[path].timestamp)
+                    if (!self.images[path].timestamp)
                         self.images[path].timestamp = ko.observable();
-                    self.images[path].url = ko.computed(function() {
+                    self.images[path].url = ko.computed(function () {
                         // self.updateCounter(self.updateCounter()+1)
-                        let query=(self.images[path].state() == "success") ? "success" : "wait";
-                        return "/downloads/files/local/cam/debug/" + self.basename(path) + "?" + query;
+                        let query =
+                            self.images[path].state() == "success"
+                                ? "success"
+                                : "wait";
+                        return (
+                            "/plugin/camera/image/" +
+                            self.basename(path) +
+                            "?" +
+                            query
+                        );
                     });
                     // // KO version < 3.5 hack to update the successful images
                     // //   1. self.getLensCalibrationImage receives the timestamp for the image we need
@@ -106,24 +115,25 @@ $(function () {
             }
 
             // TODO : Remove images that were dropped
-            Object.keys(self.images).filter(x => ! Object.keys(imgInfo).includes(x))
-                                    .forEach(function(path){
-                delete self.images[path];
-            })
+            Object.keys(self.images)
+                .filter((x) => !Object.keys(imgInfo).includes(x))
+                .forEach(function (path) {
+                    delete self.images[path];
+                });
             // Hack : Refresh the array of images to display
-            //        The rawPicSelection does not have direct 
+            //        The rawPicSelection does not have direct
             //        bindings to the observables in self.images
-            self.updateCounter(self.updateCounter()+1)
+            self.updateCounter(self.updateCounter() + 1);
             // self.update_rawPicSelection();
         };
 
-        self.update_rawPicSelection = ko.computed(function() {
-            // Hack : Use the counter as a direct observable 
-            //        The rawPicSelection does not have direct 
+        self.update_rawPicSelection = ko.computed(function () {
+            // Hack : Use the counter as a direct observable
+            //        The rawPicSelection does not have direct
             //        bindings to the observables in self.images
-            self.updateCounter()
+            self.updateCounter();
             // inneficient:
-            // 1. ko.toJS(img_arr) will make a copy of the content, 
+            // 1. ko.toJS(img_arr) will make a copy of the content,
             //    including the images  -> huge waste of ram
             let img_arr = [];
             for (const [path, value] of Object.entries(self.images)) {
@@ -342,17 +352,18 @@ $(function () {
             let index = this.index;
             let path = this.path;
             // TODO gray out image while waiting for confirmation
-            //      - A bit more difficult than expected. 
+            //      - A bit more difficult than expected.
             //        Probably requires to update self.rawPicSelection
             new PNotify({
                 title: gettext("Deleting picture..."),
                 text: gettext("Please wait a second..."),
                 type: "warning",
-                hide: true,});
+                hide: true,
+            });
             self.camera.simpleApiCommand(
                 "lens_calibration_del_image",
                 JSON.stringify({ path: path }),
-                function() {
+                function () {
                     $("#heatmap_board" + index).remove();
                     self._refreshPics();
                 },
@@ -471,7 +482,7 @@ $(function () {
         };
 
         /* Lens Calibration QA view - Factory only */
-        self.refreshQAImg = function(which) {
+        self.refreshQAImg = function (which) {
             // which : GET_IMG.last or GET_IMG.next
             return self.camera.getImage(which, GET_IMG.pic_lens);
         };
@@ -479,19 +490,23 @@ $(function () {
         self.lensCalibrationToggleQA = function () {
             $("#lensCalibrationPhases").toggleClass("qa_active");
             if ($("#lensCalibrationPhases").hasClass("qa_active"))
-                self.camera.startReloadImageLoop("last", "lens",tab='lens tab active');
-                // self.refreshQAImg(GET_IMG.last);
+                self.camera.startReloadImageLoop(
+                    "last",
+                    "lens",
+                    "lens tab active"
+                );
+            // self.refreshQAImg(GET_IMG.last);
         };
         self._tabActive = ko.observable(false);
         self.calibration.activeTab.subscribe(function (activeTab) {
-                self._tabActive(activeTab === self.calibration.TABS.lens);
-            })
-            // self._reloadImageLoop();
-            self._tabActive.subscribe(function (active) {
-                if (!active){
-                    self.camera.stopReloadImageLoop();
-                }
-            })
+            self._tabActive(activeTab === self.calibration.TABS.lens);
+        });
+        // self._reloadImageLoop();
+        self._tabActive.subscribe(function (active) {
+            if (!active) {
+                self.camera.stopReloadImageLoop();
+            }
+        });
 
         self.lensCalibrationNpzFileVerboseDate = ko.computed(function () {
             const ts = self.lensCalibrationNpzFileTs();
@@ -514,7 +529,7 @@ $(function () {
         // e.g. loginStateViewModel, settingsViewModel, ...
         [
             "calibrationViewModel",
-            "cameraViewModel"
+            "cameraViewModel",
             // "analyticsViewModel", #TODO in MRBEAM plugin included
         ],
 

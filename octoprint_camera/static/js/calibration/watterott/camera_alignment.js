@@ -16,27 +16,29 @@ $(function () {
         self.qa_cameraalignment_image_loaded = ko.observable(false);
         self._tabActive = ko.observable(true);
 
-        self.camera.rawUrl.subscribe(function(newValue){
-           if (newValue) {
-               self.qa_cameraalignment_image_loaded(true);
-           }else{
-               self.qa_cameraalignment_image_loaded(false);
-           }
+        self.camera.rawUrl.subscribe(function (newValue) {
+            if (newValue) {
+                self.qa_cameraalignment_image_loaded(true);
+            } else {
+                self.qa_cameraalignment_image_loaded(false);
+            }
         });
         self.camera.startReloadImageLoop("last", "plain", "alignment init");
         self.calibration.activeTab.subscribe(function (activeTab) {
-                self._tabActive(activeTab === self.calibration.TABS.alignment);
-            })
-            // self._reloadImageLoop();
-            self._tabActive.subscribe(function (active) {
-                if (active) {
-                    self.camera.startReloadImageLoop("last", "plain",tab='alignment tab active');
-                } else {
-                    self.camera.stopReloadImageLoop();
-                }
-            })
-
-
+            self._tabActive(activeTab === self.calibration.TABS.alignment);
+        });
+        // self._reloadImageLoop();
+        self._tabActive.subscribe(function (active) {
+            if (active) {
+                self.camera.startReloadImageLoop(
+                    "last",
+                    "plain",
+                    "alignment tab active"
+                );
+            } else {
+                self.camera.stopReloadImageLoop();
+            }
+        });
     }
 
     // view model class, parameters for constructor, container to bind to
@@ -44,11 +46,7 @@ $(function () {
         CameraAlignmentViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [
-            "calibrationViewModel",
-            "cameraViewModel",
-            "lensCalibrationViewModel",
-        ],
+        ["calibrationViewModel", "cameraViewModel", "lensCalibrationViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#tab_camera_alignment", "#tab_camera_alignment_wrap"],

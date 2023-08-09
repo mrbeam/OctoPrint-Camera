@@ -69,7 +69,6 @@ $(function () {
             );
         });
 
-
         self.cameraStatusOk = ko.computed(function () {
             return (
                 self.readyToLaser.lid_fully_open() &&
@@ -131,7 +130,9 @@ $(function () {
 
         self.markerDetectionMode = function () {
             // retrieve the detection mode from the back end
-            remember = self.settings.plugins.camera.corrections.remember_markers_across_sessions;
+            const remember =
+                self.settings.plugins.camera.corrections
+                    .remember_markers_across_sessions;
             if (remember === undefined) return "reliable";
             else return remember() ? "reliable" : "accurate";
         };
@@ -146,7 +147,10 @@ $(function () {
                 // self.settings.plugins.mrbeam.cam.remember_markers_across_sessions(true);
                 let _data = {
                     cam: {
-                        corrections: { remember_markers_across_sessions: val === "reliable",},
+                        corrections: {
+                            remember_markers_across_sessions:
+                                val === "reliable",
+                        },
                     },
                 };
                 $("#camera_settings_marker_detection button").prop(
@@ -206,10 +210,8 @@ $(function () {
 
         self.onAllBound = function () {
             self.setMarkerDetectionMode();
-            new MutationObserver(
-                self._testCameraSettingsActive
-            ).observe(
-                document.getElementById("settings_plugin_mrbeam_camera"),
+            new MutationObserver(self._testCameraSettingsActive).observe(
+                document.getElementById("initial_camera_calibration"),
                 { attributes: true }
             );
         };

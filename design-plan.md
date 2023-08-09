@@ -84,7 +84,7 @@ Each request can yield an error message `{error: <error message>, errcode: <erro
 
 `[GET] /image`
 
-Returns the latest available image to diplay on the interface  
+Returns the latest available image to diplay on the interface
 Should return err msg if the picture cannot be processed ...
 
 - __payload__:
@@ -96,13 +96,13 @@ Should return err msg if the picture cannot be processed ...
    }
     ```
 
-    - Which:  
-      `available` : The last taken image  
+    - Which:
+      `available` : The last taken image
       `next` : wait for the next image taken
-    - Picture Type:  
-      `plain` : No corrections, just the picture taken by the camera  
-      `corners` : Adjust the image such that it corresponds to real-world coordinates (mapping the corner areas)  
-      `lens`: Adjust the lens distortion  
+    - Picture Type:
+      `plain` : No corrections, just the picture taken by the camera
+      `corners` : Adjust the image such that it corresponds to real-world coordinates (mapping the corner areas)
+      `lens`: Adjust the lens distortion
       `both`: Do both the corners and lens correction
 
 - __return__:
@@ -120,7 +120,7 @@ Should return err msg if the picture cannot be processed ...
     }
   }
   ```
-  __corner_Data__:  
+  __corner_Data__:
   if corner found:
   ```
     {
@@ -155,7 +155,7 @@ Return the list of possible images:
 
 - __return__:
   ```
-   {   
+   {
        "available_corrections": [ "plain", "corners", "lens", "both" ]
    }
   ```
@@ -164,14 +164,14 @@ Return the list of possible images:
 
 Returns the timestamp of the latest available image
 
-- __return__:  
+- __return__:
   `{timestamp: timestamp}`
 
 `[GET] /running`
 
 Whether the camera is running or not
 
-- __return__:  
+- __return__:
   `[ true, false ]`
 
 `[POST] /save_corner_calibration`
@@ -218,7 +218,7 @@ deletes image for the lens calibration of the given `path`
     - labelType:
 
       `boxLabel` = will print the label for the box
-       
+
       `deviceLabel` = will print the device label
 
       `eanLabel` = will print the ean label
@@ -295,5 +295,3 @@ size of that config and cause performance issues.
 
 It is best to keep the calibration configuration separate, as that one shouldn't change much over time. Therefore we can
 keep the current files in `.octoprint/cam/`
-
-
