@@ -328,7 +328,7 @@ class CameraPlugin(
         from octoprint.server import connectivityChecker
 
         device_info = DeviceInfo()
-        beamos_version, beamos_date = device_info.get_beamos_version()
+        beamos_version = device_info.get_beamos_version()
         model_id = device_info.get_model()
 
         render_kwargs = dict(
@@ -344,7 +344,6 @@ class CameraPlugin(
             # mrbeam values
             # beamOS version - Not the plugin version
             beamosVersionNumber=beamos_version,
-            beamosBuildDate=beamos_date,
             hostname=socket.gethostname(),
             serial=device_info.get_serial(),
             model=model_id,
