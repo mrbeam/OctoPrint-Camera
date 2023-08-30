@@ -180,13 +180,13 @@ saves the position of the corners in corelation to the markers
 
 ```
 {
-    "newMarkers": {
+    "new_markers": {
           "NE": <corner_data>,
           "NW": <corner_data>,
           "SE": <corner_data>,
           "SW": <corner_data>,
       }
-      "newCorners": {
+      "new_corners": {
           "NE": <corner_data>,
           "NW": <corner_data>,
           "SE": <corner_data>,

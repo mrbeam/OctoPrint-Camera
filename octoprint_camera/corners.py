@@ -63,11 +63,11 @@ def to_int_list(l):
 def save_corner_calibration(path, *a, **kw):
     # Save the pink circle positions to provide
     # history for the new user
-    kw["newMarkers"] = to_int_list(
-        kw.get("newMarkers", {"NE": [], "NW": [], "SE": [], "SW": []})
+    kw["new_markers"] = to_int_list(
+        kw.get("new_markers", {"NE": [], "NW": [], "SE": [], "SW": []})
     )
-    kw["newCorners"] = to_int_list(
-        kw.get("newCorners", {"NE": [], "NW": [], "SE": [], "SW": []})
+    kw["new_corners"] = to_int_list(
+        kw.get("new_corners", {"NE": [], "NW": [], "SE": [], "SW": []})
     )
     return corners.save_corner_calibration(path, *a, **kw)
 
