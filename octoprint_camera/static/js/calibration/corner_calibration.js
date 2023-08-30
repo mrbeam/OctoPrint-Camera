@@ -319,8 +319,8 @@ $(function () {
 
         self.saveCornerCalibrationData = function () {
             let data = {
-                newMarkers: self.markersFoundPositionCopy,
-                newCorners: self.currentResults(),
+                new_markers: self.markersFoundPositionCopy,
+                new_corners: self.currentResults(),
             };
             self.calibration.simpleApiCommand(
                 "save_corner_calibration",

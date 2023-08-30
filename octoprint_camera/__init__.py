@@ -578,7 +578,7 @@ class CameraPlugin(
             json_data = request.get_json()
         except BadRequest:
             return make_response("Malformed JSON body in request", 400)
-        if not all(k in json_data.keys() for k in ["newCorners", "newMarkers"]):
+        if not all(k in json_data.keys() for k in ["new_corners", "new_markers"]):
             # TODO correct error message
             return make_response("No profile included in request", 400)
         corners.save_corner_calibration(
@@ -586,8 +586,8 @@ class CameraPlugin(
             hostname=socket.gethostname(),
             plugin_version=self._plugin_version,
             from_factory=util.factory_mode(),
-            newCorners=json_data["newCorners"],
-            newMarkers=json_data["newMarkers"],
+            new_corners=json_data["new_corners"],
+            new_markers=json_data["new_markers"],
         )
         key = "factory" if util.factory_mode() else "user"
         self._settings.set(["corners", key], json_data)
