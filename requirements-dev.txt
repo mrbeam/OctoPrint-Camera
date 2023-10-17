@@ -1,0 +1,2 @@
+
+git+https://${PERSONAL_ACCESS_TOKEN}@github.com/mrbeam/mrb3-utils.git@alpha#egg=MrBeamUtils

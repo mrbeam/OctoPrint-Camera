@@ -324,8 +324,7 @@ class CameraPlugin(
     def calibration_wrapper(self):
         from flask import render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, BRANCH
-        from octoprint_mrbeam.util.device_info import DeviceInfo
-        from octoprint.server import connectivityChecker
+        from mrbeam_utils.device_info import DeviceInfo
 
         device_info = DeviceInfo()
         beamos_version = device_info.get_beamos_version()
