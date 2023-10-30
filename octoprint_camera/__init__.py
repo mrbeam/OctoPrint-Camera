@@ -853,14 +853,25 @@ def __plugin_load__():
     global __plugin_settings_overlay__
     if util.factory_mode():
         disabled_plugins = [
-            "cura",
-            "pluginmanager",
             "announcements",
+            "pluginmanager",
             "corewizard",
             "octopi_support",
+            "virtual_printer",
+            "eventmanager",
+            "tracking",
+            "gcodeviewer",
+            "errortracking",
+            "backup",
+            "appkeys",
+            "action_command_prompt",
+            "action_command_notification",
+            "firmware_check",
+            "file_check",
+            "pi_support",
+            "softwareupdate",
             "mrbeam",
             "mrbeamdoc",
-            "virtual_printer",
         ]
     else:
         # disables itself
