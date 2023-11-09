@@ -89,7 +89,10 @@ class CalibrationState(lens.CalibrationState):
         octoprint_mrbeam.util.makedirs(self.debugPath)
         symlink_path = os.path.join(self.debugPath, os.path.basename(path))
         if not os.path.islink(symlink_path):
-            os.symlink(path, symlink_path)
+            try:
+                os.symlink(path, symlink_path)
+            except FileExistsError:
+                self._logger.warn("Symlink already exists: %s", symlink_path)
 
     def remove(self, path):
         lens.CalibrationState.remove(self, path)
